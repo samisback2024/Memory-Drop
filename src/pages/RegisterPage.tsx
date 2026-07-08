@@ -78,7 +78,7 @@ export const RegisterPage: React.FC = () => {
     if (result.needsEmailVerification) {
       navigate('/verify-email', { state: { email } });
     } else {
-      navigate('/dashboard');
+      navigate('/feed');
     }
   };
 

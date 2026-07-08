@@ -1,20 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutGrid, Search, Users, User, Settings, LogOut, ChevronDown } from 'lucide-react';
+import { Rss, Search, Users, User, LayoutGrid, Bookmark, Settings, LogOut, ChevronDown } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useSocial } from '../../hooks/useSocial';
 import { Avatar } from '../ui/Avatar';
 
+// Feed is the primary destination now (Phase 4) — Dashboard moved into the
+// account dropdown below rather than crowding the top bar to five items.
 const NAV_LINKS = [
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutGrid },
+  { to: '/feed', label: 'Feed', icon: Rss },
   { to: '/search', label: 'Search', icon: Search },
   { to: '/friends', label: 'Friends', icon: Users },
   { to: '/profile', label: 'Profile', icon: User },
 ];
 
-// Grows as later phases add Feed, Messages, etc. One responsive bar
-// covers every breakpoint at this size, so there's no separate mobile
-// bottom-tab component yet.
 export const Navbar: React.FC = () => {
   const { profile, signOut } = useAuth();
   const { getPendingRequestsReceived } = useSocial();
@@ -52,7 +51,7 @@ export const Navbar: React.FC = () => {
   return (
     <header className="sticky top-0 z-40 h-16 bg-white border-b border-gray-100 shadow-sm">
       <div className="flex items-center justify-between h-full max-w-2xl mx-auto px-4">
-        <NavLink to="/dashboard" className="flex items-center gap-2">
+        <NavLink to="/feed" className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center flex-shrink-0">
             <span className="text-white font-bold text-sm">M</span>
           </div>
@@ -107,6 +106,13 @@ export const Navbar: React.FC = () => {
                 <div className="py-1">
                   <button
                     role="menuitem"
+                    onClick={() => { navigate('/dashboard'); setDropdownOpen(false); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <LayoutGrid size={15} aria-hidden="true" /> Dashboard
+                  </button>
+                  <button
+                    role="menuitem"
                     onClick={() => { navigate('/profile'); setDropdownOpen(false); }}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   >
@@ -118,6 +124,13 @@ export const Navbar: React.FC = () => {
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   >
                     <Settings size={15} aria-hidden="true" /> Edit profile
+                  </button>
+                  <button
+                    role="menuitem"
+                    onClick={() => { navigate('/saved'); setDropdownOpen(false); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <Bookmark size={15} aria-hidden="true" /> Saved posts
                   </button>
                   <div className="border-t border-gray-100 my-1" />
                   <button

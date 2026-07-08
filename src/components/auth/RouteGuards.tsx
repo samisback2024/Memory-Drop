@@ -26,7 +26,7 @@ export const PublicOnlyRoute: React.FC<{ children: React.ReactNode }> = ({ child
 
   if (loading) return <AuthSpinner />;
   if (user) {
-    return <Navigate to={needsProfileCompletion ? '/complete-profile' : '/dashboard'} replace />;
+    return <Navigate to={needsProfileCompletion ? '/complete-profile' : '/feed'} replace />;
   }
   return <>{children}</>;
 };
@@ -40,5 +40,5 @@ export const RootRedirect: React.FC = () => {
   if (loading) return <AuthSpinner />;
   if (!user) return <Navigate to="/login" replace />;
   if (needsProfileCompletion) return <Navigate to="/complete-profile" replace />;
-  return <Navigate to="/dashboard" replace />;
+  return <Navigate to="/feed" replace />;
 };

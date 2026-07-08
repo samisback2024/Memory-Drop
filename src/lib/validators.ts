@@ -118,6 +118,23 @@ export const validateImageFile = (file: File, maxBytes: number): string | null =
   return null;
 };
 
+export const CAPTION_MAX = 2200;
+export const MAX_POST_IMAGES = 10;
+export const MAX_POST_IMAGE_BYTES = 8 * 1024 * 1024;
+export const MAX_POST_VIDEO_BYTES = 50 * 1024 * 1024;
+const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime'];
+
+export const validateCaption = (caption: string): string | null => {
+  if (caption.length > CAPTION_MAX) return `Caption must be ${CAPTION_MAX} characters or fewer.`;
+  return null;
+};
+
+export const validateVideoFile = (file: File): string | null => {
+  if (!ALLOWED_VIDEO_TYPES.includes(file.type)) return 'Use an MP4, WebM, or MOV video.';
+  if (file.size > MAX_POST_VIDEO_BYTES) return `Video must be ${Math.round(MAX_POST_VIDEO_BYTES / (1024 * 1024))}MB or smaller.`;
+  return null;
+};
+
 const USERNAME_COOLDOWN_DAYS = 30;
 
 // Mirrors enforce_username_cooldown() in supabase/phase2b_polish.sql — the

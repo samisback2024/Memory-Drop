@@ -34,7 +34,7 @@ export const LoginPage: React.FC = () => {
       setError(signInError);
       return;
     }
-    navigate('/dashboard');
+    navigate('/feed');
   };
 
   const handleGoogle = async () => {

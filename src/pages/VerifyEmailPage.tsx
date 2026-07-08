@@ -32,7 +32,7 @@ export const VerifyEmailPage: React.FC = () => {
   }, [cooldown]);
 
   useEffect(() => {
-    if (!loading && emailVerified) navigate('/dashboard', { replace: true });
+    if (!loading && emailVerified) navigate('/feed', { replace: true });
   }, [loading, emailVerified, navigate]);
 
   if (loading) return <AuthSpinner />;

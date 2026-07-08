@@ -54,7 +54,7 @@ export const CompleteProfilePage: React.FC = () => {
       setError(completeError);
       return;
     }
-    navigate('/dashboard');
+    navigate('/feed');
   };
 
   return (

@@ -42,7 +42,7 @@ export const ResetPasswordPage: React.FC = () => {
       setError(updateError);
       return;
     }
-    navigate('/dashboard');
+    navigate('/feed');
   };
 
   if (loading || linkExpiredGrace) {

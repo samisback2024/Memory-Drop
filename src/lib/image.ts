@@ -54,3 +54,29 @@ export const renderCroppedImage = (
 
 export const blobToFile = (blob: Blob, filename: string): File =>
   new File([blob], filename, { type: blob.type });
+
+// Feed photos don't go through ImageCropModal — unlike avatar/cover, a
+// social feed is expected to preserve whatever aspect ratio the photo was
+// taken in. This still compresses (downscale + re-encode), just without
+// forcing a fixed output rectangle.
+export const compressImageFile = async (file: File, maxDimension = 1600, quality = 0.85): Promise<File> => {
+  const image = await loadImageFromFile(file);
+  const scale = Math.min(1, maxDimension / Math.max(image.naturalWidth, image.naturalHeight));
+  const outputWidth = Math.round(image.naturalWidth * scale);
+  const outputHeight = Math.round(image.naturalHeight * scale);
+
+  const canvas = document.createElement('canvas');
+  canvas.width = outputWidth;
+  canvas.height = outputHeight;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return file;
+  ctx.drawImage(image, 0, 0, outputWidth, outputHeight);
+
+  return new Promise(resolve => {
+    canvas.toBlob(
+      blob => resolve(blob ? blobToFile(blob, file.name.replace(/\.[^.]+$/, '.jpg')) : file),
+      'image/jpeg',
+      quality,
+    );
+  });
+};

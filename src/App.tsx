@@ -17,6 +17,9 @@ import { FriendsPage } from './pages/FriendsPage';
 import { FriendRequestsPage } from './pages/FriendRequestsPage';
 import { FollowersPage } from './pages/FollowersPage';
 import { FollowingPage } from './pages/FollowingPage';
+import { FeedPage } from './pages/FeedPage';
+import { SavedPostsPage } from './pages/SavedPostsPage';
+import { PostPage } from './pages/PostPage';
 import { TermsPage } from './pages/TermsPage';
 import { PrivacyPage } from './pages/PrivacyPage';
 
@@ -45,7 +48,13 @@ function App() {
           <Route path="/followers" element={<AuthProtectedRoute><FollowersPage /></AuthProtectedRoute>} />
           <Route path="/following" element={<AuthProtectedRoute><FollowingPage /></AuthProtectedRoute>} />
 
+          {/* Own chrome (PublicPageHeader) but requires login — get_post is
+              only granted to `authenticated`, not `anon` */}
+          <Route path="/post/:postId" element={<AuthProtectedRoute><PostPage /></AuthProtectedRoute>} />
+
           <Route element={<AuthProtectedRoute><AppShell /></AuthProtectedRoute>}>
+            <Route path="/feed" element={<FeedPage />} />
+            <Route path="/saved" element={<SavedPostsPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/profile/edit" element={<EditProfilePage />} />
