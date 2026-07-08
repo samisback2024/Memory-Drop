@@ -1,6 +1,6 @@
 export type MemoryType = 'photo' | 'video' | 'audio' | 'text';
 export type DropTab = 'my_drops' | 'unlocking_soon' | 'today_unlocks' | 'public_drops';
-export type Visibility = 'public' | 'private';
+export type Visibility = 'public' | 'followers' | 'private';
 export type Mood = 'joyful' | 'grateful' | 'nostalgic' | 'hopeful' | 'reflective' | 'peaceful' | 'bittersweet' | 'excited';
 export type ReportReason = 'spam' | 'harassment' | 'violence' | 'nudity' | 'fake_account' | 'other';
 
@@ -73,6 +73,12 @@ export const MOOD_META: Record<Mood, { emoji: string; label: string }> = {
   peaceful: { emoji: '🕊️', label: 'Peaceful' },
   bittersweet: { emoji: '🍂', label: 'Bittersweet' },
   excited: { emoji: '✨', label: 'Excited' },
+};
+
+export const VISIBILITY_META: Record<Visibility, { label: string; description: string }> = {
+  public: { label: 'Everyone', description: 'Anyone can find it once unlocked — appears in Public Drops.' },
+  followers: { label: 'Followers', description: 'Only people who follow you can see it once unlocked.' },
+  private: { label: 'Only me', description: "Just for you — nobody else will ever see it, unlocked or not." },
 };
 
 export const MEMORY_TYPE_LABELS: Record<MemoryType, string> = {

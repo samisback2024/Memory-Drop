@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Lock, Globe2, MoreHorizontal, Flag, EyeOff, User, Trash2 } from 'lucide-react';
+import { Lock, Globe2, Users, MoreHorizontal, Flag, EyeOff, User, Trash2 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useDrops } from '../../hooks/useDrops';
 import { Avatar } from '../ui/Avatar';
@@ -14,7 +14,7 @@ import { ReportModal } from './ReportModal';
 import { ReflectionModal } from './ReflectionModal';
 import { LockedDropPlaceholder, MEMORY_TYPE_ICONS } from './LockedDropPlaceholder';
 import { formatRelativeTime } from '../../utils/date';
-import { MOOD_META, MEMORY_TYPE_LABELS, type Drop } from '../../types/feed';
+import { MOOD_META, MEMORY_TYPE_LABELS, VISIBILITY_META, type Drop } from '../../types/feed';
 
 interface DropCardProps {
   drop: Drop;
@@ -107,8 +107,8 @@ export const DropCard: React.FC<DropCardProps> = ({ drop, onDeleted, onHidden, o
                 <MemoryIcon size={11} aria-hidden="true" />
               </span>
               {moodMeta && <span aria-label={moodMeta.label}>{moodMeta.emoji}</span>}
-              <span className="text-gray-300" title={content.visibility === 'private' ? 'Private drop' : 'Public drop'}>
-                {content.visibility === 'private' ? <Lock size={10} aria-hidden="true" /> : <Globe2 size={10} aria-hidden="true" />}
+              <span className="text-gray-300" title={VISIBILITY_META[content.visibility].label}>
+                {content.visibility === 'private' ? <Lock size={10} aria-hidden="true" /> : content.visibility === 'followers' ? <Users size={10} aria-hidden="true" /> : <Globe2 size={10} aria-hidden="true" />}
               </span>
             </p>
           </div>

@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Image as ImageIcon, Video, Mic, X, CalendarClock, Globe2, Lock } from 'lucide-react';
+import { Image as ImageIcon, Video, Mic, X, CalendarClock, Globe2, Users, Lock } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useDrops } from '../../hooks/useDrops';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Avatar } from '../ui/Avatar';
-import { Toggle } from '../ui/Toggle';
 import { MoodPicker } from './MoodPicker';
+import { VisibilityPicker } from './VisibilityPicker';
 import { EmojiPicker } from './EmojiPicker';
 import {
   validateCaption, validateImageFile, validateVideoFile, validateAudioFile,
@@ -46,7 +46,7 @@ export const DropComposer: React.FC<DropComposerProps> = ({ isOpen, onClose, onD
   const [video, setVideo] = useState<PendingFile | null>(null);
   const [audio, setAudio] = useState<PendingFile | null>(null);
   const [unlockDate, setUnlockDate] = useState(nowForDatetimeLocal);
-  const [visibility, setVisibility] = useState<Visibility>('public');
+  const [visibility, setVisibility] = useState<Visibility>('followers');
   const [mood, setMood] = useState<Mood | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dropping, setDropping] = useState(false);
@@ -75,7 +75,7 @@ export const DropComposer: React.FC<DropComposerProps> = ({ isOpen, onClose, onD
     setVideo(null);
     setAudio(null);
     setUnlockDate(nowForDatetimeLocal());
-    setVisibility('public');
+    setVisibility('followers');
     setMood(null);
     setError(null);
     onClose();
@@ -253,13 +253,10 @@ export const DropComposer: React.FC<DropComposerProps> = ({ isOpen, onClose, onD
           <MoodPicker value={mood} onChange={setMood} />
         </div>
 
-        <Toggle
-          id="drop-visibility"
-          checked={visibility === 'public'}
-          onChange={checked => setVisibility(checked ? 'public' : 'private')}
-          label={visibility === 'public' ? 'Public drop' : 'Private drop'}
-          description={visibility === 'public' ? 'Visible to your followers once unlocked.' : 'Only you will ever see this one.'}
-        />
+        <div className="flex flex-col gap-1.5">
+          <p className="text-sm font-medium text-gray-700">Who can see this?</p>
+          <VisibilityPicker value={visibility} onChange={setVisibility} />
+        </div>
 
         {error && (
           <div className="bg-red-50 border border-red-100 rounded-xl p-3">
@@ -269,7 +266,7 @@ export const DropComposer: React.FC<DropComposerProps> = ({ isOpen, onClose, onD
 
         <div className="flex gap-3">
           <Button variant="gradient" fullWidth loading={dropping} onClick={handleSubmit}>
-            {visibility === 'private' ? <Lock size={15} aria-hidden="true" /> : <Globe2 size={15} aria-hidden="true" />}
+            {visibility === 'private' ? <Lock size={15} aria-hidden="true" /> : visibility === 'followers' ? <Users size={15} aria-hidden="true" /> : <Globe2 size={15} aria-hidden="true" />}
             Drop Memory
           </Button>
           <Button variant="outline" fullWidth onClick={handleCancel} disabled={dropping}>
