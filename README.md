@@ -4,82 +4,91 @@
 
 Memory Drop is a time-capsule social app. Write a message, attach photos or audio, set a future unlock date, and share it with the world — or keep it just for yourself. When the date arrives, your capsule opens.
 
----
-
-## What it looks like
-
-### Auth screen
-A full-screen purple-to-blue gradient with the Memory Drop logo. Supports email/password sign-in, sign-up, and Google OAuth. A **Try Demo Mode** button lets you explore the entire app instantly without an account.
-
-### Feed (`/feed`)
-- A personalized greeting banner ("Good morning, Alex 👋") with a count of your unlocked memories
-- A horizontal **Stories Row** — circular avatars for recent stories from people you follow (expire in 12–48 hours)
-- A **search bar** to filter by title, author, or tag
-- Four tabs: **Discover · Trending · Recent · Friends**
-- Scrollable capsule cards showing author avatar, title, lock/unlock status, tags, media previews, and time remaining
-
-### Create (`/create`)
-- Title field (100 char limit)
-- Message/note textarea (2 000 chars) with an **AI Suggest** button that injects writing prompts
-- Media upload for photos, videos, and audio
-- Future-only date picker for the unlock date
-- Visibility picker: Public / Friends / Only Me / Specific People
-- Tag input (up to 10 tags, auto-slugified) and optional location field
-
-### Memories (`/memories`)
-- Your personal timeline of unlocked capsules grouped by year
-- Unlocked/locked counters at the top
-- Locked upcoming capsules listed separately with a countdown
-
-### Messages (`/messages`)
-- Two-panel layout on desktop: conversation list on the left, chat on the right
-- Collapsible to a single panel on mobile with a back button
-- Conversation search, unread count badges, last-message preview
-
-### Profile (`/profile`)
-- Cover gradient with editable avatar (picks from 10 DiceBear-generated options)
-- Follower / following counts, active streak, and achievement badges
-- Your capsules list with quick access to create more
-- Sign-out button
+**Live:** https://memory-drop-inky.vercel.app
 
 ---
 
 ## Tech stack
 
 | Layer | Technology |
-|-------|------------|
+|---|---|
 | Framework | React 19 + TypeScript 6 |
 | Routing | React Router DOM 7 |
 | Styling | Tailwind CSS 3 |
 | Icons | Lucide React |
 | Backend / Auth | Supabase (PostgreSQL, Auth, Storage) |
-| Build | Vite 8 |
+| Build tool | Vite 8 |
+| Deployment | Vercel |
+
+---
+
+## Features
+
+### Authentication (Phase 1 — complete)
+- Email / password sign-up and sign-in
+- Google OAuth (one-tap)
+- Forgot password → email reset link
+- Email verification with resend + cooldown
+- Complete-profile flow for OAuth users (username + date of birth)
+- Demo mode — full app tour with no account required
+- All routes protected: auth-only, public-only, and smart root redirect
+- Age gate (13+) enforced on both client and database
+
+### Profile (Phase 2 — in progress)
+- View and edit display name, username, avatar
+- Avatar upload to Supabase Storage
+- Profile completion progress bar
+- Stats row (capsules · followers · following · streak)
+- Badges & achievements panel
+- Public profile page at `/@username`
+- Privacy toggle (public / private)
 
 ---
 
 ## Getting started
 
 ```bash
+git clone https://github.com/samisback2024/Memory-Drop.git
+cd Memory-Drop
 npm install
-npm run dev        # http://localhost:5173
+npm run dev        # → http://localhost:5173
 ```
 
-Click **Try Demo Mode** on the auth page to explore without a Supabase account. Everything (create, message, follow) works against local state in demo mode.
+Hit **Try Demo Mode** on the login screen to explore without any account.
 
-### With Supabase
+### Connecting Supabase
 
-Create a `.env` file at the project root:
+1. Create a project at [supabase.com](https://supabase.com)
+2. Copy your **Project URL** and **anon public key** from Project Settings → API
+3. Create a `.env` file at the project root:
 
 ```env
 VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your-anon-key
 ```
 
-Then restart the dev server.
+4. Run the database migrations in order via the Supabase SQL editor:
+   - `supabase/phase1_auth.sql` — profiles table, RLS, triggers
+   - `supabase/phase2_profiles.sql` — avatar storage bucket, extended profile columns
+
+5. Restart the dev server.
+
+### Google OAuth setup
+
+1. Supabase dashboard → Authentication → Providers → Google → enable, add Client ID & Secret
+2. Authentication → URL Configuration:
+   - **Site URL:** `https://your-vercel-domain.vercel.app`
+   - **Redirect URLs:** `https://your-vercel-domain.vercel.app/**` and `http://localhost:5173/**`
+
+---
+
+## Available scripts
 
 ```bash
-npm run build      # production build → dist/
-npm run preview    # preview production build locally
+npm run dev       # local dev server with HMR
+npm run build     # type-check + production build → dist/
+npm run preview   # serve the production build locally
+npm run lint      # oxlint
 ```
 
 ---
@@ -88,16 +97,77 @@ npm run preview    # preview production build locally
 
 ```
 src/
-  pages/          # AuthPage, FeedPage, CreatePage, MemoriesPage, MessagesPage, ProfilePage
-  components/
-    layout/       # Navbar (desktop), BottomTabBar (mobile), Layout
-    feed/         # CapsuleCard, StoriesRow
-    create/       # MediaUpload
-    messages/     # ConversationList, ChatWindow
-    profile/      # ProfileHeader, AvatarGenerator
-    friends/      # FriendSearch
-    ui/           # Button, Card, Input, Modal, Avatar, Badge
-  hooks/          # useAuth, useCapsules, useMessages, useFriends, useStories
+├── pages/
+│   ├── LoginPage.tsx
+│   ├── RegisterPage.tsx
+│   ├── ForgotPasswordPage.tsx
+│   ├── ResetPasswordPage.tsx
+│   ├── VerifyEmailPage.tsx
+│   ├── CompleteProfilePage.tsx
+│   ├── DashboardPage.tsx
+│   ├── ProfilePage.tsx
+│   ├── EditProfilePage.tsx
+│   ├── PublicProfilePage.tsx
+│   ├── TermsPage.tsx
+│   └── PrivacyPage.tsx
+├── components/
+│   ├── auth/         # AuthLayout, GoogleButton, RouteGuards
+│   ├── layout/       # AppShell, Navbar
+│   ├── profile/      # ProfileHeader, AvatarUpload, StatsRow,
+│   │                 #   BadgesAndAchievements, ProfileCompletionBar
+│   ├── legal/        # LegalLayout
+│   └── ui/           # Button, Input, Avatar, Card, Modal,
+│                     #   Checkbox, Toggle, EmptyState
+├── hooks/
+│   └── useAuth.tsx   # full auth context (sign-in, sign-up, OAuth,
+│                     #   password reset, email verify, demo mode)
+├── lib/
+│   ├── supabase.ts   # Supabase client + isSupabaseConfigured()
+│   ├── validators.ts # email, password, username, date-of-birth rules
+│   └── profile.ts    # profile helpers
+├── types/
+│   ├── index.ts      # Profile view-model
+│   └── auth.ts       # ProfileRow, RegisterFormValues, AuthResult
+└── utils/
+    ├── date.ts
+    └── storage.ts
+
+supabase/
+├── phase1_auth.sql   # profiles table, RLS, triggers, username RPC
+└── phase2_profiles.sql
+```
+
+---
+
+## Deployment
+
+The project is deployed on **Vercel** and auto-builds from the `main` branch on GitHub.
+
+To deploy manually:
+
+```bash
+vercel --prod
+```
+
+Environment variables required in Vercel:
+
+| Variable | Description |
+|---|---|
+| `VITE_SUPABASE_URL` | Your Supabase project URL |
+| `VITE_SUPABASE_ANON_KEY` | Your Supabase anon public key |
+
+---
+
+## Roadmap
+
+| Phase | Scope | Status |
+|---|---|---|
+| 1 | Auth (sign-up, sign-in, Google OAuth, password reset, email verify) | ✅ Complete |
+| 2 | Profiles (edit, avatar upload, public `/@username` page) | 🔄 In progress |
+| 3 | Feed + Capsules (create, unlock, discover, trending) | Planned |
+| 4 | Memories (personal timeline, countdown) | Planned |
+| 5 | Messages (DMs, conversation list) | Planned |
+| 6 | Social (follow, friends, stories) | Planned |
   lib/            # supabase client, demo-data
   types/          # TypeScript interfaces
   utils/          # date helpers, storage helpers
