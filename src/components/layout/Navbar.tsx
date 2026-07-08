@@ -1,22 +1,31 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutGrid, User, Settings, LogOut, ChevronDown } from 'lucide-react';
+import { LayoutGrid, Search, Users, User, Settings, LogOut, ChevronDown } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
+import { useSocial } from '../../hooks/useSocial';
 import { Avatar } from '../ui/Avatar';
 
 const NAV_LINKS = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutGrid },
+  { to: '/search', label: 'Search', icon: Search },
+  { to: '/friends', label: 'Friends', icon: Users },
   { to: '/profile', label: 'Profile', icon: User },
 ];
 
-// Deliberately just two destinations — grows as later phases add Feed,
-// Messages, etc. One responsive bar covers every breakpoint at this size,
-// so there's no separate mobile bottom-tab component yet.
+// Grows as later phases add Feed, Messages, etc. One responsive bar
+// covers every breakpoint at this size, so there's no separate mobile
+// bottom-tab component yet.
 export const Navbar: React.FC = () => {
   const { profile, signOut } = useAuth();
+  const { getPendingRequestsReceived } = useSocial();
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    getPendingRequestsReceived().then(rows => setPendingCount(rows.length));
+  }, [getPendingRequestsReceived]);
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -66,7 +75,14 @@ export const Navbar: React.FC = () => {
                 }`
               }
             >
-              <Icon size={16} aria-hidden="true" />
+              <span className="relative">
+                <Icon size={16} aria-hidden="true" />
+                {to === '/friends' && pendingCount > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full bg-red-500 text-white text-[9px] font-semibold flex items-center justify-center leading-none">
+                    {pendingCount > 9 ? '9+' : pendingCount}
+                  </span>
+                )}
+              </span>
               <span className="hidden sm:inline">{label}</span>
             </NavLink>
           ))}

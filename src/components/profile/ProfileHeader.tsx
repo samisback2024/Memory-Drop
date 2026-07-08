@@ -12,7 +12,7 @@ import { getProfileCompletion } from '../../lib/profile';
 
 type HeaderProfile = Pick<
   Profile,
-  | 'username' | 'display_name' | 'bio' | 'profile_photo_url' | 'cover_photo_url'
+  | 'id' | 'username' | 'display_name' | 'bio' | 'profile_photo_url' | 'cover_photo_url'
   | 'website' | 'location' | 'pronouns' | 'is_private' | 'profile_completed' | 'created_at'
 >;
 
@@ -121,7 +121,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = React.memo(({ profile
           <p className="text-sm text-gray-400 italic mb-1">Add a bio to tell people about yourself.</p>
         ) : null}
 
-        <StatsRow createdAt={profile.created_at} />
+        {profile.username && <StatsRow profileId={profile.id} username={profile.username} createdAt={profile.created_at} />}
       </div>
     </div>
   );

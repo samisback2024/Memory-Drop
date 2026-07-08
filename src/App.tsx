@@ -12,6 +12,11 @@ import { DashboardPage } from './pages/DashboardPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { EditProfilePage } from './pages/EditProfilePage';
 import { PublicProfilePage } from './pages/PublicProfilePage';
+import { SearchPage } from './pages/SearchPage';
+import { FriendsPage } from './pages/FriendsPage';
+import { FriendRequestsPage } from './pages/FriendRequestsPage';
+import { FollowersPage } from './pages/FollowersPage';
+import { FollowingPage } from './pages/FollowingPage';
 import { TermsPage } from './pages/TermsPage';
 import { PrivacyPage } from './pages/PrivacyPage';
 
@@ -30,12 +35,23 @@ function App() {
           <Route path="/complete-profile" element={<AuthProtectedRoute><CompleteProfilePage /></AuthProtectedRoute>} />
           <Route path="/terms" element={<TermsPage />} />
           <Route path="/privacy" element={<PrivacyPage />} />
+
+          {/* Public — reachable logged out, own chrome (PublicPageHeader) */}
           <Route path="/u/:username" element={<PublicProfilePage />} />
+          <Route path="/u/:username/followers" element={<FollowersPage />} />
+          <Route path="/u/:username/following" element={<FollowingPage />} />
+
+          {/* Same two pages, resolved to the signed-in user's own username */}
+          <Route path="/followers" element={<AuthProtectedRoute><FollowersPage /></AuthProtectedRoute>} />
+          <Route path="/following" element={<AuthProtectedRoute><FollowingPage /></AuthProtectedRoute>} />
 
           <Route element={<AuthProtectedRoute><AppShell /></AuthProtectedRoute>}>
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/profile/edit" element={<EditProfilePage />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/friends" element={<FriendsPage />} />
+            <Route path="/friends/requests" element={<FriendRequestsPage />} />
           </Route>
 
           <Route path="*" element={<RootRedirect />} />

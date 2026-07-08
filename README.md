@@ -43,6 +43,19 @@ Memory Drop is a time-capsule social app. Write a message, attach photos or audi
 - **Badges & Achievements** — empty-state panels, ready for a future phase to populate
 - Skeleton loading states, error states with retry, full keyboard/screen-reader support
 
+### Friend System (Phase 3 — complete)
+- **Follow / request to follow** — instant accepted follow on public profiles, pending request on private ones
+- **Manage requests** — accept, decline, or cancel a request you sent, at `/friends/requests`
+- **Unfollow / remove follower**
+- **Block / unblock** — severs any existing follow relationship in both directions the moment you block someone; a blocked account's profile becomes fully unreachable to you and vice versa
+- **Mute / unmute, restrict / unrestrict** — relationship-only for now (no visible effect on content until a later phase adds a feed)
+- **Search** at `/search` — by username or display name, blocked accounts (either direction) never appear
+- **Suggested friends** — ranked by mutual-connection overlap, falls back to recent accounts when mutuals are scarce
+- **Mutual friends** — count + up to 3 avatars, shown on profiles and follow requests
+- **Followers / Following pages** — your own at `/followers` and `/following`, anyone's at `/u/username/followers` and `/u/username/following`; private accounts show "This account is private" to everyone except the owner and accepted followers
+- **Real social counts** — Followers/Following in the profile stats row are live now, not placeholders
+- Follow button states: Follow, Requested, Following (→ Unfollow on hover), Follow Back, Blocked (→ Unblock), Unavailable (they've blocked you)
+
 ---
 
 ## Getting started
@@ -69,6 +82,7 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
    - `supabase/phase1_auth.sql` — profiles table, RLS, triggers, username-availability RPC
    - `supabase/phase2_profiles.sql` — bio/privacy/completion columns, `avatars` storage bucket, `get_profile_by_username` RPC
    - `supabase/phase2b_profile_polish.sql` — website/location/pronouns/cover photo columns, username change cooldown, `covers` storage bucket
+   - `supabase/phase3_social_graph.sql` — follows/blocks/mutes/restrictions tables, RLS, and the social RPCs (search, suggestions, mutual friends, followers/following, requests)
 
 5. Restart the dev server.
 
@@ -110,18 +124,29 @@ src/
 │   ├── ProfilePage.tsx          # own profile, at /profile
 │   ├── EditProfilePage.tsx      # at /profile/edit
 │   ├── PublicProfilePage.tsx    # anyone's profile, at /u/:username
+│   ├── SearchPage.tsx           # at /search
+│   ├── FriendsPage.tsx          # at /friends
+│   ├── FriendRequestsPage.tsx   # at /friends/requests
+│   ├── FollowersPage.tsx        # at /followers and /u/:username/followers
+│   ├── FollowingPage.tsx        # at /following and /u/:username/following
 │   └── TermsPage.tsx, PrivacyPage.tsx
 ├── components/
 │   ├── auth/         # AuthLayout, GoogleButton, RouteGuards
-│   ├── layout/        # AppShell, Navbar
-│   ├── profile/       # ProfileHeader (+ skeleton), AvatarUpload,
-│   │                   #   CoverPhotoUpload, ImageCropModal, StatsRow,
-│   │                   #   BadgesAndAchievements (+ skeleton), ProfileCompletionBar
-│   ├── legal/         # LegalLayout
-│   └── ui/            # Button, Input, Avatar, Card, Modal, Checkbox,
-│                       #   Toggle, Badge, EmptyState, ErrorState, Skeleton
+│   ├── layout/       # AppShell, Navbar, PublicPageHeader
+│   ├── profile/      # ProfileHeader (+ skeleton), AvatarUpload,
+│   │                 #   CoverPhotoUpload, ImageCropModal, StatsRow,
+│   │                 #   BadgesAndAchievements (+ skeleton), ProfileCompletionBar
+│   ├── social/       # UserCard, UserList (+ skeleton), FollowButton,
+│   │                 #   RelationshipMenu, FriendRequestCard, MutualFriends,
+│   │                 #   SocialStats, EmptySocialState, UserSearchBar,
+│   │                 #   UserSearchResults, FollowersList, FollowingList,
+│   │                 #   SuggestedFriends
+│   ├── legal/        # LegalLayout
+│   └── ui/           # Button, Input, Avatar, Card, Modal, Checkbox,
+│                      #   Toggle, Badge, EmptyState, ErrorState, Skeleton
 ├── hooks/
 │   ├── useAuth.tsx               # full auth + profile context
+│   ├── useSocial.ts               # follow/block/mute/restrict, search, lists
 │   ├── useUsernameAvailability.ts
 │   └── useImageUpload.ts         # shared drag-drop/crop/upload pipeline
 ├── lib/
@@ -131,7 +156,8 @@ src/
 │   └── image.ts        # canvas crop + compression
 ├── types/
 │   ├── index.ts       # Profile (mirrors the real table)
-│   └── auth.ts
+│   ├── auth.ts
+│   └── social.ts       # Relationship, SocialUser, SocialCounts, ...
 └── utils/
     ├── date.ts
     └── storage.ts      # upload/delete + storage-path parsing (for cleanup on replace)
@@ -139,7 +165,8 @@ src/
 supabase/
 ├── phase1_auth.sql            # profiles table, RLS, triggers, username RPC
 ├── phase2_profiles.sql        # bio/privacy/completion, avatars bucket, public-profile RPC
-└── phase2b_profile_polish.sql # website/location/pronouns/cover photo, username cooldown, covers bucket
+├── phase2b_profile_polish.sql # website/location/pronouns/cover photo, username cooldown, covers bucket
+└── phase3_social_graph.sql    # follows/blocks/mutes/restrictions, social RPCs
 ```
 
 ---
@@ -155,13 +182,49 @@ Both are created and policed by their respective migration files — nothing to 
 
 ---
 
+## Database tables (Phase 3)
+
+| Table | Purpose | Key rules |
+|---|---|---|
+| `follows` | follower_id → following_id, `status` accepted/pending | No self-follow, no duplicates, status is trigger-derived from the target's privacy, not client-set |
+| `user_blocks` | blocker_id → blocked_id | Blocking severs any existing follow both ways; only the blocker can see their own block list |
+| `user_mutes` | muter_id → muted_id | No visible effect yet — groundwork for a future feed to filter on |
+| `user_restrictions` | restrictor_id → restricted_id | Same — groundwork, no visible effect yet |
+
 ## Security notes
 
-- **Row Level Security** on `profiles`: everyone can read/write only their own row directly. Reading *someone else's* profile goes through `get_profile_by_username`, a `SECURITY DEFINER` function that's the one place allowed to decide what a private account exposes — bio, location, and website are nulled out for private accounts when the viewer isn't the owner; birthday is never returned by it at all, to anyone, ever.
+- **Row Level Security** on `profiles`: everyone can read/write only their own row directly. Reading *someone else's* profile goes through `get_profile_by_username`, a `SECURITY DEFINER` function that's the one place allowed to decide what a private account exposes — bio, location, and website are nulled out unless the viewer is the owner *or an accepted follower* (Phase 3 extended this from "owner only"); birthday is never returned by it at all, to anyone, ever. The function also hides the profile entirely between two users with a block relationship in either direction.
 - **Username uniqueness and format** are enforced by a DB constraint and checked live via a narrow RPC (`is_username_available`), not a broad table read.
 - **Username change cooldown** (30 days) is enforced by a database trigger, not just client-side — a client that skips the check still gets rejected by Postgres.
 - **Age gate** (13+) is a DB check constraint, not just form validation.
 - **Storage policies** key off the first path segment matching `auth.uid()`, so a signed-in user can only write inside their own folder in either bucket.
+- **follows/user_blocks/user_mutes/user_restrictions RLS** only ever exposes relationships the caller is a party to (as either side of the pair). Every screen that needs to show *someone else's* profile alongside relationship state — search, suggestions, followers/following lists, mutual friends — goes through a `SECURITY DEFINER` RPC that applies the real privacy rule itself, same pattern as `get_profile_by_username`.
+- **Blocked users are invisible** to each other everywhere: search, suggestions, follower/following lists, and the profile page itself. A user is never told they've been blocked, muted, or restricted — same convention as Instagram/Twitter.
+- **Follow status can't be tampered with** — a client can only ever insert a bare `(follower_id, following_id)` pair; a trigger decides pending vs. accepted from the target's actual privacy setting, and a second trigger rejects any status transition except pending → accepted.
+
+---
+
+## Testing Phase 3 (needs two accounts)
+
+- **Follow a public account** — Follow button should go straight to "Following."
+- **Follow a private account** — button shows "Requested"; the other account sees it under `/friends/requests` and can Accept or Decline.
+- **Cancel a sent request** — from `/friends/requests` → Sent, or by clicking "Requested" again on the profile.
+- **Unfollow** — hover "Following" on desktop, should swap to red "Unfollow."
+- **Remove a follower** — from your own `/followers`, kebab menu → Remove follower.
+- **Block / unblock** — block someone you follow (or who follows you) and confirm the relationship disappears on both sides; confirm their profile now shows "User not found" to you and yours to them; unblock and confirm it's visitable again.
+- **Mute/unmute, restrict/unrestrict** — toggle from the kebab menu on a profile or in your followers/following list; no visible effect elsewhere yet (expected — see Known limitations).
+- **Search** — by both username and display name; confirm a blocked account (either direction) never appears.
+- **Suggested friends** at `/search` with an empty query, or on `/friends`.
+- **Mutual friends** — should show on profiles and on incoming follow requests once you and the other account share at least one connection.
+- **Private profile visibility** — as a non-follower, confirm bio/location/website are hidden and followers/following show "This account is private"; as an accepted follower, confirm they're visible.
+- **RLS with two browser sessions** — try to accept a request that wasn't sent to you, or delete someone else's follow row, directly via the Supabase table editor as a non-service-role user — should be rejected.
+
+## Known limitations
+
+- Mute and Restrict have no visible effect anywhere yet — there's no feed/content surface for them to filter (that's Phase 4+). The relationships are stored and toggle correctly; they just don't *do* anything visible yet, by design.
+- Suggested friends only looks one hop out (people followed by people you follow). No engagement-based ranking — there's no engagement data yet.
+- No real-time updates — accepting a request or a new follower won't appear for the other user until they reload or navigate. Supabase Realtime would be the natural fit for a later pass.
+- The account dropdown in `Navbar` and the kebab menu in `RelationshipMenu` implement the same open/outside-click/Escape pattern independently rather than sharing one primitive — noted as a refactor opportunity, not done here to avoid touching already-working nav code in the same change as this phase.
 
 ---
 
@@ -184,7 +247,7 @@ Environment variables required in Vercel (Project Settings → Environment Varia
 |---|---|---|
 | 1 | Auth (sign-up, sign-in, Google OAuth, password reset, email verify) | ✅ Complete |
 | 2 | Profiles (edit, avatar + cover upload, public `/u/username` page) | ✅ Complete |
-| 3 | Friend system (follow/unfollow, requests, followers/following lists) | Planned |
+| 3 | Friend system (follow/unfollow, requests, block/mute/restrict, search, suggestions) | ✅ Complete |
 | 4 | Feed + Capsules (create, unlock, discover, trending) | Planned |
 | 5 | Stories | Planned |
 | 6 | Messages (DMs, conversation list) | Planned |
