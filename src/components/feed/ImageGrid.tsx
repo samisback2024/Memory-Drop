@@ -1,8 +1,8 @@
 import React from 'react';
-import type { PostImage } from '../../types/feed';
+import type { DropImage } from '../../types/feed';
 
 interface ImageGridProps {
-  images: PostImage[];
+  images: DropImage[];
 }
 
 // A plain CSS-grid layout rather than a swipeable carousel — simplest thing

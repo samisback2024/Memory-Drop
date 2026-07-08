@@ -2,19 +2,19 @@ import React, { useState } from 'react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Textarea } from '../ui/Input';
-import { useFeed } from '../../hooks/useFeed';
+import { useDrops } from '../../hooks/useDrops';
 import { REPORT_REASON_LABELS, type ReportReason } from '../../types/feed';
 
 interface ReportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  postId: string;
+  dropId: string;
 }
 
 const REASONS = Object.keys(REPORT_REASON_LABELS) as ReportReason[];
 
-export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose, postId }) => {
-  const { reportPost } = useFeed();
+export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose, dropId }) => {
+  const { reportDrop } = useDrops();
   const [reason, setReason] = useState<ReportReason | null>(null);
   const [details, setDetails] = useState('');
   const [loading, setLoading] = useState(false);
@@ -33,7 +33,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose, postI
     if (!reason) return;
     setLoading(true);
     setError(null);
-    const { error: reportError } = await reportPost(postId, reason, details);
+    const { error: reportError } = await reportDrop(dropId, reason, details);
     setLoading(false);
     if (reportError) {
       setError(reportError);
@@ -46,7 +46,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose, postI
     return (
       <Modal isOpen={isOpen} onClose={handleClose} title="Thanks for letting us know" size="sm">
         <p className="text-sm text-gray-600">
-          We've received your report and will review this post.
+          We've received your report and will review this drop.
         </p>
         <Button variant="primary" fullWidth size="md" onClick={handleClose} className="mt-4">
           Done
@@ -56,7 +56,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose, postI
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} title="Report post" size="sm">
+    <Modal isOpen={isOpen} onClose={handleClose} title="Report this drop" size="sm">
       <div className="flex flex-col gap-4">
         <div role="radiogroup" aria-label="Reason for reporting" className="flex flex-col gap-1.5">
           {REASONS.map(r => (
@@ -83,7 +83,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose, postI
             onChange={e => setDetails(e.target.value)}
             rows={3}
             maxLength={500}
-            placeholder="What's going on with this post?"
+            placeholder="What's going on with this drop?"
           />
         )}
 

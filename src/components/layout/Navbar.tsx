@@ -130,7 +130,7 @@ export const Navbar: React.FC = () => {
                     onClick={() => { navigate('/saved'); setDropdownOpen(false); }}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   >
-                    <Bookmark size={15} aria-hidden="true" /> Saved posts
+                    <Bookmark size={15} aria-hidden="true" /> Saved memories
                   </button>
                   <div className="border-t border-gray-100 my-1" />
                   <button

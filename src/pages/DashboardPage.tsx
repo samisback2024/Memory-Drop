@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AlertTriangle, User, Rss } from 'lucide-react';
+import { AlertTriangle, User, Sparkles } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { Avatar } from '../components/ui/Avatar';
 import { Button } from '../components/ui/Button';
@@ -44,14 +44,14 @@ export const DashboardPage: React.FC = () => {
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col items-center text-center gap-3">
         <div className="w-12 h-12 rounded-2xl bg-purple-50 flex items-center justify-center">
-          <Rss size={22} className="text-purple-600" aria-hidden="true" />
+          <Sparkles size={22} className="text-purple-600" aria-hidden="true" />
         </div>
         <div>
-          <p className="text-sm font-semibold text-gray-900">Your feed is ready.</p>
-          <p className="text-sm text-gray-500 mt-1">Capsules and messaging are coming in a later phase.</p>
+          <p className="text-sm font-semibold text-gray-900">Ready to capture a moment?</p>
+          <p className="text-sm text-gray-500 mt-1">Drop a memory now, or seal one for your future self to unlock.</p>
         </div>
         <Button variant="gradient" size="md" onClick={() => navigate('/feed')}>
-          Go to feed
+          Go to Memory Drop
         </Button>
       </div>
     </div>

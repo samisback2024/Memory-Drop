@@ -3,10 +3,10 @@ import { Link } from 'react-router-dom';
 import { Trash2 } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { formatRelativeTime } from '../../utils/date';
-import type { PostComment } from '../../types/feed';
+import type { DropComment } from '../../types/feed';
 
 interface CommentItemProps {
-  comment: PostComment;
+  comment: DropComment;
   isOwn: boolean;
   onDelete: () => Promise<void> | void;
 }

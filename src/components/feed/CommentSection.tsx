@@ -1,39 +1,41 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { useFeed } from '../../hooks/useFeed';
+import { useDrops } from '../../hooks/useDrops';
 import { Avatar } from '../ui/Avatar';
 import { Skeleton } from '../ui/Skeleton';
 import { CommentItem } from './CommentItem';
-import type { PostComment } from '../../types/feed';
+import type { DropComment } from '../../types/feed';
 
 interface CommentSectionProps {
-  postId: string;
+  dropId: string;
   onCountChange?: (count: number) => void;
 }
 
-export const CommentSection: React.FC<CommentSectionProps> = ({ postId, onCountChange }) => {
+// Only ever mounted once a drop has unlocked — see DropCard, which doesn't
+// render this at all while a drop is still sealed.
+export const CommentSection: React.FC<CommentSectionProps> = ({ dropId, onCountChange }) => {
   const { user, profile } = useAuth();
-  const { getComments, addComment, deleteComment } = useFeed();
-  const [comments, setComments] = useState<PostComment[]>([]);
+  const { getDropComments, addComment, deleteComment } = useDrops();
+  const [comments, setComments] = useState<DropComment[]>([]);
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState('');
   const [posting, setPosting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    getComments(postId).then(data => {
+    getDropComments(dropId).then(data => {
       if (cancelled) return;
       setComments(data);
       setLoading(false);
     });
     return () => { cancelled = true; };
-  }, [postId, getComments]);
+  }, [dropId, getDropComments]);
 
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!text.trim() || posting) return;
     setPosting(true);
-    const { error, comment } = await addComment(postId, text);
+    const { error, comment } = await addComment(dropId, text);
     setPosting(false);
     if (!error && comment) {
       setComments(prev => {
@@ -68,7 +70,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ postId, onCountC
           ))}
         </div>
       ) : comments.length === 0 ? (
-        <p className="text-sm text-gray-400 py-1.5">No comments yet. Be the first to say something.</p>
+        <p className="text-sm text-gray-400 py-1.5">No comments yet.</p>
       ) : (
         <div className="flex flex-col divide-y divide-gray-50 max-h-72 overflow-y-auto">
           {comments.map(c => (

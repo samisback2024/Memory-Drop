@@ -135,6 +135,15 @@ export const validateVideoFile = (file: File): string | null => {
   return null;
 };
 
+export const MAX_POST_AUDIO_BYTES = 20 * 1024 * 1024;
+const ALLOWED_AUDIO_TYPES = ['audio/mpeg', 'audio/mp4', 'audio/wav', 'audio/webm'];
+
+export const validateAudioFile = (file: File): string | null => {
+  if (!ALLOWED_AUDIO_TYPES.includes(file.type)) return 'Use an MP3, M4A, WAV, or WebM audio file.';
+  if (file.size > MAX_POST_AUDIO_BYTES) return `Audio must be ${Math.round(MAX_POST_AUDIO_BYTES / (1024 * 1024))}MB or smaller.`;
+  return null;
+};
+
 const USERNAME_COOLDOWN_DAYS = 30;
 
 // Mirrors enforce_username_cooldown() in supabase/phase2b_polish.sql — the

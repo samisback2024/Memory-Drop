@@ -2,28 +2,28 @@ import React, { useState } from 'react';
 import { Link2, Check, Share2, Users } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
-import { useFeed } from '../../hooks/useFeed';
+import { useDrops } from '../../hooks/useDrops';
 
 interface ShareModalProps {
   isOpen: boolean;
   onClose: () => void;
-  postId: string;
+  dropId: string;
   onShared?: () => void;
 }
 
-export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, postId, onShared }) => {
-  const { incrementShareCount } = useFeed();
+export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, dropId, onShared }) => {
+  const { incrementShareCount } = useDrops();
   const [copied, setCopied] = useState(false);
-  const postUrl = `${window.location.origin}/post/${postId}`;
+  const dropUrl = `${window.location.origin}/drop/${dropId}`;
   const canNativeShare = typeof navigator !== 'undefined' && Boolean(navigator.share);
 
   const recordShare = async () => {
-    await incrementShareCount(postId);
+    await incrementShareCount(dropId);
     onShared?.();
   };
 
   const handleCopyLink = async () => {
-    await navigator.clipboard.writeText(postUrl);
+    await navigator.clipboard.writeText(dropUrl);
     setCopied(true);
     await recordShare();
     setTimeout(() => setCopied(false), 2000);
@@ -31,7 +31,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, postId,
 
   const handleNativeShare = async () => {
     try {
-      await navigator.share({ url: postUrl });
+      await navigator.share({ url: dropUrl });
       await recordShare();
     } catch {
       // User cancelled the native share sheet — not an error.
@@ -39,7 +39,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, postId,
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Share post" size="sm">
+    <Modal isOpen={isOpen} onClose={onClose} title="Share this memory" size="sm">
       <div className="flex flex-col gap-2">
         <button
           type="button"

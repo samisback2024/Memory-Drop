@@ -1,19 +1,19 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Loader2, Image as ImageIcon } from 'lucide-react';
+import { Loader2, Sparkles } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
-import { useFeed } from '../hooks/useFeed';
+import { useDrops } from '../hooks/useDrops';
 import { usePullToRefresh } from '../hooks/usePullToRefresh';
-import { FeedTabs } from '../components/feed/FeedTabs';
+import { DropTabs } from '../components/feed/DropTabs';
 import { Feed } from '../components/feed/Feed';
-import { PostComposer } from '../components/feed/PostComposer';
+import { DropComposer } from '../components/feed/DropComposer';
 import { Avatar } from '../components/ui/Avatar';
-import type { FeedPost, FeedTab } from '../types/feed';
+import type { Drop, DropTab } from '../types/feed';
 
 const PAGE_SIZE = 10;
-const ALL_TABS: FeedTab[] = ['following', 'discover', 'trending', 'recent'];
+const ALL_TABS: DropTab[] = ['my_drops', 'unlocking_soon', 'today_unlocks', 'public_drops'];
 
 interface TabState {
-  posts: FeedPost[];
+  drops: Drop[];
   offset: number;
   hasMore: boolean;
   loading: boolean;
@@ -21,26 +21,32 @@ interface TabState {
   loaded: boolean;
 }
 
-const emptyTabState = (): TabState => ({ posts: [], offset: 0, hasMore: true, loading: true, loadingMore: false, loaded: false });
+const emptyTabState = (): TabState => ({ drops: [], offset: 0, hasMore: true, loading: true, loadingMore: false, loaded: false });
 
+// The feed as Memory Drop's actual identity, not a generic social wall:
+// four tabs built around the lifecycle of a memory (dropped, sealed,
+// opening today, out in the world) rather than "following/discover/
+// trending." See DropCard for how a locked drop renders — no content is
+// ever sent to the client early, so there's nothing to blur, just a
+// sealed capsule and a countdown.
 export const FeedPage: React.FC = () => {
   const { profile } = useAuth();
-  const { getFeed } = useFeed();
-  const [activeTab, setActiveTab] = useState<FeedTab>('following');
-  const [tabStates, setTabStates] = useState<Record<FeedTab, TabState>>({
-    following: emptyTabState(), discover: emptyTabState(), trending: emptyTabState(), recent: emptyTabState(),
+  const { getDropsFeed } = useDrops();
+  const [activeTab, setActiveTab] = useState<DropTab>('my_drops');
+  const [tabStates, setTabStates] = useState<Record<DropTab, TabState>>({
+    my_drops: emptyTabState(), unlocking_soon: emptyTabState(), today_unlocks: emptyTabState(), public_drops: emptyTabState(),
   });
   const [composerOpen, setComposerOpen] = useState(false);
-  const scrollPositions = useRef<Record<FeedTab, number>>({ following: 0, discover: 0, trending: 0, recent: 0 });
+  const scrollPositions = useRef<Record<DropTab, number>>({ my_drops: 0, unlocking_soon: 0, today_unlocks: 0, public_drops: 0 });
 
-  const loadTab = useCallback(async (tab: FeedTab) => {
+  const loadTab = useCallback(async (tab: DropTab) => {
     setTabStates(prev => ({ ...prev, [tab]: { ...prev[tab], loading: true } }));
-    const data = await getFeed(tab, PAGE_SIZE, 0);
+    const data = await getDropsFeed(tab, PAGE_SIZE, 0);
     setTabStates(prev => ({
       ...prev,
-      [tab]: { posts: data, offset: data.length, hasMore: data.length === PAGE_SIZE, loading: false, loadingMore: false, loaded: true },
+      [tab]: { drops: data, offset: data.length, hasMore: data.length === PAGE_SIZE, loading: false, loadingMore: false, loaded: true },
     }));
-  }, [getFeed]);
+  }, [getDropsFeed]);
 
   useEffect(() => {
     if (!tabStates[activeTab].loaded) loadTab(activeTab);
@@ -51,7 +57,7 @@ export const FeedPage: React.FC = () => {
   }, [activeTab]);
 
   // Restores the previously-visited tab's scroll offset after its (already
-  // cached) posts have painted, rather than resetting to the top every
+  // cached) drops have painted, rather than resetting to the top every
   // time you switch tabs.
   useEffect(() => {
     const y = scrollPositions.current[activeTab];
@@ -59,7 +65,7 @@ export const FeedPage: React.FC = () => {
     return () => cancelAnimationFrame(frame);
   }, [activeTab]);
 
-  const handleTabChange = (tab: FeedTab) => {
+  const handleTabChange = (tab: DropTab) => {
     if (tab === activeTab) return;
     scrollPositions.current[activeTab] = window.scrollY;
     setActiveTab(tab);
@@ -69,38 +75,38 @@ export const FeedPage: React.FC = () => {
     const state = tabStates[activeTab];
     if (state.loadingMore || !state.hasMore || state.loading) return;
     setTabStates(prev => ({ ...prev, [activeTab]: { ...prev[activeTab], loadingMore: true } }));
-    const data = await getFeed(activeTab, PAGE_SIZE, state.offset);
+    const data = await getDropsFeed(activeTab, PAGE_SIZE, state.offset);
     setTabStates(prev => ({
       ...prev,
       [activeTab]: {
         ...prev[activeTab],
-        posts: [...prev[activeTab].posts, ...data],
+        drops: [...prev[activeTab].drops, ...data],
         offset: prev[activeTab].offset + data.length,
         hasMore: data.length === PAGE_SIZE,
         loadingMore: false,
       },
     }));
-  }, [activeTab, tabStates, getFeed]);
+  }, [activeTab, tabStates, getDropsFeed]);
 
   const refresh = useCallback(() => loadTab(activeTab), [activeTab, loadTab]);
   const { pulling, distance, refreshing } = usePullToRefresh(refresh, true);
 
-  const handlePosted = (post: FeedPost) => {
+  const handleDropped = (drop: Drop) => {
     setTabStates(prev => {
       const next = { ...prev };
       for (const tab of ALL_TABS) {
         next[tab] = tab === activeTab
-          ? { ...prev[tab], posts: [post, ...prev[tab].posts] }
+          ? { ...prev[tab], drops: [drop, ...prev[tab].drops] }
           : { ...prev[tab], loaded: false }; // refetch next time that tab is opened
       }
       return next;
     });
   };
 
-  const removeFromAllTabs = (postId: string) => {
+  const removeFromAllTabs = (dropId: string) => {
     setTabStates(prev => {
       const next = { ...prev };
-      for (const tab of ALL_TABS) next[tab] = { ...prev[tab], posts: prev[tab].posts.filter(p => p.id !== postId) };
+      for (const tab of ALL_TABS) next[tab] = { ...prev[tab], drops: prev[tab].drops.filter(d => d.id !== dropId) };
       return next;
     });
   };
@@ -109,7 +115,7 @@ export const FeedPage: React.FC = () => {
   const displayName = profile?.display_name || profile?.username || 'there';
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 -mx-4 px-4 -mt-6 pt-6 pb-6 bg-gradient-to-b from-purple-50/60 via-transparent to-transparent min-h-[calc(100vh-4rem)]">
       {(pulling || refreshing) && (
         <div className="flex justify-center items-center overflow-hidden transition-[height]" style={{ height: refreshing ? 36 : distance }}>
           <Loader2
@@ -124,17 +130,20 @@ export const FeedPage: React.FC = () => {
       <button
         type="button"
         onClick={() => setComposerOpen(true)}
-        className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-3 text-left hover:border-gray-200 transition-colors"
+        className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm p-4 flex items-center gap-3 text-left hover:shadow-md transition-shadow"
       >
         <Avatar src={profile?.profile_photo_url} name={displayName} size="md" />
-        <span className="flex-1 text-sm text-gray-400">What's on your mind, {displayName.split(' ')[0]}?</span>
-        <ImageIcon size={18} className="text-purple-500 flex-shrink-0" aria-hidden="true" />
+        <span className="flex-1 text-sm text-gray-400">What moment do you want to save, {displayName.split(' ')[0]}?</span>
+        <span className="flex items-center gap-1.5 text-sm font-medium text-purple-600 flex-shrink-0">
+          <Sparkles size={15} aria-hidden="true" />
+          Create Drop
+        </span>
       </button>
 
-      <FeedTabs active={activeTab} onChange={handleTabChange} />
+      <DropTabs active={activeTab} onChange={handleTabChange} />
 
       <Feed
-        posts={current.posts}
+        drops={current.drops}
         loading={current.loading}
         hasMore={current.hasMore}
         loadingMore={current.loadingMore}
@@ -144,7 +153,7 @@ export const FeedPage: React.FC = () => {
         emptyVariant={activeTab}
       />
 
-      <PostComposer isOpen={composerOpen} onClose={() => setComposerOpen(false)} onPosted={handlePosted} />
+      <DropComposer isOpen={composerOpen} onClose={() => setComposerOpen(false)} onDropped={handleDropped} />
     </div>
   );
 };

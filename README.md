@@ -56,15 +56,28 @@ Memory Drop is a time-capsule social app. Write a message, attach photos or audi
 - **Real social counts** — Followers/Following in the profile stats row are live now, not placeholders
 - Follow button states: Follow, Requested, Following (→ Unfollow on hover), Follow Back, Blocked (→ Unblock), Unavailable (they've blocked you)
 
-### Feed (Phase 4 — complete)
-- **Four tabs** at `/feed` — Following (chronological, your network), Discover (public accounts only), Trending (most-liked among what you can see), Recent (newest among what you can see). Switching tabs is instant on a revisit (each tab's posts + scroll position are cached) and infinite-scrolls independently.
-- **Post types** — text-only, up to 10 photos (adaptive grid, lazy-loaded), or a single video (lazy-loaded — the `<video>` source isn't set until it scrolls near the viewport). Photos and video are schema-independent columns, ready for true mixed-media posts in a later phase without a migration.
-- **Composer** — caption (2,200 chars, counter, curated emoji picker), photo/video upload with preview and per-item remove, a localStorage caption draft that survives closing without posting, client-side compression on every image before upload.
-- **Likes, comments, saves** — optimistic UI (flips instantly, reverts on failure), duplicate-proof via DB unique constraints, denormalized counters maintained by triggers so Trending's "most likes" sort never needs a join aggregate.
-- **Share** — copy link (to a real permalink at `/post/:postId`), native share sheet where supported, "Share inside Memory Drop" shown as a disabled coming-soon option; share count is a plain counter, not a per-user record.
+### Feed — Memory Drops (Phase 4 — complete)
+Reshaped around Memory Drop's actual identity — "capture now, unlock later" — rather than a generic social feed. Nothing here copies Instagram/Facebook/Snapchat/TikTok patterns on purpose.
+
+- **Every drop has an unlock date.** Leave it at "now" and it behaves like an ordinary share; push it into the future and it's a real time capsule. **Locked content is never sent to the client** — not blurred, *absent* — so there's no way to peek at your own sealed memory early by inspecting the network response. Even the drop's own author has to wait.
+- **Four tabs** at `/feed`, each a genuinely different slice, not just a different sort order:
+  - **My Drops** — everything you've dropped, locked or not
+  - **Unlocking Soon** — still-sealed drops from you or people you follow, soonest first
+  - **Today's Unlocks** — anything visible to you opening today
+  - **Public Drops** — already-unlocked public memories, most recently opened first
+  
+  Switching tabs is instant on a revisit (each tab's drops + scroll position are cached) and infinite-scrolls independently.
+- **Memory types** — written, photo (up to 10, adaptive grid), video, or voice (audio) — all lazy-loaded.
+- **Mood** — one of 8 curated moods (joyful, grateful, nostalgic, hopeful, reflective, peaceful, bittersweet, excited), shown as an emoji on the card.
+- **Visibility** — public or private, per drop, layered *inside* the account-level privacy that already existed (a private account's "public" drops are still only visible to its accepted followers).
+- **Composer ("Create Drop")** — rotates through three prompts ("What moment do you want to save?" / "Capture this moment for later…" / "Write something your future self will unlock…"), unlock-date picker, mood picker, visibility toggle, curated emoji picker, a localStorage caption draft that survives closing without dropping.
+- **Actions, deliberately not an icon-and-counter row**: Save and Reflect always available; Comment and Share only appear once a drop has actually unlocked. No like button, no like count — a "cherish" metric didn't fit a memory-first design, so it isn't rendered (the underlying `likes` table/RLS/triggers are still in the database, just unused by the UI — see Known limitations).
+- **Reflect** — a private, unlock-independent note-to-self on any drop (yours or someone else's), never shown to anyone but its author and never counted as a comment. Reuses the `comments` table with an `is_reflection` flag rather than a new table.
+- **Comments** only unlock once the drop does (enforced by RLS, not just hidden in the UI).
+- **Share** — copy link (to a real permalink at `/drop/:dropId`), native share sheet where supported, "Share inside Memory Drop" shown as a disabled coming-soon option.
 - **Report** (6 reasons) and **Hide** (feed-local, current user only) — both write-only from the client; nobody but the reporter can see their own report.
-- **Saved posts** page at `/saved`.
-- Skeleton loaders, empty states per tab, pull-to-refresh (touch), and an infinite-scroll sentinel that fires ~400px before the actual bottom.
+- **Saved memories** page at `/saved`.
+- Glass cards on a soft gradient wash, a timeline rail connecting cards down the left edge, gradient countdown pills, a locked-drop "sealed capsule" placeholder (not a blurred photo — there's no photo to blur), and a brief reveal transition when a countdown hits zero while the card is on screen.
 
 ---
 
@@ -94,6 +107,7 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
    - `supabase/phase2b_profile_polish.sql` — website/location/pronouns/cover photo columns, username change cooldown, `covers` storage bucket
    - `supabase/phase3_social_graph.sql` — follows/blocks/mutes/restrictions tables, RLS, and the social RPCs (search, suggestions, mutual friends, followers/following, requests)
    - `supabase/phase4_feed.sql` — posts/post_images/likes/comments/saved_posts/hidden_posts/reports tables, RLS, counter triggers, feed RPCs, `post-media` storage bucket
+   - `supabase/phase4b_time_capsule_redesign.sql` — time-capsule redesign: `unlock_date`/`visibility`/`mood`/`audio_url` columns on `posts`, `is_reflection` column on `comments`, updated comment RLS (reflections private, real comments unlock-gated), and RPCs `get_drops_feed`/`get_drop`/`get_drop_comments`/`get_saved_drops`/`get_my_reflections` (replacing the old `get_feed`/`get_post`/`get_comments`/`get_saved_posts`)
 
 5. Restart the dev server.
 
@@ -141,8 +155,8 @@ src/
 │   ├── FollowersPage.tsx        # at /followers and /u/:username/followers
 │   ├── FollowingPage.tsx        # at /following and /u/:username/following
 │   ├── FeedPage.tsx             # at /feed — primary landing after login
-│   ├── SavedPostsPage.tsx       # at /saved
-│   ├── PostPage.tsx             # single-post permalink, at /post/:postId
+│   ├── SavedDropsPage.tsx       # at /saved
+│   ├── DropPage.tsx             # single-drop permalink, at /drop/:dropId
 │   └── TermsPage.tsx, PrivacyPage.tsx
 ├── components/
 │   ├── auth/         # AuthLayout, GoogleButton, RouteGuards
@@ -155,17 +169,18 @@ src/
 │   │                 #   SocialStats, EmptySocialState, UserSearchBar,
 │   │                 #   UserSearchResults, FollowersList, FollowingList,
 │   │                 #   SuggestedFriends
-│   ├── feed/         # Feed, FeedTabs, PostCard, PostComposer, PostActions,
-│   │                 #   LikeButton, SaveButton, CommentSection, CommentItem,
-│   │                 #   ImageGrid, VideoPlayer, ShareModal, ReportModal,
-│   │                 #   EmojiPicker, EmptyFeed, FeedSkeleton, InfiniteLoader
+│   ├── feed/         # Feed, DropTabs, DropCard, DropComposer, DropActions,
+│   │                 #   SaveButton, CommentSection, CommentItem, ReflectionModal,
+│   │                 #   MoodPicker, CountdownPill, LockedDropPlaceholder,
+│   │                 #   ImageGrid, VideoPlayer, AudioPlayer, ShareModal, ReportModal,
+│   │                 #   EmojiPicker, EmptyDropState, FeedSkeleton, InfiniteLoader
 │   ├── legal/        # LegalLayout
 │   └── ui/           # Button, Input, Avatar, Card, Modal, Checkbox,
 │                      #   Toggle, Badge, EmptyState, ErrorState, Skeleton
 ├── hooks/
 │   ├── useAuth.tsx               # full auth + profile context
 │   ├── useSocial.ts              # follow/block/mute/restrict, search, lists
-│   ├── useFeed.ts                # posts, likes, comments, saves, hide, report
+│   ├── useDrops.ts                # drops, comments, reflections, saves, hide, report
 │   ├── useUsernameAvailability.ts
 │   ├── useImageUpload.ts         # shared drag-drop/crop/upload pipeline
 │   ├── useInView.ts              # IntersectionObserver (video lazy-load, infinite scroll)
@@ -179,7 +194,7 @@ src/
 │   ├── index.ts       # Profile (mirrors the real table)
 │   ├── auth.ts
 │   ├── social.ts       # Relationship, SocialUser, SocialCounts, ...
-│   └── feed.ts          # FeedPost, PostComment, FeedTab, ReportReason
+│   └── feed.ts          # Drop, DropComment, Reflection, DropTab, MemoryType, Mood, ReportReason
 └── utils/
     ├── date.ts
     └── storage.ts      # upload/delete + storage-path parsing (for cleanup on replace)
@@ -215,16 +230,16 @@ All three are created and policed by their respective migration files — nothin
 | `user_mutes` | muter_id → muted_id | No visible effect yet — groundwork for a future feed to filter on |
 | `user_restrictions` | restrictor_id → restricted_id | Same — groundwork, no visible effect yet |
 
-## Database tables (Phase 4)
+## Database tables (Phase 4 + Phase 4b redesign)
 
 | Table | Purpose | Key rules |
 |---|---|---|
-| `posts` | One row per post — caption, `post_type`, `video_url`, and denormalized like/comment/share/save counts | `video_url` only allowed when `post_type = 'video'`; counts are trigger-maintained, never written by the client |
-| `post_images` | Up to 10 per post, ordered by `position` | Unique `(post_id, position)`; only the post's owner can insert/delete |
-| `likes` | One row per (post, user) | Unique `(post_id, user_id)` — the DB, not the client, is what actually prevents a double-like |
-| `comments` | Flat for now; `parent_comment_id` exists but is always null from Phase 4's UI | Content capped at 1,000 chars; only the author can delete |
+| `posts` | One row per drop — caption, `post_type` (photo/video/audio/text), `video_url`/`audio_url`, `unlock_date`, `visibility` (public/private), `mood`, and denormalized like/comment/share/save counts | `video_url`/`audio_url` only allowed when `post_type` matches; `unlock_date` defaults to `now()`; counts are trigger-maintained, never written by the client |
+| `post_images` | Up to 10 per drop, ordered by `position` | Unique `(post_id, position)`; only the drop's owner can insert/delete |
+| `likes` | One row per (post, user) | Still exists (unique `(post_id, user_id)`) but unused by the redesigned UI — see Known limitations |
+| `comments` | Real comments *and* private reflections, distinguished by `is_reflection` | Content capped at 1,000 chars; real comments require the drop to already be unlocked (RLS-enforced, not just hidden client-side); reflections are exempt from that check but only ever visible to their own author; only the author can delete |
 | `saved_posts` | One row per (post, user) | Unique `(post_id, user_id)` |
-| `hidden_posts` | One row per (post, user) | Feed-local — only ever filters the hider's own `get_feed` results |
+| `hidden_posts` | One row per (post, user) | Feed-local — only ever filters the hider's own `get_drops_feed` results |
 | `reports` | reporter_id, post_id, reason, optional details | Unique `(post_id, reporter_id)` — one report per user per post; no SELECT policy at all, write-only from the client |
 
 ## Security notes
@@ -237,9 +252,12 @@ All three are created and policed by their respective migration files — nothin
 - **follows/user_blocks/user_mutes/user_restrictions RLS** only ever exposes relationships the caller is a party to (as either side of the pair). Every screen that needs to show *someone else's* profile alongside relationship state — search, suggestions, followers/following lists, mutual friends — goes through a `SECURITY DEFINER` RPC that applies the real privacy rule itself, same pattern as `get_profile_by_username`.
 - **Blocked users are invisible** to each other everywhere: search, suggestions, follower/following lists, and the profile page itself. A user is never told they've been blocked, muted, or restricted — same convention as Instagram/Twitter.
 - **Follow status can't be tampered with** — a client can only ever insert a bare `(follower_id, following_id)` pair; a trigger decides pending vs. accepted from the target's actual privacy setting, and a second trigger rejects any status transition except pending → accepted.
-- **Post visibility follows the same rule as profiles**: your own posts, anyone public, or a private account you're an accepted follower of. `get_feed`/`get_post`/`get_saved_posts`/`get_comments` are `SECURITY DEFINER` (same reason as `get_profile_by_username` — they join `profiles` for author info) and each re-implements that exact predicate via two shared helper functions (`can_view_author_posts`, `is_blocked_either_way`), since being `SECURITY DEFINER` means they bypass `posts`' own RLS too, not just `profiles`'. The table-level RLS on `posts` remains as defense in depth for any future direct-table access path.
-- **Counter triggers are `SECURITY DEFINER`** — liking, commenting on, or saving someone else's post needs to increment a counter on a row you don't own, which `posts`' own "owners only" UPDATE policy would otherwise block.
-- **Hiding a post is invisible and personal** — `hidden_posts` only ever filters `get_feed` for the person who hid it; there's no way to discover a post was hidden from someone else's feed.
+- **Drop visibility follows the same rule as profiles**: your own drops, anyone public, or a private account you're an accepted follower of, further layered by each drop's own `visibility` field. `get_drops_feed`/`get_drop`/`get_saved_drops`/`get_drop_comments` are `SECURITY DEFINER` (same reason as `get_profile_by_username` — they join `profiles` for author info) and each re-implements that exact predicate via two shared helper functions (`can_view_author_posts`, `is_blocked_either_way`), since being `SECURITY DEFINER` means they bypass `posts`' own RLS too, not just `profiles`'. The table-level RLS on `posts` remains as defense in depth for any future direct-table access path.
+- **Locked content is nulled server-side, for everyone, including the owner.** Every read path (`get_drops_feed`, `get_drop`, `get_saved_drops`) checks `unlock_date <= now()` and returns `null` for `caption`/`images`/`video_url`/`audio_url` when it isn't — this isn't a UI blur the client chooses to apply, it's data that never leaves the database. There's no authenticated request that returns a sealed drop's real content early, including one made by the drop's own author.
+- **Comments are unlock-gated by RLS, not just hidden in the UI** — the INSERT policy on `comments` rejects a real (non-reflection) comment on a still-locked drop outright; a direct API call with the right `post_id` still gets rejected.
+- **Reflections are private by construction** — the SELECT policy on `comments` only returns rows where `is_reflection = true` to their own author; nobody else's reflections are ever returned to you, on any drop, including your own.
+- **Counter triggers are `SECURITY DEFINER`** — commenting on or saving someone else's drop needs to increment a counter on a row you don't own, which `posts`' own "owners only" UPDATE policy would otherwise block; the trigger also skips reflections so they never inflate the visible comment count.
+- **Hiding a drop is invisible and personal** — `hidden_posts` only ever filters `get_drops_feed` for the person who hid it; there's no way to discover a drop was hidden from someone else's feed.
 - **Reports are a one-way mailbox** — no SELECT policy exists on `reports` at all, so nobody (including the reporter) can read reports back through the app; reviewing them is an admin-tool concern for a later phase.
 
 ---
@@ -259,30 +277,37 @@ All three are created and policed by their respective migration files — nothin
 - **Private profile visibility** — as a non-follower, confirm bio/location/website are hidden and followers/following show "This account is private"; as an accepted follower, confirm they're visible.
 - **RLS with two browser sessions** — try to accept a request that wasn't sent to you, or delete someone else's follow row, directly via the Supabase table editor as a non-service-role user — should be rejected.
 
-## Testing Phase 4
+## Testing Phase 4 (Memory Drops)
 
-- **Create a post** — text-only, photos (try 1, try 10, try attempting an 11th), and video; confirm the composer won't let you add both media types to the same post.
-- **Delete own post** — from the "..." menu on the card; confirm the storage files (check the `post-media` bucket) get cleaned up, not just the DB row.
-- **Like / unlike** — click fast a few times in a row, confirm the count never goes negative and settles on the correct value after the requests land.
-- **Comment / delete comment** — add one, confirm the count updates live; confirm you can't delete someone else's comment (no delete button shows, and a direct API call would be rejected by RLS).
-- **Save / unsave** — confirm it shows up at `/saved`, and disappears from there immediately on unsave.
-- **Hide** — confirm the post disappears from your feed but is still visible to other users.
-- **Report** — submit each of the 6 reasons once; try reporting the same post twice as the same user (should be rejected — unique constraint).
-- **Tabs** — Following shows only people you follow (+ you); Discover excludes private accounts; Trending sorts by likes; Recent is newest-first. Switch tabs and back — should not re-fetch or lose scroll position.
-- **Infinite scroll** — with more than 10 posts visible to you, scroll to the bottom and confirm the next page loads before you hit the literal end.
+- **Create a drop** — try each memory type (text, photo — 1, 10, and an attempted 11th, video, audio); confirm the composer won't let you attach two media types to the same drop.
+- **Unlock date in the future** — drop it, then confirm: the card shows the sealed placeholder with a live countdown; caption/media are genuinely absent from the network response (check DevTools, not just the rendered DOM); comment/share are replaced with the unlock-gated message; this holds true even when you view your own drop as its author.
+- **Unlock date in the past (or left as "now")** — confirm the drop renders immediately with full content, comments, and share, same as a normal post would.
+- **Countdown hitting zero live** — leave a card with a near-future unlock date open and wait for it to cross zero; confirm it plays the reveal transition and shows real content without a manual refresh.
+- **Delete own drop** — from the "..." menu on the card; confirm the storage files (check the `post-media` bucket, including audio) get cleaned up, not just the DB row.
+- **Save / unsave** — confirm it shows up at `/saved`, and disappears from there immediately on unsave; confirm a still-locked saved drop still shows sealed there.
+- **Reflect** — add a reflection on your own drop and on someone else's; confirm it never appears as a comment or affects the comment count; confirm nobody else (including the drop's author, for someone else's reflection on it) can see it.
+- **Comment** — confirm the comment box only appears once a drop is unlocked; try posting a comment directly against a still-locked drop's `post_id` via the Supabase API — should be rejected by RLS.
+- **Hide** — confirm the drop disappears from your feed but is still visible to other users.
+- **Report** — submit each of the 6 reasons once; try reporting the same drop twice as the same user (should be rejected — unique constraint).
+- **Tabs** — My Drops shows only your own (locked and unlocked); Unlocking Soon shows still-sealed drops from you and people you follow, soonest first; Today's Unlocks shows anything unlocking today that you can see; Public Drops shows already-unlocked public drops. Switch tabs and back — should not re-fetch or lose scroll position.
+- **Visibility** — drop something as private on a public account and confirm a non-follower can't see it in Public Drops even after it unlocks; confirm an accepted follower can.
+- **Infinite scroll** — with more than 10 drops visible to you in a tab, scroll to the bottom and confirm the next page loads before you hit the literal end.
 - **Pull to refresh** — on a touch device (or Chrome DevTools device emulation), pull down at the top of the feed.
-- **Multiple users / RLS** — as User B, confirm you can't see User A's private-account posts unless following; confirm liking/commenting/saving on a post you can't see is rejected by RLS even if you have the post's UUID.
-- **Share** — copy link, open it in an incognito tab while logged out — should redirect to `/login` (see Known limitations), then load correctly once signed in.
+- **Multiple users / RLS** — as User B, confirm you can't see User A's private-account drops unless following; confirm saving/commenting/reflecting on a drop you can't see is rejected by RLS even if you have its UUID.
+- **Share** — copy link (only shown once unlocked), open it in an incognito tab while logged out — should redirect to `/login` (see Known limitations), then load correctly once signed in.
 
 ## Known limitations
 
-- Mute and Restrict have no visible effect anywhere yet — Phase 4's feed doesn't filter on them. The relationships are stored and toggle correctly; wiring `get_feed` to exclude muted/restricted authors is a natural next step, deliberately not done here since it wasn't part of this phase's explicit scope.
-- **Shared post links require login** — `get_post` is only granted to `authenticated`, not `anon`, so `/post/:postId` redirects to `/login` for logged-out visitors even when the post itself is public. Real link-preview/logged-out sharing would need a separate, more narrowly-scoped anonymous-read path.
+- **Likes are gone from the UI on purpose but not from the schema.** The `likes` table, its RLS, and its counter trigger are all still in the database from Phase 4 — a memory-first design just doesn't render a like button or count. Nothing currently writes to `likes`; it's inert rather than deleted, in case a lighter-weight "cherish" gesture returns in a later phase.
+- Mute and Restrict have no visible effect anywhere yet — the feed doesn't filter on them. The relationships are stored and toggle correctly; wiring `get_drops_feed` to exclude muted/restricted authors is a natural next step, deliberately not done here since it wasn't part of this phase's explicit scope.
+- **Shared drop links require login** — `get_drop` is only granted to `authenticated`, not `anon`, so `/drop/:dropId` redirects to `/login` for logged-out visitors even when the drop itself is public and unlocked. Real link-preview/logged-out sharing would need a separate, more narrowly-scoped anonymous-read path.
+- **No notification when a drop unlocks.** The countdown/reveal only plays if you happen to have the card open in a browser tab at the exact moment; there's no push/email/in-app notification telling you "your memory is ready." That's natural territory for the Phase 8 notifications work, or an earlier pass if it turns out to matter sooner.
+- **`unlock_date` is compared against the database server's clock**, not the viewer's device clock — correct and tamper-proof, but means a client with a badly skewed clock could see a countdown that doesn't hit zero exactly when their own UI expected.
 - Suggested friends only looks one hop out (people followed by people you follow). No engagement-based ranking — there's no engagement data yet.
-- No real-time updates anywhere — a new like, comment, or follower won't appear for another open tab/user until they reload or navigate. Supabase Realtime would be the natural fit for a later pass across both the feed and the friend system.
-- **Offset-based pagination**, not cursor/keyset — simpler and fine at this scale, but re-paginating after new posts arrive above the current page can occasionally skip or repeat a row. Worth revisiting if the feed needs to scale further.
-- **No feed virtualization** — posts accumulate in the DOM as you scroll rather than windowing them out. Not a problem at normal session lengths; a candidate for `react-window`/`react-virtual` if very long scroll sessions become common.
-- The account dropdown in `Navbar`, the kebab menu in `RelationshipMenu`, and the "..." menu in `PostCard` all implement the same open/outside-click/Escape pattern independently rather than sharing one primitive — noted as a refactor opportunity across three phases now, not done here to avoid touching working, tested code outside this phase's scope.
+- No real-time updates anywhere — a new comment, reflection, or follower won't appear for another open tab/user until they reload or navigate. Supabase Realtime would be the natural fit for a later pass, and would also let a still-open tab see an unlock happen without the local countdown timer doing the work.
+- **Offset-based pagination**, not cursor/keyset — simpler and fine at this scale, but re-paginating after new drops arrive above the current page can occasionally skip or repeat a row. Worth revisiting if the feed needs to scale further.
+- **No feed virtualization** — drops accumulate in the DOM as you scroll rather than windowing them out. Not a problem at normal session lengths; a candidate for `react-window`/`react-virtual` if very long scroll sessions become common.
+- The account dropdown in `Navbar`, the kebab menu in `RelationshipMenu`, and the "..." menu in `DropCard` all implement the same open/outside-click/Escape pattern independently rather than sharing one primitive — noted as a refactor opportunity across several phases now, not done here to avoid touching working, tested code outside this phase's scope.
 
 ---
 
@@ -306,8 +331,8 @@ Environment variables required in Vercel (Project Settings → Environment Varia
 | 1 | Auth (sign-up, sign-in, Google OAuth, password reset, email verify) | ✅ Complete |
 | 2 | Profiles (edit, avatar + cover upload, public `/u/username` page) | ✅ Complete |
 | 3 | Friend system (follow/unfollow, requests, block/mute/restrict, search, suggestions) | ✅ Complete |
-| 4 | Feed (posts, likes, comments, saves, shares, reports, 4 tabs) | ✅ Complete |
-| 5 | Time Capsules (the app's actual namesake feature — create, unlock, countdown) | Planned |
-| 6 | Stories | Planned |
+| 4 | Feed — Memory Drops (time-capsule redesign: unlock dates, mood, visibility, reflections, 4 tabs) | ✅ Complete |
+| 5 | Stories | Planned |
+| 6 | Time Capsules (dedicated capsule creation/management — multi-drop capsules, shared/group capsules, richer unlock rules beyond a single drop's date) | Planned |
 | 7 | Messages (DMs, conversation list) | Planned |
 | 8 | Notifications | Planned |
