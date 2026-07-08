@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Eye, EyeOff, Mail, Lock, Sparkles } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -10,7 +10,7 @@ import { validateEmail } from '../lib/validators';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { signIn, signInWithGoogle, enterDemoMode } = useAuth();
+  const { signIn, signInWithGoogle } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -47,11 +47,6 @@ export const LoginPage: React.FC = () => {
     }
     // On success the browser is redirected away to Google, so no further
     // state update is needed here.
-  };
-
-  const handleDemo = () => {
-    enterDemoMode();
-    navigate('/dashboard');
   };
 
   return (
@@ -126,15 +121,6 @@ export const LoginPage: React.FC = () => {
       </div>
 
       <GoogleButton onClick={handleGoogle} loading={googleLoading} />
-
-      <div className="my-3 text-center">
-        <span className="text-xs text-gray-400">or try it out instantly</span>
-      </div>
-
-      <Button variant="gradient" fullWidth onClick={handleDemo} size="lg" type="button">
-        <Sparkles size={16} />
-        Try Demo Mode
-      </Button>
 
       <p className="text-center text-sm text-gray-500 mt-5">
         Don&apos;t have an account?{' '}

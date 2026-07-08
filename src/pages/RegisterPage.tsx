@@ -98,7 +98,11 @@ export const RegisterPage: React.FC = () => {
       setError(result.error);
       return;
     }
-    navigate(result.needsEmailVerification ? '/verify-email' : '/dashboard');
+    if (result.needsEmailVerification) {
+      navigate('/verify-email', { state: { email } });
+    } else {
+      navigate('/dashboard');
+    }
   };
 
   const handleGoogle = async () => {

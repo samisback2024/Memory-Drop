@@ -1,51 +1,25 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
-import { demoProfiles } from '../lib/demo-data';
 import type { Profile } from '../types';
-import type { ProfileRow, RegisterFormValues, AuthResult } from '../types/auth';
-import { normalizeUsername } from '../lib/validators';
-
-const DEMO_PROFILE_ROW: ProfileRow = {
-  id: 'demo-user-001',
-  username: demoProfiles[0].username,
-  display_name: demoProfiles[0].full_name,
-  avatar_url: demoProfiles[0].avatar_url,
-  date_of_birth: null,
-  is_demo: true,
-  created_at: demoProfiles[0].created_at,
-  updated_at: demoProfiles[0].created_at,
-};
-
-// Phase 2 pages/components (Navbar, ProfileHeader, useCapsules, useFriends, ...)
-// read a richer `Profile` shape (full_name, bio, follower_count, ...) that no
-// longer exists on the real `profiles` table. This adapter fills in sensible
-// defaults for those not-yet-built fields so Phase 2 keeps compiling and
-// rendering unchanged, while the real DB schema matches the Phase 1 spec.
-const toViewProfile = (row: ProfileRow): Profile => ({
-  id: row.id,
-  username: row.username ?? '',
-  full_name: row.display_name ?? '',
-  avatar_url: row.avatar_url,
-  bio: null,
-  is_private: false,
-  capsule_count: 0,
-  follower_count: 0,
-  following_count: 0,
-  streak: 0,
-  badges: [],
-  created_at: row.created_at,
-});
+import type { RegisterFormValues, AuthResult } from '../types/auth';
+import { normalizeUsername, validateAvatarFile } from '../lib/validators';
+import { uploadFile, generateStoragePath } from '../utils/storage';
 
 interface SignUpResult extends AuthResult {
   needsEmailVerification: boolean;
 }
 
+export interface ProfileUpdate {
+  username?: string;
+  displayName?: string;
+  bio?: string;
+  isPrivate?: boolean;
+}
+
 interface AuthContextType {
   user: User | null;
   profile: Profile | null;
-  profileRow: ProfileRow | null;
-  isDemo: boolean;
   loading: boolean;
   emailVerified: boolean;
   needsProfileCompletion: boolean;
@@ -53,13 +27,13 @@ interface AuthContextType {
   signUp: (values: RegisterFormValues) => Promise<SignUpResult>;
   signInWithGoogle: () => Promise<AuthResult>;
   signOut: () => Promise<void>;
-  enterDemoMode: () => void;
-  updateProfile: (updates: Partial<Profile>) => Promise<void>;
+  updateProfile: (updates: ProfileUpdate) => Promise<AuthResult>;
+  uploadAvatar: (file: File) => Promise<AuthResult>;
   completeProfile: (values: { username: string; displayName: string; dateOfBirth: string }) => Promise<AuthResult>;
   checkUsernameAvailable: (username: string) => Promise<boolean>;
   sendPasswordReset: (email: string) => Promise<AuthResult>;
   updatePassword: (newPassword: string) => Promise<AuthResult>;
-  resendVerificationEmail: () => Promise<AuthResult>;
+  resendVerificationEmail: (email?: string) => Promise<AuthResult>;
   refreshUser: () => Promise<void>;
 }
 
@@ -68,8 +42,6 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [profileRow, setProfileRow] = useState<ProfileRow | null>(null);
-  const [isDemo, setIsDemo] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = useCallback(async (userId: string) => {
@@ -78,23 +50,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .select('*')
       .eq('id', userId)
       .single();
-    if (!error && data) {
-      const row = data as ProfileRow;
-      setProfileRow(row);
-      setProfile(toViewProfile(row));
-    }
+    if (!error && data) setProfile(data as Profile);
   }, []);
 
   useEffect(() => {
-    const demoFlag = localStorage.getItem('md_demo');
-    if (demoFlag === 'true') {
-      setIsDemo(true);
-      setProfile(demoProfiles[0]);
-      setProfileRow(DEMO_PROFILE_ROW);
-      setLoading(false);
-      return;
-    }
-
     if (!isSupabaseConfigured()) {
       setLoading(false);
       return;
@@ -112,7 +71,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         fetchProfile(session.user.id);
       } else {
         setProfile(null);
-        setProfileRow(null);
       }
     });
 
@@ -120,7 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [fetchProfile]);
 
   const signIn = async (email: string, password: string): Promise<AuthResult> => {
-    if (!isSupabaseConfigured()) return { error: 'Supabase is not configured. Use Demo Mode.' };
+    if (!isSupabaseConfigured()) return { error: 'Supabase is not configured.' };
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error: error?.message ?? null };
   };
@@ -136,7 +94,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (values: RegisterFormValues): Promise<SignUpResult> => {
     if (!isSupabaseConfigured()) {
-      return { error: 'Supabase is not configured. Use Demo Mode.', needsEmailVerification: false };
+      return { error: 'Supabase is not configured.', needsEmailVerification: false };
     }
     const username = normalizeUsername(values.username);
 
@@ -149,6 +107,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       email: values.email,
       password: values.password,
       options: {
+        emailRedirectTo: `${window.location.origin}/dashboard`,
         data: {
           username,
           display_name: values.displayName.trim(),
@@ -192,16 +151,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .single();
 
     if (error) return { error: error.message };
-    if (data) {
-      const row = data as ProfileRow;
-      setProfileRow(row);
-      setProfile(toViewProfile(row));
-    }
+    if (data) setProfile(data as Profile);
     return { error: null };
   };
 
   const signInWithGoogle = async (): Promise<AuthResult> => {
-    if (!isSupabaseConfigured()) return { error: 'Supabase is not configured. Use Demo Mode.' };
+    if (!isSupabaseConfigured()) return { error: 'Supabase is not configured.' };
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: `${window.location.origin}/dashboard` },
@@ -210,53 +165,60 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
-    if (isDemo) {
-      localStorage.removeItem('md_demo');
-      setIsDemo(false);
-      setProfile(null);
-      setProfileRow(null);
-      return;
-    }
     await supabase.auth.signOut();
   };
 
-  const enterDemoMode = () => {
-    localStorage.setItem('md_demo', 'true');
-    setIsDemo(true);
-    setProfile(demoProfiles[0]);
-    setProfileRow(DEMO_PROFILE_ROW);
-  };
-
-  const updateProfile = async (updates: Partial<Profile>) => {
-    if (isDemo) {
-      setProfile(prev => prev ? { ...prev, ...updates } : prev);
-      return;
+  const updateProfile = async (updates: ProfileUpdate): Promise<AuthResult> => {
+    if (!user) return { error: 'Not authenticated' };
+    const rowUpdates: Record<string, unknown> = {};
+    if (updates.displayName !== undefined) rowUpdates.display_name = updates.displayName.trim();
+    if (updates.bio !== undefined) rowUpdates.bio = updates.bio.trim() || null;
+    if (updates.isPrivate !== undefined) rowUpdates.is_private = updates.isPrivate;
+    if (updates.username !== undefined) {
+      const username = normalizeUsername(updates.username);
+      if (username !== profile?.username) {
+        const available = await checkUsernameAvailable(username);
+        if (!available) return { error: 'That username is already taken.' };
+      }
+      rowUpdates.username = username;
     }
-    if (!user) return;
-    // Only forward fields that exist on the real Phase 1 schema; Phase 2
-    // view-model fields (bio, is_private, streak, ...) have no column to
-    // write to yet and are silently dropped rather than erroring.
-    const rowUpdates: Partial<ProfileRow> = {};
-    if ('avatar_url' in updates) rowUpdates.avatar_url = updates.avatar_url ?? null;
-    if ('full_name' in updates) rowUpdates.display_name = updates.full_name;
-    if ('username' in updates) rowUpdates.username = updates.username ? normalizeUsername(updates.username) : null;
-    if (Object.keys(rowUpdates).length === 0) return;
+    if (Object.keys(rowUpdates).length === 0) return { error: null };
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('profiles')
       .update(rowUpdates)
       .eq('id', user.id)
       .select()
       .single();
-    if (data) {
-      const row = data as ProfileRow;
-      setProfileRow(row);
-      setProfile(toViewProfile(row));
-    }
+
+    if (error) return { error: error.message };
+    if (data) setProfile(data as Profile);
+    return { error: null };
+  };
+
+  const uploadAvatar = async (file: File): Promise<AuthResult> => {
+    if (!user) return { error: 'Not authenticated' };
+    const fileError = validateAvatarFile(file);
+    if (fileError) return { error: fileError };
+
+    const path = generateStoragePath(user.id, file.name);
+    const url = await uploadFile('avatars', path, file);
+    if (!url) return { error: 'Upload failed. Try again.' };
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ profile_photo_url: url })
+      .eq('id', user.id)
+      .select()
+      .single();
+
+    if (error) return { error: error.message };
+    if (data) setProfile(data as Profile);
+    return { error: null };
   };
 
   const sendPasswordReset = async (email: string): Promise<AuthResult> => {
-    if (!isSupabaseConfigured()) return { error: 'Supabase is not configured. Use Demo Mode.' };
+    if (!isSupabaseConfigured()) return { error: 'Supabase is not configured.' };
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
     });
@@ -264,15 +226,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updatePassword = async (newPassword: string): Promise<AuthResult> => {
-    if (!isSupabaseConfigured()) return { error: 'Supabase is not configured. Use Demo Mode.' };
+    if (!isSupabaseConfigured()) return { error: 'Supabase is not configured.' };
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     return { error: error?.message ?? null };
   };
 
-  const resendVerificationEmail = async (): Promise<AuthResult> => {
-    if (!isSupabaseConfigured()) return { error: 'Supabase is not configured. Use Demo Mode.' };
-    if (!user?.email) return { error: 'No email on file for this account.' };
-    const { error } = await supabase.auth.resend({ type: 'signup', email: user.email });
+  // Takes an explicit email rather than only reading `user.email`: right
+  // after registration (email confirmation required), signUp() returns no
+  // session, so `user` is still null here — the email has to come from
+  // wherever the caller got it (e.g. the register form).
+  const resendVerificationEmail = async (email?: string): Promise<AuthResult> => {
+    if (!isSupabaseConfigured()) return { error: 'Supabase is not configured.' };
+    const target = email ?? user?.email;
+    if (!target) return { error: 'No email on file for this account.' };
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: target,
+      options: { emailRedirectTo: `${window.location.origin}/dashboard` },
+    });
     return { error: error?.message ?? null };
   };
 
@@ -283,16 +254,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (data.user) await fetchProfile(data.user.id);
   };
 
-  const emailVerified = isDemo || Boolean(user?.email_confirmed_at);
-  const needsProfileCompletion = !isDemo && Boolean(user) && Boolean(profileRow) && !profileRow?.username;
+  const emailVerified = Boolean(user?.email_confirmed_at);
+  const needsProfileCompletion = Boolean(user) && Boolean(profile) && !profile?.username;
 
   return (
     <AuthContext.Provider
       value={{
         user,
         profile,
-        profileRow,
-        isDemo,
         loading,
         emailVerified,
         needsProfileCompletion,
@@ -300,8 +269,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signUp,
         signInWithGoogle,
         signOut,
-        enterDemoMode,
         updateProfile,
+        uploadAvatar,
         completeProfile,
         checkUsernameAvailable,
         sendPasswordReset,

@@ -16,9 +16,9 @@ type UsernameStatus = 'idle' | 'checking' | 'available' | 'taken' | 'invalid';
 // that gap — see needsProfileCompletion in useAuth and AuthProtectedRoute.
 export const CompleteProfilePage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, profileRow, completeProfile, checkUsernameAvailable, signOut } = useAuth();
+  const { user, profile, completeProfile, checkUsernameAvailable, signOut } = useAuth();
 
-  const [displayName, setDisplayName] = useState(profileRow?.display_name ?? '');
+  const [displayName, setDisplayName] = useState(profile?.display_name ?? '');
   const [username, setUsername] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);

@@ -53,3 +53,25 @@ export const maxDateOfBirthForMinAge = (): string => {
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 };
+
+export const DISPLAY_NAME_MAX = 50;
+export const BIO_MAX = 150;
+const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
+const ALLOWED_AVATAR_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+
+export const validateDisplayName = (displayName: string): string | null => {
+  if (!displayName.trim()) return 'Display name is required.';
+  if (displayName.length > DISPLAY_NAME_MAX) return `Display name must be ${DISPLAY_NAME_MAX} characters or fewer.`;
+  return null;
+};
+
+export const validateBio = (bio: string): string | null => {
+  if (bio.length > BIO_MAX) return `Bio must be ${BIO_MAX} characters or fewer.`;
+  return null;
+};
+
+export const validateAvatarFile = (file: File): string | null => {
+  if (!ALLOWED_AVATAR_TYPES.includes(file.type)) return 'Use a PNG, JPEG, WebP, or GIF image.';
+  if (file.size > MAX_AVATAR_BYTES) return 'Image must be 5MB or smaller.';
+  return null;
+};
