@@ -24,6 +24,7 @@ export const Toggle: React.FC<ToggleProps> = ({ checked, onChange, label, descri
       onClick={() => onChange(!checked)}
       className={[
         'relative w-11 h-6 rounded-full flex-shrink-0 transition-colors',
+        'focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:ring-offset-2 focus-visible:outline-none',
         checked ? 'bg-black' : 'bg-gray-200',
       ].join(' ')}
     >

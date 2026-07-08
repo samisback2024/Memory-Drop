@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Mail, Lock, User, AtSign, Calendar, Check, X, Loader2 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { useUsernameAvailability } from '../hooks/useUsernameAvailability';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Checkbox } from '../components/ui/Checkbox';
@@ -16,11 +17,9 @@ import {
   maxDateOfBirthForMinAge,
 } from '../lib/validators';
 
-type UsernameStatus = 'idle' | 'checking' | 'available' | 'taken' | 'invalid';
-
 export const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
-  const { signUp, signInWithGoogle, checkUsernameAvailable } = useAuth();
+  const { signUp, signInWithGoogle } = useAuth();
 
   const [displayName, setDisplayName] = useState('');
   const [username, setUsername] = useState('');
@@ -30,33 +29,11 @@ export const RegisterPage: React.FC = () => {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const [usernameStatus, setUsernameStatus] = useState<UsernameStatus>('idle');
+  const usernameStatus = useUsernameAvailability(username);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-
-  const checkSeq = useRef(0);
-
-  useEffect(() => {
-    const formatError = validateUsername(normalizeUsername(username));
-    if (!username) {
-      setUsernameStatus('idle');
-      return;
-    }
-    if (formatError) {
-      setUsernameStatus('invalid');
-      return;
-    }
-    setUsernameStatus('checking');
-    const seq = ++checkSeq.current;
-    const timer = setTimeout(async () => {
-      const available = await checkUsernameAvailable(username);
-      if (checkSeq.current !== seq) return; // stale response, a newer keystroke superseded it
-      setUsernameStatus(available ? 'available' : 'taken');
-    }, 450);
-    return () => clearTimeout(timer);
-  }, [username, checkUsernameAvailable]);
 
   const validate = (): boolean => {
     const errors: Record<string, string> = {};

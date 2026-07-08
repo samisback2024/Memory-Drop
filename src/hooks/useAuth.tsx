@@ -3,8 +3,15 @@ import type { User } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import type { Profile } from '../types';
 import type { RegisterFormValues, AuthResult } from '../types/auth';
-import { normalizeUsername, validateAvatarFile } from '../lib/validators';
-import { uploadFile, generateStoragePath } from '../utils/storage';
+import {
+  normalizeUsername,
+  normalizeWebsite,
+  validateImageFile,
+  getUsernameCooldownDaysRemaining,
+  MAX_AVATAR_BYTES,
+  MAX_COVER_BYTES,
+} from '../lib/validators';
+import { uploadFile, deleteFile, generateStoragePath, extractStoragePath } from '../utils/storage';
 
 interface SignUpResult extends AuthResult {
   needsEmailVerification: boolean;
@@ -14,6 +21,10 @@ export interface ProfileUpdate {
   username?: string;
   displayName?: string;
   bio?: string;
+  location?: string;
+  website?: string;
+  pronouns?: string;
+  dateOfBirth?: string;
   isPrivate?: boolean;
 }
 
@@ -29,6 +40,8 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   updateProfile: (updates: ProfileUpdate) => Promise<AuthResult>;
   uploadAvatar: (file: File) => Promise<AuthResult>;
+  uploadCoverPhoto: (file: File) => Promise<AuthResult>;
+  removeCoverPhoto: () => Promise<AuthResult>;
   completeProfile: (values: { username: string; displayName: string; dateOfBirth: string }) => Promise<AuthResult>;
   checkUsernameAvailable: (username: string) => Promise<boolean>;
   sendPasswordReset: (email: string) => Promise<AuthResult>;
@@ -171,12 +184,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateProfile = async (updates: ProfileUpdate): Promise<AuthResult> => {
     if (!user) return { error: 'Not authenticated' };
     const rowUpdates: Record<string, unknown> = {};
+
     if (updates.displayName !== undefined) rowUpdates.display_name = updates.displayName.trim();
     if (updates.bio !== undefined) rowUpdates.bio = updates.bio.trim() || null;
+    if (updates.location !== undefined) rowUpdates.location = updates.location.trim() || null;
+    if (updates.pronouns !== undefined) rowUpdates.pronouns = updates.pronouns.trim() || null;
+    if (updates.website !== undefined) rowUpdates.website = normalizeWebsite(updates.website);
+    if (updates.dateOfBirth !== undefined) rowUpdates.date_of_birth = updates.dateOfBirth;
     if (updates.isPrivate !== undefined) rowUpdates.is_private = updates.isPrivate;
+
     if (updates.username !== undefined) {
       const username = normalizeUsername(updates.username);
       if (username !== profile?.username) {
+        const cooldownDays = getUsernameCooldownDaysRemaining(profile?.username_changed_at ?? null);
+        if (cooldownDays > 0) {
+          return { error: `You can change your username again in ${cooldownDays} day${cooldownDays === 1 ? '' : 's'}.` };
+        }
         const available = await checkUsernameAvailable(username);
         if (!available) return { error: 'That username is already taken.' };
       }
@@ -191,16 +214,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .select()
       .single();
 
-    if (error) return { error: error.message };
+    // The 30-day cooldown is also enforced by a DB trigger (defense in
+    // depth against clients that skip the client-side check above) — this
+    // surfaces that failure with the same message rather than a raw
+    // Postgres exception.
+    if (error) {
+      if (/once every 30 days/i.test(error.message)) {
+        return { error: 'You can only change your username once every 30 days.' };
+      }
+      return { error: error.message };
+    }
     if (data) setProfile(data as Profile);
     return { error: null };
   };
 
   const uploadAvatar = async (file: File): Promise<AuthResult> => {
     if (!user) return { error: 'Not authenticated' };
-    const fileError = validateAvatarFile(file);
+    const fileError = validateImageFile(file, MAX_AVATAR_BYTES);
     if (fileError) return { error: fileError };
 
+    const previousUrl = profile?.profile_photo_url ?? null;
     const path = generateStoragePath(user.id, file.name);
     const url = await uploadFile('avatars', path, file);
     if (!url) return { error: 'Upload failed. Try again.' };
@@ -214,6 +247,59 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (error) return { error: error.message };
     if (data) setProfile(data as Profile);
+
+    if (previousUrl) {
+      const previousPath = extractStoragePath(previousUrl, 'avatars');
+      if (previousPath) await deleteFile('avatars', previousPath);
+    }
+    return { error: null };
+  };
+
+  const uploadCoverPhoto = async (file: File): Promise<AuthResult> => {
+    if (!user) return { error: 'Not authenticated' };
+    const fileError = validateImageFile(file, MAX_COVER_BYTES);
+    if (fileError) return { error: fileError };
+
+    const previousUrl = profile?.cover_photo_url ?? null;
+    const path = generateStoragePath(user.id, file.name);
+    const url = await uploadFile('covers', path, file);
+    if (!url) return { error: 'Upload failed. Try again.' };
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ cover_photo_url: url })
+      .eq('id', user.id)
+      .select()
+      .single();
+
+    if (error) return { error: error.message };
+    if (data) setProfile(data as Profile);
+
+    if (previousUrl) {
+      const previousPath = extractStoragePath(previousUrl, 'covers');
+      if (previousPath) await deleteFile('covers', previousPath);
+    }
+    return { error: null };
+  };
+
+  const removeCoverPhoto = async (): Promise<AuthResult> => {
+    if (!user) return { error: 'Not authenticated' };
+    const previousUrl = profile?.cover_photo_url ?? null;
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ cover_photo_url: null })
+      .eq('id', user.id)
+      .select()
+      .single();
+
+    if (error) return { error: error.message };
+    if (data) setProfile(data as Profile);
+
+    if (previousUrl) {
+      const previousPath = extractStoragePath(previousUrl, 'covers');
+      if (previousPath) await deleteFile('covers', previousPath);
+    }
     return { error: null };
   };
 
@@ -271,6 +357,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signOut,
         updateProfile,
         uploadAvatar,
+        uploadCoverPhoto,
+        removeCoverPhoto,
         completeProfile,
         checkUsernameAvailable,
         sendPasswordReset,

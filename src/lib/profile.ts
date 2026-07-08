@@ -28,3 +28,11 @@ export const getProfileCompletion = (profile: CompletionProfile): ProfileComplet
     missing,
   };
 };
+
+// The one "stat" that isn't a placeholder — account age is real data
+// already on the row, unlike followers/capsules/streak which need tables
+// that don't exist until later phases.
+export const getYearsActive = (createdAt: string): number => {
+  const years = (Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24 * 365.25);
+  return Math.max(0, Math.floor(years));
+};

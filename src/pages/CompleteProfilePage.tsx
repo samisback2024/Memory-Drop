@@ -1,14 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AtSign, User, Calendar, Check, X, Loader2 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { useUsernameAvailability } from '../hooks/useUsernameAvailability';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Checkbox } from '../components/ui/Checkbox';
 import { AuthLayout } from '../components/auth/AuthLayout';
 import { validateUsername, validateDateOfBirth, normalizeUsername, maxDateOfBirthForMinAge } from '../lib/validators';
-
-type UsernameStatus = 'idle' | 'checking' | 'available' | 'taken' | 'invalid';
 
 // Google OAuth sign-ins skip the /register form entirely, so they arrive
 // with an auth.users row (and a bare profiles row, via the DB trigger) but
@@ -16,37 +15,16 @@ type UsernameStatus = 'idle' | 'checking' | 'available' | 'taken' | 'invalid';
 // that gap — see needsProfileCompletion in useAuth and AuthProtectedRoute.
 export const CompleteProfilePage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, profile, completeProfile, checkUsernameAvailable, signOut } = useAuth();
+  const { user, profile, completeProfile, signOut } = useAuth();
 
   const [displayName, setDisplayName] = useState(profile?.display_name ?? '');
   const [username, setUsername] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const [usernameStatus, setUsernameStatus] = useState<UsernameStatus>('idle');
+  const usernameStatus = useUsernameAvailability(username);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const checkSeq = useRef(0);
-
-  useEffect(() => {
-    const formatError = validateUsername(normalizeUsername(username));
-    if (!username) {
-      setUsernameStatus('idle');
-      return;
-    }
-    if (formatError) {
-      setUsernameStatus('invalid');
-      return;
-    }
-    setUsernameStatus('checking');
-    const seq = ++checkSeq.current;
-    const timer = setTimeout(async () => {
-      const available = await checkUsernameAvailable(username);
-      if (checkSeq.current !== seq) return;
-      setUsernameStatus(available ? 'available' : 'taken');
-    }, 450);
-    return () => clearTimeout(timer);
-  }, [username, checkUsernameAvailable]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

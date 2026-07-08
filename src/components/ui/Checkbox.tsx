@@ -21,6 +21,7 @@ export const Checkbox: React.FC<CheckboxProps> = ({ checked, onChange, label, er
           onClick={() => onChange(!checked)}
           className={[
             'mt-0.5 w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 transition-colors',
+            'focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none',
             checked ? 'bg-black border-black' : 'bg-white border-gray-300 hover:border-gray-400',
             error ? 'border-red-400' : '',
           ].join(' ')}

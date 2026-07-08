@@ -28,14 +28,16 @@ export const DashboardPage: React.FC = () => {
         </div>
       )}
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex items-center gap-4">
-        <Avatar src={profile?.profile_photo_url} name={displayName} size="2xl" ring />
-        <div className="flex-1">
-          <h1 className="text-xl font-bold text-gray-900">Welcome back, {displayName} 👋</h1>
-          {profile?.username && <p className="text-sm text-gray-500">@{profile.username}</p>}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col sm:flex-row sm:items-center gap-4">
+        <div className="flex items-center gap-4 min-w-0">
+          <Avatar src={profile?.profile_photo_url} name={displayName} size="2xl" ring />
+          <div className="min-w-0">
+            <h1 className="text-xl font-bold text-gray-900 truncate">Welcome back, {displayName} 👋</h1>
+            {profile?.username && <p className="text-sm text-gray-500 truncate">@{profile.username}</p>}
+          </div>
         </div>
-        <Button variant="outline" size="sm" onClick={() => navigate('/profile')}>
-          <User size={14} />
+        <Button variant="outline" size="sm" onClick={() => navigate('/profile')} className="sm:ml-auto flex-shrink-0">
+          <User size={14} aria-hidden="true" />
           View profile
         </Button>
       </div>

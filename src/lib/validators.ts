@@ -56,8 +56,13 @@ export const maxDateOfBirthForMinAge = (): string => {
 
 export const DISPLAY_NAME_MAX = 50;
 export const BIO_MAX = 150;
-const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
-const ALLOWED_AVATAR_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+export const LOCATION_MAX = 60;
+export const WEBSITE_MAX = 200;
+export const PRONOUNS_MAX = 30;
+
+export const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
+export const MAX_COVER_BYTES = 8 * 1024 * 1024;
+const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
 
 export const validateDisplayName = (displayName: string): string | null => {
   if (!displayName.trim()) return 'Display name is required.';
@@ -70,8 +75,59 @@ export const validateBio = (bio: string): string | null => {
   return null;
 };
 
-export const validateAvatarFile = (file: File): string | null => {
-  if (!ALLOWED_AVATAR_TYPES.includes(file.type)) return 'Use a PNG, JPEG, WebP, or GIF image.';
-  if (file.size > MAX_AVATAR_BYTES) return 'Image must be 5MB or smaller.';
+export const validateLocation = (location: string): string | null => {
+  if (location.length > LOCATION_MAX) return `Location must be ${LOCATION_MAX} characters or fewer.`;
   return null;
+};
+
+export const validatePronouns = (pronouns: string): string | null => {
+  if (pronouns.length > PRONOUNS_MAX) return `Pronouns must be ${PRONOUNS_MAX} characters or fewer.`;
+  return null;
+};
+
+// Accepts "example.com" as well as "https://example.com" — normalizeWebsite
+// is what actually prepends the protocol before it's stored, this just
+// checks the result is a plausible http(s) URL.
+export const validateWebsite = (website: string): string | null => {
+  if (!website) return null;
+  if (website.length > WEBSITE_MAX) return `Website must be ${WEBSITE_MAX} characters or fewer.`;
+  const candidate = /^https?:\/\//i.test(website) ? website : `https://${website}`;
+  try {
+    const url = new URL(candidate);
+    if (!url.hostname.includes('.')) return 'Enter a valid website URL.';
+    return null;
+  } catch {
+    return 'Enter a valid website URL.';
+  }
+};
+
+export const normalizeWebsite = (website: string): string | null => {
+  const trimmed = website.trim();
+  if (!trimmed) return null;
+  return /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;
+};
+
+// Strips the protocol and any trailing slash for compact display, e.g.
+// "https://example.com/" -> "example.com".
+export const displayWebsite = (website: string): string =>
+  website.replace(/^https?:\/\//i, '').replace(/\/$/, '');
+
+export const validateImageFile = (file: File, maxBytes: number): string | null => {
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) return 'Use a PNG, JPEG, WebP, or GIF image.';
+  if (file.size > maxBytes) return `Image must be ${Math.round(maxBytes / (1024 * 1024))}MB or smaller.`;
+  return null;
+};
+
+const USERNAME_COOLDOWN_DAYS = 30;
+
+// Mirrors enforce_username_cooldown() in supabase/phase2b_polish.sql — the
+// DB trigger is the real enforcement, this is just what lets the UI warn
+// the user before they waste a submit on it.
+export const getUsernameCooldownDaysRemaining = (usernameChangedAt: string | null): number => {
+  if (!usernameChangedAt) return 0;
+  const changedAt = new Date(usernameChangedAt);
+  const eligibleAt = new Date(changedAt);
+  eligibleAt.setDate(eligibleAt.getDate() + USERNAME_COOLDOWN_DAYS);
+  const msRemaining = eligibleAt.getTime() - Date.now();
+  return msRemaining > 0 ? Math.ceil(msRemaining / (1000 * 60 * 60 * 24)) : 0;
 };

@@ -32,3 +32,14 @@ export const generateStoragePath = (userId: string, filename: string): string =>
   const random = Math.random().toString(36).slice(2, 8);
   return `${userId}/${timestamp}-${random}.${ext}`;
 };
+
+// Public Supabase Storage URLs look like
+// ".../storage/v1/object/public/{bucket}/{path}" — pulling the path back
+// out of one lets us delete the previous avatar/cover file when a new one
+// replaces it, instead of leaving orphaned uploads in the bucket forever.
+export const extractStoragePath = (publicUrl: string, bucket: string): string | null => {
+  const marker = `/object/public/${bucket}/`;
+  const index = publicUrl.indexOf(marker);
+  if (index === -1) return null;
+  return publicUrl.slice(index + marker.length);
+};

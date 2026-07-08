@@ -38,7 +38,7 @@ export const Input: React.FC<InputProps> = ({
           className={[
             'w-full border rounded-xl bg-white text-gray-900 placeholder-gray-400',
             'focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent',
-            'transition duration-150',
+            'transition duration-150 disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-gray-50',
             leftIcon ? 'pl-10 pr-4 py-3' : rightElement ? 'pl-4 pr-10 py-3' : 'px-4 py-3',
             error ? 'border-red-400 focus:ring-red-400' : 'border-gray-200',
             className,
