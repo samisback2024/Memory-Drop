@@ -58,9 +58,7 @@ export const Navbar: React.FC = () => {
     <header className="sticky top-0 z-40 h-16 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 shadow-sm transition-colors">
       <div className="flex items-center justify-between h-full max-w-2xl mx-auto px-4">
         <NavLink to="/feed" className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center flex-shrink-0">
-            <span className="text-white font-bold text-sm">M</span>
-          </div>
+          <img src="/icon-192.png" alt="Memory Drop" className="w-8 h-8 rounded-xl flex-shrink-0" />
           <span className="hidden sm:inline text-lg font-bold bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
             Memory Drop
           </span>
