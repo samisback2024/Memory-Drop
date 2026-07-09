@@ -4,7 +4,7 @@ import { useAuth } from './useAuth';
 import { uploadFile, deleteFile, generateStoragePath, extractStoragePath } from '../utils/storage';
 import { compressImageFile } from '../lib/image';
 import type { AuthResult } from '../types/auth';
-import type { Drop, DropComment, DropTab, MemoryType, Mood, Reflection, ReportReason, Visibility } from '../types/feed';
+import type { Drop, DropComment, DropTab, InterestType, MemoryType, Mood, Reflection, ReportReason, Visibility } from '../types/feed';
 
 interface CreateDropParams {
   caption: string;
@@ -142,10 +142,20 @@ export const useDrops = () => {
       visibility,
       unlock_date: unlockDate,
       is_unlocked: isUnlocked,
+      like_count: 0,
+      is_liked: false,
       comment_count: 0,
       share_count: 0,
       save_count: 0,
       is_saved: false,
+      interested_count: 0,
+      cant_wait_count: 0,
+      good_vibes_count: 0,
+      save_to_unlock_count: 0,
+      is_interested: false,
+      is_cant_wait: false,
+      is_good_vibes: false,
+      is_saved_to_unlock: false,
       created_at: dropRow.created_at as string,
     };
     return { error: null, drop };
@@ -179,6 +189,45 @@ export const useDrops = () => {
     if (!user) return { error: 'Not authenticated' };
     const { error } = await supabase.from('saved_posts').delete().eq('post_id', dropId).eq('user_id', user.id);
     return { error: error?.message ?? null };
+  }, [user]);
+
+  // Post-unlock only — enforced by likes' own RLS (see
+  // phase4d_engagement.sql), this just avoids a round trip for the
+  // obviously-locked case.
+  const likeDrop = useCallback(async (dropId: string): Promise<AuthResult> => {
+    if (!user) return { error: 'Not authenticated' };
+    const { error } = await supabase.from('likes').insert({ post_id: dropId, user_id: user.id });
+    if (error && !/unique/i.test(error.message)) return { error: error.message };
+    return { error: null };
+  }, [user]);
+
+  const unlikeDrop = useCallback(async (dropId: string): Promise<AuthResult> => {
+    if (!user) return { error: 'Not authenticated' };
+    const { error } = await supabase.from('likes').delete().eq('post_id', dropId).eq('user_id', user.id);
+    return { error: error?.message ?? null };
+  }, [user]);
+
+  // Pre-unlock only — a positive reaction to a still-sealed drop. RLS
+  // rejects this once the drop has actually unlocked.
+  const addInterest = useCallback(async (dropId: string, interestType: InterestType): Promise<AuthResult> => {
+    if (!user) return { error: 'Not authenticated' };
+    const { error } = await supabase.from('drop_interests').insert({ drop_id: dropId, user_id: user.id, interest_type: interestType });
+    if (error && !/unique/i.test(error.message)) return { error: error.message };
+    return { error: null };
+  }, [user]);
+
+  const removeInterest = useCallback(async (dropId: string, interestType: InterestType): Promise<AuthResult> => {
+    if (!user) return { error: 'Not authenticated' };
+    const { error } = await supabase.from('drop_interests').delete().eq('drop_id', dropId).eq('user_id', user.id).eq('interest_type', interestType);
+    return { error: error?.message ?? null };
+  }, [user]);
+
+  // Best-effort event log for a future "X unlocked your drop" notification
+  // (Phase 9) — nothing reads this back yet, and a failure here (already
+  // recorded, blocked, or it's your own drop) is silently fine to ignore.
+  const recordUnlockView = useCallback(async (dropId: string): Promise<void> => {
+    if (!user) return;
+    await supabase.from('drop_unlock_views').insert({ drop_id: dropId, user_id: user.id });
   }, [user]);
 
   const hideDrop = useCallback(async (dropId: string): Promise<AuthResult> => {
@@ -267,6 +316,11 @@ export const useDrops = () => {
     deleteDrop,
     saveDrop,
     unsaveDrop,
+    likeDrop,
+    unlikeDrop,
+    addInterest,
+    removeInterest,
+    recordUnlockView,
     hideDrop,
     reportDrop,
     addComment,

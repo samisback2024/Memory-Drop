@@ -1,8 +1,14 @@
 export type MemoryType = 'photo' | 'video' | 'audio' | 'text';
-export type DropTab = 'my_drops' | 'unlocking_soon' | 'today_unlocks' | 'public_drops';
+export type DropTab = 'my_drops' | 'following' | 'public_drops' | 'unlocking_soon' | 'today_unlocks' | 'saved_to_unlock';
 export type Visibility = 'public' | 'followers' | 'private';
 export type Mood = 'joyful' | 'grateful' | 'nostalgic' | 'hopeful' | 'reflective' | 'peaceful' | 'bittersweet' | 'excited';
 export type ReportReason = 'spam' | 'harassment' | 'violence' | 'nudity' | 'fake_account' | 'other';
+
+// The four positive, pre-unlock-only reactions — deliberately not a
+// like/dislike or a generic emoji-reaction picker. Enforced server-side
+// as locked-drop-only (see phase4d_engagement.sql); once a drop unlocks,
+// Like/Comment/Save take over instead.
+export type InterestType = 'interested' | 'cant_wait' | 'good_vibes' | 'save_to_unlock';
 
 export interface DropImage {
   url: string;
@@ -30,10 +36,20 @@ export interface Drop {
   visibility: Visibility;
   unlock_date: string;
   is_unlocked: boolean;
+  like_count: number;
+  is_liked: boolean;
   comment_count: number;
   share_count: number;
   save_count: number;
   is_saved: boolean;
+  interested_count: number;
+  cant_wait_count: number;
+  good_vibes_count: number;
+  save_to_unlock_count: number;
+  is_interested: boolean;
+  is_cant_wait: boolean;
+  is_good_vibes: boolean;
+  is_saved_to_unlock: boolean;
   created_at: string;
 }
 
@@ -79,6 +95,13 @@ export const VISIBILITY_META: Record<Visibility, { label: string; description: s
   public: { label: 'Everyone', description: 'Anyone can find it once unlocked — appears in Public Drops.' },
   followers: { label: 'Followers', description: 'Only people who follow you can see it once unlocked.' },
   private: { label: 'Only me', description: "Just for you — nobody else will ever see it, unlocked or not." },
+};
+
+export const INTEREST_META: Record<InterestType, { label: string; activeLabel: string }> = {
+  save_to_unlock: { label: 'Save to Unlock', activeLabel: 'Saved to unlock' },
+  interested: { label: "I'm Interested", activeLabel: 'Interested' },
+  cant_wait: { label: "Can't Wait", activeLabel: "Can't wait" },
+  good_vibes: { label: 'Good Vibes', activeLabel: 'Sent good vibes' },
 };
 
 export const MEMORY_TYPE_LABELS: Record<MemoryType, string> = {

@@ -25,15 +25,13 @@ interface DropCardProps {
 
 export const DropCard: React.FC<DropCardProps> = ({ drop, onDeleted, onHidden, onUnsaved }) => {
   const { user } = useAuth();
-  const { deleteDrop, hideDrop, getDrop } = useDrops();
+  const { deleteDrop, hideDrop, getDrop, recordUnlockView } = useDrops();
   const isOwn = drop.user_id === user?.id;
   const displayName = drop.display_name || drop.username;
   const MemoryIcon = MEMORY_TYPE_ICONS[drop.post_type];
   const moodMeta = drop.mood ? MOOD_META[drop.mood] : null;
 
   const [content, setContent] = useState(drop);
-  const [commentCount, setCommentCount] = useState(drop.comment_count);
-  const [isSaved, setIsSaved] = useState(drop.is_saved);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
@@ -41,6 +39,9 @@ export const DropCard: React.FC<DropCardProps> = ({ drop, onDeleted, onHidden, o
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const viewRecorded = useRef(false);
+
+  const patchContent = (patch: Partial<Drop>) => setContent(c => ({ ...c, ...patch }));
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -55,6 +56,15 @@ export const DropCard: React.FC<DropCardProps> = ({ drop, onDeleted, onHidden, o
       document.removeEventListener('keydown', handleKey);
     };
   }, [menuOpen]);
+
+  // Groundwork for a future "X unlocked your drop" notification (Phase 9)
+  // — best-effort, fire-and-forget, once per mount. Never fires for your
+  // own drops (recordUnlockView's RLS would reject it anyway).
+  useEffect(() => {
+    if (isOwn || !content.is_unlocked || viewRecorded.current) return;
+    viewRecorded.current = true;
+    recordUnlockView(content.id);
+  }, [isOwn, content.is_unlocked, content.id, recordUnlockView]);
 
   const handleDelete = async () => {
     setMenuOpen(false);
@@ -177,23 +187,25 @@ export const DropCard: React.FC<DropCardProps> = ({ drop, onDeleted, onHidden, o
         {content.is_unlocked && content.post_type === 'audio' && content.audio_url && <AudioPlayer src={content.audio_url} />}
 
         <DropActions
-          dropId={content.id}
-          isUnlocked={content.is_unlocked}
-          isSaved={isSaved}
-          commentCount={commentCount}
-          onSaveChange={next => { setIsSaved(next); if (!next) onUnsaved?.(content.id); }}
+          drop={content}
+          onUpdate={patch => {
+            patchContent(patch);
+            if (patch.is_saved === false) onUnsaved?.(content.id);
+          }}
           onReflect={() => setReflectOpen(true)}
           onCommentToggle={() => setCommentsOpen(p => !p)}
           onShare={() => setShareOpen(true)}
         />
 
-        {content.is_unlocked && commentsOpen && <CommentSection dropId={content.id} onCountChange={setCommentCount} />}
+        {content.is_unlocked && commentsOpen && (
+          <CommentSection dropId={content.id} onCountChange={count => patchContent({ comment_count: count })} />
+        )}
 
         <ShareModal
           isOpen={shareOpen}
           onClose={() => setShareOpen(false)}
           dropId={content.id}
-          onShared={() => setContent(c => ({ ...c, share_count: c.share_count + 1 }))}
+          onShared={() => patchContent({ share_count: content.share_count + 1 })}
         />
         <ReportModal isOpen={reportOpen} onClose={() => setReportOpen(false)} dropId={content.id} />
         <ReflectionModal isOpen={reflectOpen} onClose={() => setReflectOpen(false)} dropId={content.id} />
