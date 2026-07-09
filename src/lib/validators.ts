@@ -161,6 +161,23 @@ export const validateMomentLocation = (location: string): string | null => {
   return null;
 };
 
+export const validateCapsuleTitle = (title: string): string | null => {
+  if (title.length > 100) return 'A title must be 100 characters or fewer.';
+  return null;
+};
+
+export const validateCapsuleMemoryText = (text: string): string | null => {
+  if (text.length > 3000) return 'A memory can be 3,000 characters or fewer.';
+  return null;
+};
+
+export const MAX_VOICE_RECORDING_BYTES = 15 * 1024 * 1024;
+
+export const validateVoiceRecording = (file: File): string | null => {
+  if (file.size > MAX_VOICE_RECORDING_BYTES) return `Voice recordings must be ${Math.round(MAX_VOICE_RECORDING_BYTES / (1024 * 1024))}MB or smaller.`;
+  return null;
+};
+
 const USERNAME_COOLDOWN_DAYS = 30;
 
 // Mirrors enforce_username_cooldown() in supabase/phase2b_polish.sql — the

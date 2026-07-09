@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { UserX } from 'lucide-react';
+import { UserX, Clock } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { useSocial } from '../hooks/useSocial';
@@ -10,6 +10,7 @@ import { ProfileHeader } from '../components/profile/ProfileHeader';
 import { ProfileHeaderSkeleton } from '../components/profile/ProfileHeaderSkeleton';
 import { BadgesAndAchievements, BadgesAndAchievementsSkeleton } from '../components/profile/BadgesAndAchievements';
 import { MomentViewer } from '../components/moments/MomentViewer';
+import { CapsuleArchive } from '../components/capsules/CapsuleArchive';
 import { FollowButton } from '../components/social/FollowButton';
 import { RelationshipMenu } from '../components/social/RelationshipMenu';
 import { MutualFriends } from '../components/social/MutualFriends';
@@ -139,6 +140,16 @@ export const PublicProfilePage: React.FC = () => {
             )}
 
             <BadgesAndAchievements />
+
+            {user && (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
+                <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+                  <Clock size={15} className="text-purple-500" aria-hidden="true" />
+                  Time Capsules
+                </h2>
+                <CapsuleArchive userId={data.id} isOwnArchive={data.is_own_profile} />
+              </div>
+            )}
 
             {viewerOpen && <MomentViewer authorUserId={data.id} onClose={() => setViewerOpen(false)} />}
           </div>

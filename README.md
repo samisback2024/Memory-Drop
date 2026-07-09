@@ -97,6 +97,18 @@ Short-lived, not a Stories clone. A Moment is one photo, video, or written thoug
 - **Expiration is a real boundary, not a filter** — once `expires_at` passes, a moment's direct-table RLS stops returning it to anyone but its owner, and every tab/tray RPC excludes it outright. The owner's **archive** at `/moments` is the one place expired moments keep existing, in a tappable grid, oldest interactions preserved (reactions/replies/views on an expired moment aren't deleted, just no longer growable).
 - **Moment ring on profiles** — a small, optional touch: your own profile and anyone else's shows a gradient ring around the avatar when that person currently has an active moment, tap it to open the viewer right from their profile.
 
+### Time Capsules (Phase 6 — complete)
+The signature feature, and deliberately not shaped like a post with a date on it. A capsule is a sealed vault: title, memory text, and every attached photo/video/audio/voice note are all withheld until `unlock_date` passes — for *every* viewer, including the capsule's own author. There's no tab, no algorithmic ranking, no engagement bait while it's sealed — just a countdown.
+
+- **A 9-step guided creator**, not a composer form — memory type(s), title, the memory itself, media, mood, visibility, unlock date, a review screen, then a "Memory Locked" confirmation. Each step is one decision; nothing scrolls past you unnoticed.
+- **Memory types can combine** — Text, Photo, Video, Audio, and Voice Recording are all independently selectable, and a single capsule can genuinely hold several (e.g. three photos and a recorded voice note alongside a written memory). Voice notes are recorded in-browser via `MediaRecorder`, not just uploaded — a real capability Drops/Moments don't have.
+- **Visibility**: **Only Me**, **Followers**, **Public** — decided by the same `can_view_capsule()` pattern as Drops/Moments, but capsules go one step further: the `capsules` table's own row-level security refuses a locked capsule to non-owners *outright*, not just a nulled column. Direct API access to a locked capsule you don't own returns nothing, not a stripped-down row — a stricter guarantee than Drops currently makes (see Security notes).
+- **Unlock date presets** — Tomorrow, Next Week, Next Month, 1 Year, Custom Date, Custom Date & Time — plus a hard rule: a capsule's unlock date must be in the future, enforced by a DB trigger, not just form validation.
+- **The reveal is a deliberate tap, not automatic.** Once `unlock_date` passes, a capsule shows an "Open Capsule" button instead of silently revealing itself — tapping it plays a short unlock animation while the real content loads underneath, then reveals it. That "I opened this" moment is recorded (`capsule_unlocks`) per person, so it only plays once per viewer.
+- **Live countdown down to the second** — years, months, days, hours, minutes, seconds, calendar-aware (not a flat ms division, so "1 year 2 months" actually means that).
+- **Post-unlock engagement**: Like, Comment, Reflect, Save, Share — the only point any of those five appear. Reflect is available at any lock state (a private note-to-self, same convention as Drops/Moments); the other four are unlock-gated by RLS.
+- **My Archive** at `/capsules` — every capsule you've ever sealed, searchable (title/memory text, your own capsules only) and filterable by lock status, unlock year, mood, media type, and visibility. Rendered as a chronological timeline with year markers, not a feed. The same archive, read-only and without search, appears on your own and anyone else's profile for whatever capsules are visible to you.
+
 ---
 
 ## Getting started
@@ -129,6 +141,7 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
    - `supabase/phase4c_drop_visibility.sql` — real three-tier drop visibility (Everyone / Followers / Only me): widens the `visibility` check constraint, adds the `can_view_drop()` helper, and fixes a leak where a "private" drop was reachable by anyone who could view the author's posts in general
    - `supabase/phase4d_engagement.sql` — pre-unlock anticipation reactions and post-unlock engagement: `drop_interests` and `drop_unlock_views` tables, interest-count columns on `posts`, re-enables `likes` for post-unlock only, and two new feed tabs (Following, Saved to Unlock) via an updated `get_drops_feed`/`get_drop`/`get_saved_drops`
    - `supabase/phase5_moments.sql` — Memory Moments: `moments`/`moment_media`/`moment_views`/`moment_reactions`/`moment_replies`/`close_friends` tables, RLS, the `can_view_moment()`/`set_moment_expiry()` helpers, the `moments` storage bucket, and RPCs `get_moments_tray`/`get_user_moments`/`get_moment`/`get_moment_seen_list`/`get_moment_reactions`
+   - `supabase/phase6_capsules.sql` — Time Capsules: `capsules`/`capsule_media`/`capsule_unlocks`/`capsule_views`/`capsule_reflections`/`capsule_likes`/`capsule_comments`/`capsule_saves` tables, RLS (including a stricter-than-Drops table-level lock on non-owner access to a still-sealed capsule), the `can_view_capsule()`/`validate_capsule_unlock_date()`/`unlock_capsule()` helpers, the `capsules` storage bucket, and RPCs `get_capsule`/`get_user_capsules`/`get_capsule_comments`/`get_capsule_reflections`
 
 5. Restart the dev server.
 
@@ -181,6 +194,9 @@ src/
 │   ├── MomentsPage.tsx          # your own archive (active + expired), at /moments
 │   ├── MomentCreatePage.tsx     # linkable composer, at /moments/create
 │   ├── MomentViewerPage.tsx     # single-moment permalink, at /moments/:momentId
+│   ├── CapsulesPage.tsx         # "My Archive" — search + filters, at /capsules
+│   ├── CapsuleCreatePage.tsx    # linkable wizard, at /capsules/create
+│   ├── CapsuleViewerPage.tsx    # single-capsule permalink, at /capsules/:capsuleId
 │   └── TermsPage.tsx, PrivacyPage.tsx
 ├── components/
 │   ├── auth/         # AuthLayout, GoogleButton, RouteGuards
@@ -203,6 +219,9 @@ src/
 │   │                 #   MomentDurationSelector, MomentPrivacySelector, MomentViewer,
 │   │                 #   MomentProgressBar, MomentReactionBar, MomentReplyInput,
 │   │                 #   MomentSeenList, MomentArchive, EmptyMomentsState
+│   ├── capsules/     # CapsuleWizard, CapsuleCountdown, CapsuleCard,
+│   │                 #   CapsuleLockedCard, CapsuleUnlockedCard, UnlockAnimation,
+│   │                 #   CapsuleTimeline, CapsuleArchive, CapsuleFilters, CapsuleViewer
 │   ├── legal/        # LegalLayout
 │   └── ui/           # Button, Input, Avatar, Card, Modal, Checkbox,
 │                      #   Toggle, Badge, EmptyState, ErrorState, Skeleton
@@ -211,6 +230,7 @@ src/
 │   ├── useSocial.ts              # follow/block/mute/restrict, search, lists
 │   ├── useDrops.ts                # drops, comments, reflections, likes, interests, saves, hide, report
 │   ├── useMoments.ts              # moments, views, reactions, replies, archive
+│   ├── useCapsules.ts             # capsules, media, unlocks, likes, comments, reflections
 │   ├── useUsernameAvailability.ts
 │   ├── useImageUpload.ts         # shared drag-drop/crop/upload pipeline
 │   ├── useInView.ts              # IntersectionObserver (video lazy-load, infinite scroll)
@@ -225,7 +245,8 @@ src/
 │   ├── auth.ts
 │   ├── social.ts       # Relationship, SocialUser, SocialCounts, ...
 │   ├── feed.ts          # Drop, DropComment, Reflection, DropTab, MemoryType, Mood, Visibility, InterestType, ReportReason
-│   └── moment.ts        # Moment, MomentTrayItem, MomentSeenEntry, MomentPrivacy, MomentDurationHours
+│   ├── moment.ts        # Moment, MomentTrayItem, MomentSeenEntry, MomentPrivacy, MomentDurationHours
+│   └── capsule.ts       # Capsule, CapsuleMediaItem, CapsuleVisibility, CapsuleMemoryType, CapsuleArchiveFilters
 └── utils/
     ├── date.ts
     └── storage.ts      # upload/delete + storage-path parsing (for cleanup on replace)
@@ -239,8 +260,11 @@ supabase/
 ├── phase4b_time_capsule_redesign.sql  # unlock_date/visibility/mood/audio_url, reflections
 ├── phase4c_drop_visibility.sql        # three-tier drop visibility, can_view_drop()
 ├── phase4d_engagement.sql             # drop_interests/drop_unlock_views, likes re-enabled, 2 new tabs
-└── phase5_moments.sql         # moments + 5 related tables, can_view_moment(), moments bucket, moment RPCs
+├── phase5_moments.sql         # moments + 5 related tables, can_view_moment(), moments bucket, moment RPCs
+└── phase6_capsules.sql        # capsules + 7 related tables, can_view_capsule(), capsules bucket, capsule RPCs
 ```
+
+> Note: `phase4b_time_capsule_redesign.sql` predates this phase and refers to the Drops feed's unlock-date redesign — it has nothing to do with the dedicated `capsules` tables in `phase6_capsules.sql`. Unfortunate naming collision, kept as-is rather than renaming an already-applied migration file.
 
 ---
 
@@ -252,8 +276,9 @@ supabase/
 | `covers` | Yes (read) | 8 MB | `{user_id}/{file}` | Owner-only write via RLS on `storage.objects` |
 | `post-media` | Yes (read) | 50 MB | `{user_id}/{file}` | Photos and videos; owner-only write |
 | `moments` | Yes (read) | 50 MB | `{user_id}/{file}` | Photos and videos; owner-only write; nothing auto-deletes an expired moment's file, see Known limitations |
+| `capsules` | Yes (read) | 50 MB | `{user_id}/{file}` | Photos, videos, audio, and recorded voice notes; owner-only write |
 
-All four are created and policed by their respective migration files — nothing to configure by hand beyond running the SQL.
+All five are created and policed by their respective migration files — nothing to configure by hand beyond running the SQL.
 
 ---
 
@@ -295,6 +320,19 @@ All four are created and policed by their respective migration files — nothing
 
 **Privacy tiers**, plain language — `everyone` (gated by the author's own account privacy, same as Drops' `public` tier), `followers` (only accepted followers, regardless of account privacy), `close_friends` (only people on your `close_friends` list — nobody's, yet), `only_me` (nobody but the owner, ever). All four are decided by one function, `can_view_moment(owner, privacy)`, used consistently by `moments`' own table RLS and every RPC — there's no separate path that only checks account-level privacy and forgets the moment's own tier.
 
+## Database tables (Phase 6 — Time Capsules)
+
+| Table | Purpose | Key rules |
+|---|---|---|
+| `capsules` | One row per capsule — `title`, `memory_text`, `memory_types` (text array, e.g. `{photo,voice}`), `mood`, `visibility`, `unlock_date`, and denormalized like/comment/save/share counts | `unlock_date` must be after `created_at`, enforced by a trigger (`validate_capsule_unlock_date`), not just form validation; `memory_types` is constrained to a fixed set and can never be empty |
+| `capsule_media` | One or more per capsule, ordered by `position` — unlike Moments' unused `moment_media`, this one is fully wired up: a capsule genuinely holds combinations (e.g. three photos and a voice note together) | Unique `(capsule_id, position)`; only the capsule's owner can insert/delete |
+| `capsule_unlocks` | One row per (capsule, user) — the "I opened this vault" ritual event | Unique `(capsule_id, user_id)`; not a security gate (`unlock_date` alone controls whether content is readable) — purely a UX/stats concern: gates whether the reveal animation replays, and backs the owner's "opened by" stat |
+| `capsule_views` | One row per (capsule, non-owner viewer) — notification groundwork, same shape as `drop_unlock_views`/`moment_views` | Unique `(capsule_id, viewer_id)`; nothing reads this yet; only the capsule's owner can ever SELECT their own capsules' rows |
+| `capsule_reflections` | A private note-to-self on any capsule, available at any lock state | Only ever visible to its own author, never anyone else's — including the capsule's owner reading a reflection someone else left |
+| `capsule_likes` / `capsule_comments` / `capsule_saves` | Not in this phase's originally-named table list — added because Like/Comment/Save are explicitly required post-unlock actions with nowhere else to live. Dedicated tables, not a reuse of Drops' `likes`/`comments`/`saved_posts` | All three: unlock-gated by RLS (`unlock_date <= now()`), same discipline as Drops |
+
+**Visibility tiers**, plain language — `only_me` (nobody but the owner, ever), `followers` (only accepted followers, regardless of account privacy), `public` (gated by the author's own account privacy, same as Drops' `public` tier). Decided by `can_view_capsule(owner, visibility)`, the same pattern as `can_view_drop`/`can_view_moment` — see Security notes for how capsules go one step further than Drops on enforcement.
+
 ## Security notes
 
 - **Row Level Security** on `profiles`: everyone can read/write only their own row directly. Reading *someone else's* profile goes through `get_profile_by_username`, a `SECURITY DEFINER` function that's the one place allowed to decide what a private account exposes — bio, location, and website are nulled out unless the viewer is the owner *or an accepted follower* (Phase 3 extended this from "owner only"); birthday is never returned by it at all, to anyone, ever. The function also hides the profile entirely between two users with a block relationship in either direction.
@@ -306,7 +344,7 @@ All four are created and policed by their respective migration files — nothing
 - **Blocked users are invisible** to each other everywhere: search, suggestions, follower/following lists, and the profile page itself. A user is never told they've been blocked, muted, or restricted — same convention as Instagram/Twitter.
 - **Follow status can't be tampered with** — a client can only ever insert a bare `(follower_id, following_id)` pair; a trigger decides pending vs. accepted from the target's actual privacy setting, and a second trigger rejects any status transition except pending → accepted.
 - **Drop visibility is decided by one function, `can_view_drop(owner, visibility)`**, and everything that touches a specific drop row uses it: the `posts` table's own SELECT RLS, `saved_posts`/`likes`/`drop_interests` INSERT RLS, both `comments` policies, and the `get_drops_feed`/`get_drop`/`get_saved_drops`/`get_drop_comments` RPCs. It returns true for the owner always; for `public` visibility if the viewer can see the author's posts at all (itself still gated by the author's own account privacy); for `followers` visibility only if the viewer is an accepted follower, regardless of whether the account itself is public; and never for `private` visibility unless you're the owner. Before this existed (pre-Phase-4c), a "private" drop was reachable by anyone who could view the author's posts in general — that leak is closed everywhere now, not just in the feed tabs. The RPCs are `SECURITY DEFINER` (same reason as `get_profile_by_username` — they join `profiles` for author info), and the table-level RLS on `posts` remains as defense in depth for any future direct-table access path.
-- **Locked content is nulled server-side, for everyone, including the owner.** Every read path (`get_drops_feed`, `get_drop`, `get_saved_drops`) checks `unlock_date <= now()` and returns `null` for `caption`/`images`/`video_url`/`audio_url` when it isn't — this isn't a UI blur the client chooses to apply, it's data that never leaves the database. There's no authenticated request that returns a sealed drop's real content early, including one made by the drop's own author.
+- **Locked content is nulled server-side, for everyone, including the owner — through the normal app path.** Every read path (`get_drops_feed`, `get_drop`, `get_saved_drops`) checks `unlock_date <= now()` and returns `null` for `caption`/`images`/`video_url`/`audio_url` when it isn't; the client only ever calls these RPCs, never a raw table `SELECT`, so this is what every real request actually experiences. Being precise about the boundary, though: `posts`' own table-level RLS only checks *visibility*, not `unlock_date` — it doesn't independently re-enforce the lock the way the RPCs do. A non-owner who can view the author's posts in general, and a technically-inclined owner, could both in principle bypass the RPCs with a direct PostgREST table query and read a locked drop's raw row early. Phase 6 closed exactly this gap for `capsules` (see below); backporting the same tightened policy to `posts`/`moments` is a reasonable hardening pass, not done here to stay scoped to each phase as it shipped.
 - **The lock state gates two disjoint sets of actions, both server-side.** `drop_interests` (Save to Unlock / Interested / Can't Wait / Good Vibes) can only be inserted while `unlock_date > now()`; `likes` and real (non-reflection) `comments` can only be inserted once `unlock_date <= now()`. Neither is just a UI convention — both are RLS `WITH CHECK` clauses, so a direct API call at the wrong lock state is rejected the same as a mistargeted one.
 - **Reflections are private by construction** — the SELECT policy on `comments` only returns rows where `is_reflection = true` to their own author; nobody else's reflections are ever returned to you, on any drop, including your own.
 - **Counter triggers are `SECURITY DEFINER`** — liking, commenting on, saving, or reacting to someone else's drop needs to increment a counter on a row you don't own, which `posts`' own "owners only" UPDATE policy would otherwise block; the comment trigger also skips reflections so they never inflate the visible comment count.
@@ -318,6 +356,11 @@ All four are created and policed by their respective migration files — nothing
 - **Seen lists and reaction rows are owner-only reads** — `moment_views`/`moment_reactions` SELECT policies only ever return another person's row to the moment's owner; a viewer can see their own reaction (to render their own toggle state) but never anyone else's, and never who else viewed.
 - **`moment_replies` are private between the replier and the owner** — shaped like a future DM on purpose (`moment_id`, `user_id`, `content`, `created_at`), never a public comment thread; each side's own SELECT policy only returns their own replies or replies-to-their-own-moments, never both directions for anyone else.
 - **A moment's `expires_at` is server-computed, not client-supplied** — `set_moment_expiry()` overwrites whatever the client sends based on `duration_hours` at insert time, the same defense `unlock_date` doesn't need (Drops trust the client's unlock date since it isn't a security boundary the same way) but a fixed 12/24/48h lifespan benefits from anyway.
+- **Capsules' table-level RLS is stricter than Drops' or Moments' on the exact same question.** The SELECT policy on `capsules` is `user_id = auth.uid() or (unlock_date <= now() and can_view_capsule(...))` — a non-owner gets *no row at all* for a still-sealed capsule, not a row with nulled columns. A direct PostgREST query against `/rest/v1/capsules` for a locked capsule you don't own returns nothing, full stop; the RPC-layer nulling (`get_capsule`/`get_user_capsules`) is then a second, redundant layer on top for the cases RLS does allow through (your own capsule, before you've decided to peek). This is the one deliberate inconsistency between Capsules and the rest of the app: Drops and Moments only ever gate on visibility at the table level, trusting the RPCs alone for the lock-state check.
+- **`unlock_date` must be in the future at creation, enforced by a trigger** (`validate_capsule_unlock_date`), not a plain CHECK constraint — Postgres CHECK constraints can't reference `now()` since it isn't immutable, so this needed `BEFORE INSERT` trigger logic instead.
+- **`unlock_capsule()` is a single atomic RPC**, not two separate client-side inserts — it writes `capsule_unlocks` (always) and `capsule_views` (only for non-owners) together, and is safe to call repeatedly (`ON CONFLICT DO NOTHING`) so revisiting an already-opened capsule is a harmless no-op rather than a duplicate-key error the client has to swallow.
+- **`capsule_reflections` are private by construction**, same as Drops' `is_reflection` comments — the SELECT policy only ever returns rows to their own author, on any capsule, including your own.
+- **Like/Comment/Save on a capsule all require `unlock_date <= now()`** at the RLS `WITH CHECK` layer — a direct API call attempting to like or comment on a still-sealed capsule is rejected the same way an out-of-order Drops interaction would be.
 
 ---
 
@@ -380,6 +423,23 @@ All four are created and policed by their respective migration files — nothing
 - **Blocked users** — block someone, confirm their moments never appear in your tray and yours never appear in theirs, in both directions.
 - **Mobile layout** — tray horizontal scroll, viewer tap zones, and the reply input's on-screen-keyboard behavior on an actual phone or device emulation.
 
+## Testing Phase 6 (Time Capsules)
+
+- **Create a capsule** — walk all 9 steps for at least one text-only capsule and one combination capsule (e.g. Photo + Voice Recording); confirm the wizard won't let you proceed past step 1 with zero types selected, and won't let you submit an entirely empty capsule (no title, no memory text, no media).
+- **Upload media of each type** — photo (try the 10-item cap), video, audio file, and an in-browser voice recording (grant microphone access, record, stop, confirm playback preview works before submitting).
+- **Lock a capsule** — confirm the "Memory Locked" confirmation screen shows the correct unlock date and a live countdown; confirm the capsule immediately appears (sealed) in your archive.
+- **Countdown** — confirm all six units (years/months/days/hours/minutes/seconds) tick correctly and the seconds actually update once a second, not once a minute.
+- **Unlock at the correct time** — create a capsule with a near-future custom date/time (a few minutes out), wait for it, confirm "Open Capsule" appears exactly when `unlock_date` passes, not before; tap it, confirm the unlock animation plays once and the real content appears after.
+- **Re-open an already-opened capsule** — confirm it shows the revealed content directly, no animation replay, no re-fetch delay.
+- **Visibility rules** — Only Me (confirm literally nobody else, including an accepted follower, can see it — check via the Supabase table editor with a second account's session that a direct query returns zero rows, not a nulled one), Followers (confirm a non-follower gets nothing), Public (confirm it's visible to anyone who can see your posts in general, gated by your own account privacy same as a public Drop).
+- **Archive** — confirm your own archive shows both locked and unlocked capsules, sorted chronologically by unlock date with year markers; confirm a locked capsule still shows its sealed state there (title/media absent) even though it's your own.
+- **Search** — search your own archive by title and by memory text; confirm searching does nothing on someone else's visible-capsules view (search is caller-own-capsules-only, by RPC design).
+- **Filters** — Locked/Unlocked toggle, year, mood, media type, visibility — test each independently and combined; confirm "Clear" resets all of them at once.
+- **Responsive layout** — the wizard's step content, the countdown grid, and the archive's filter row on a narrow viewport or real device.
+- **TypeScript build** — `npx tsc -b` clean.
+- **Production build** — `npm run build` clean.
+- **RLS** — as User B, attempt to directly query `/rest/v1/capsules?id=eq.<User A's locked capsule id>` — should return zero rows unless B is the owner; attempt to insert a `capsule_likes`/`capsule_comments`/`capsule_saves` row against a still-locked capsule — should be rejected.
+
 ## Known limitations
 
 - Mute and Restrict have no visible effect anywhere yet — the feed doesn't filter on them. The relationships are stored and toggle correctly; wiring `get_drops_feed` to exclude muted/restricted authors is a natural next step, deliberately not done here since it wasn't part of this phase's explicit scope.
@@ -400,6 +460,13 @@ All four are created and policed by their respective migration files — nothing
 - **`get_user_moments`/`get_moments_tray` are called plainly (no caching) from the tray, profile rings, and archive** — fine at this scale, but a very active account being viewed by many people at once would mean many redundant reads. Not optimized here since it wasn't part of this phase's scope.
 - **The profile "moment ring" does an extra round trip** — `ProfilePage`/`PublicProfilePage` call `get_user_moments` just to check `length > 0` for the ring, rather than a dedicated lightweight existence check. Reused the existing RPC instead of adding a new one; worth a `has_active_moments(user_id)` boolean RPC if this page turns out to be hit hard.
 - No real-time updates here either, same as everywhere else in the app — a new reaction, reply, or view won't appear in an already-open viewer until it's reopened.
+- **No multi-capsule / group / shared capsules.** Every capsule has exactly one owner and one unlock date — the "dedicated capsule creation/management" richer version (multiple people contributing to one capsule, capsules that unlock progressively, etc.) is explicitly Phase 6's *next* iteration or a later phase, not this one.
+- **No in-app comment/reflection inbox for capsule owners**, same limitation as Moments' replies — `capsule_comments` are visible via the card itself once you open it, but there's no aggregated "here's everything anyone said across all your capsules" view.
+- **No storage cleanup job for deleted-then-orphaned files**, same as every other bucket in this app — deleting a capsule cleans up its own media via the client's best-effort delete calls, but there's no server-side guarantee if that call fails partway through (e.g. the row deletes but a media file's delete request times out).
+- **The wizard's Review step doesn't support jumping directly back to a specific step** — only sequential Back, one step at a time. A minor UX rough edge, not fixed here to keep the wizard's state model simple.
+- **`get_user_capsules` is called once per profile page load with no caching**, same posture as the equivalent Moments calls — fine at this scale, not optimized further here.
+- **Capsules' RLS is intentionally stricter than Drops'/Moments' on the same lock-state question** (see Security notes) — this is a deliberate improvement made *for this phase*, not backported to the older tables, so the three content types aren't perfectly consistent with each other on this one point. Worth a dedicated hardening pass across all three in a later phase.
+- No real-time updates for capsule engagement either — a new like, comment, or reflection from someone else won't appear on an already-open card until it's reloaded.
 
 ---
 
@@ -425,6 +492,6 @@ Environment variables required in Vercel (Project Settings → Environment Varia
 | 3 | Friend system (follow/unfollow, requests, block/mute/restrict, search, suggestions) | ✅ Complete |
 | 4 | Feed — Memory Drops (time-capsule redesign: unlock dates, mood, 3-tier visibility, reflections, pre/post-unlock reactions, 6 tabs) | ✅ Complete |
 | 5 | Moments (12h/24h/48h ephemeral photo/video/text, 4-tier privacy, reactions, replies, seen list, owner archive) | ✅ Complete |
-| 6 | Time Capsules (dedicated capsule creation/management — multi-drop capsules, shared/group capsules, richer unlock rules beyond a single drop's date) | Planned |
+| 6 | Time Capsules (9-step guided creator, combinable memory types incl. in-browser voice recording, 3-tier visibility, ritual unlock + animation, Like/Comment/Reflect/Save/Share, searchable/filterable archive) | ✅ Complete |
 | 7 | Messages (DMs, conversation list) | Planned |
 | 8 | Notifications | Planned |

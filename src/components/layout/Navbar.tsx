@@ -1,14 +1,17 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Rss, Search, Users, User, LayoutGrid, Bookmark, Sparkles, Settings, LogOut, ChevronDown } from 'lucide-react';
+import { Rss, Clock, Search, Users, User, LayoutGrid, Bookmark, Sparkles, Settings, LogOut, ChevronDown } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useSocial } from '../../hooks/useSocial';
 import { Avatar } from '../ui/Avatar';
 
 // Feed is the primary destination now (Phase 4) — Dashboard moved into the
-// account dropdown below rather than crowding the top bar to five items.
+// account dropdown below rather than crowding the top bar. Time Capsules
+// (Phase 6) gets a primary slot here too, not just the dropdown — it's
+// the app's signature feature, not a secondary utility page.
 const NAV_LINKS = [
   { to: '/feed', label: 'Feed', icon: Rss },
+  { to: '/capsules', label: 'Capsules', icon: Clock },
   { to: '/search', label: 'Search', icon: Search },
   { to: '/friends', label: 'Friends', icon: Users },
   { to: '/profile', label: 'Profile', icon: User },

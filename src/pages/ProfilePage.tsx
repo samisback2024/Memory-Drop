@@ -6,8 +6,10 @@ import { ProfileHeaderSkeleton } from '../components/profile/ProfileHeaderSkelet
 import { ProfileCompletionBar } from '../components/profile/ProfileCompletionBar';
 import { BadgesAndAchievements, BadgesAndAchievementsSkeleton } from '../components/profile/BadgesAndAchievements';
 import { MomentViewer } from '../components/moments/MomentViewer';
+import { CapsuleArchive } from '../components/capsules/CapsuleArchive';
 import { ErrorState } from '../components/ui/ErrorState';
 import { getProfileCompletion } from '../lib/profile';
+import { Clock } from 'lucide-react';
 
 export const ProfilePage: React.FC = () => {
   const { profile, loading, refreshUser } = useAuth();
@@ -52,6 +54,14 @@ export const ProfilePage: React.FC = () => {
       />
       {completion && <ProfileCompletionBar completion={completion} />}
       <BadgesAndAchievements />
+
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
+        <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+          <Clock size={15} className="text-purple-500" aria-hidden="true" />
+          Time Capsules
+        </h2>
+        <CapsuleArchive userId={profile.id} isOwnArchive />
+      </div>
 
       {viewerOpen && <MomentViewer authorUserId={profile.id} onClose={() => setViewerOpen(false)} />}
     </div>
