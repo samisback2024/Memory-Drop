@@ -84,6 +84,19 @@ Reshaped around Memory Drop's actual identity — "capture now, unlock later" �
 - Glass cards on a soft gradient wash, a timeline rail connecting cards down the left edge, gradient countdown pills, a locked-drop "sealed capsule" placeholder (not a blurred photo — there's no photo to blur), warm pill-shaped reaction buttons that light up on selection, and a brief reveal transition when a countdown hits zero while the card is on screen.
 - **Notification groundwork, not notifications** — every reaction (interest, like, comment, save) is already a durable row with a timestamp and an actor, and a `drop_unlock_views` table quietly logs the first time someone other than the owner sees an unlocked drop. Nothing reads any of this yet; it's there so Phase 9 can build "Sam sent good vibes" / "Sam unlocked your drop" without a schema change.
 
+### Moments (Phase 5 — complete)
+Short-lived, not a Stories clone. A Moment is one photo, video, or written thought that sticks around for exactly 12, 24, or 48 hours — chosen once at creation, never extended — and then it's gone from everywhere except your own private archive. No filters, no stickers, no music, no swipe-up links, no merged "your story" bubble.
+
+- **Add Moment** — a dedicated bubble at the front of the tray, always present, separate from anyone's viewing bubble. Photo, video, or text, plus an optional caption, mood (the same 8-mood set as Drops), free-text location, and a mention (search-and-pick, resolved to an actual user).
+- **Duration**: 12h / 24h / 48h, decided once and enforced server-side — `expires_at` is computed by a DB trigger from `duration_hours` at insert time, not trusted from the client.
+- **Privacy**: **Everyone**, **Followers**, **Close Friends**, **Only Me**. Close Friends is a real privacy tier with a real table (`close_friends`) behind it, but there's no list-management UI yet — until a later phase adds one, a Close-Friends-only moment is visible to nobody but its owner, which the picker's copy says outright rather than pretending otherwise.
+- **Moment tray** at the top of Feed — a dedicated "Add Moment" bubble first, then one bubble per author with an active moment (yourself included, if you have one), grouped and ordered so authors with something unviewed sort first. The ring is the entire read/unread signal: gradient while something of theirs is unviewed, plain gray once you've seen everything.
+- **Full-screen viewer** at `/moments/:momentId` (or opened inline from the tray) — segmented progress bar per moment in the stack, tap the left/right half to step back/forward, hold to pause. Video drives its own progress off real playback; photo and text play for a fixed 6 seconds.
+- **Two-sided engagement, not one**: quick emoji reactions (❤️ 🔥 😍 😮 🙏 😂) and a "Reply to this memory" text field — both write-only from a viewer's side, both explicitly disallowed on your own moment (same rule as Phase 4's pre-unlock interests). Replies are private between the replier and the moment's owner, shaped like a future DM on purpose.
+- **Seen by** — owner-only. Tapping "Seen by N" on your own moment opens the viewer list; nobody else can ever see who viewed a moment, only that they themselves did (implicitly, by however the ring behaves for them). **View count**, likewise, is only ever real for the owner — everyone else always gets 0, the same convention Instagram uses for its own story view counts.
+- **Expiration is a real boundary, not a filter** — once `expires_at` passes, a moment's direct-table RLS stops returning it to anyone but its owner, and every tab/tray RPC excludes it outright. The owner's **archive** at `/moments` is the one place expired moments keep existing, in a tappable grid, oldest interactions preserved (reactions/replies/views on an expired moment aren't deleted, just no longer growable).
+- **Moment ring on profiles** — a small, optional touch: your own profile and anyone else's shows a gradient ring around the avatar when that person currently has an active moment, tap it to open the viewer right from their profile.
+
 ---
 
 ## Getting started
@@ -115,6 +128,7 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
    - `supabase/phase4b_time_capsule_redesign.sql` — time-capsule redesign: `unlock_date`/`visibility`/`mood`/`audio_url` columns on `posts`, `is_reflection` column on `comments`, updated comment RLS (reflections private, real comments unlock-gated), and RPCs `get_drops_feed`/`get_drop`/`get_drop_comments`/`get_saved_drops`/`get_my_reflections` (replacing the old `get_feed`/`get_post`/`get_comments`/`get_saved_posts`)
    - `supabase/phase4c_drop_visibility.sql` — real three-tier drop visibility (Everyone / Followers / Only me): widens the `visibility` check constraint, adds the `can_view_drop()` helper, and fixes a leak where a "private" drop was reachable by anyone who could view the author's posts in general
    - `supabase/phase4d_engagement.sql` — pre-unlock anticipation reactions and post-unlock engagement: `drop_interests` and `drop_unlock_views` tables, interest-count columns on `posts`, re-enables `likes` for post-unlock only, and two new feed tabs (Following, Saved to Unlock) via an updated `get_drops_feed`/`get_drop`/`get_saved_drops`
+   - `supabase/phase5_moments.sql` — Memory Moments: `moments`/`moment_media`/`moment_views`/`moment_reactions`/`moment_replies`/`close_friends` tables, RLS, the `can_view_moment()`/`set_moment_expiry()` helpers, the `moments` storage bucket, and RPCs `get_moments_tray`/`get_user_moments`/`get_moment`/`get_moment_seen_list`/`get_moment_reactions`
 
 5. Restart the dev server.
 
@@ -164,6 +178,9 @@ src/
 │   ├── FeedPage.tsx             # at /feed — primary landing after login
 │   ├── SavedDropsPage.tsx       # at /saved
 │   ├── DropPage.tsx             # single-drop permalink, at /drop/:dropId
+│   ├── MomentsPage.tsx          # your own archive (active + expired), at /moments
+│   ├── MomentCreatePage.tsx     # linkable composer, at /moments/create
+│   ├── MomentViewerPage.tsx     # single-moment permalink, at /moments/:momentId
 │   └── TermsPage.tsx, PrivacyPage.tsx
 ├── components/
 │   ├── auth/         # AuthLayout, GoogleButton, RouteGuards
@@ -182,6 +199,10 @@ src/
 │   │                 #   CountdownPill, LockedDropPlaceholder,
 │   │                 #   ImageGrid, VideoPlayer, AudioPlayer, ShareModal, ReportModal,
 │   │                 #   EmojiPicker, EmptyDropState, FeedSkeleton, InfiniteLoader
+│   ├── moments/      # MomentTray, MomentBubble, CreateMomentModal,
+│   │                 #   MomentDurationSelector, MomentPrivacySelector, MomentViewer,
+│   │                 #   MomentProgressBar, MomentReactionBar, MomentReplyInput,
+│   │                 #   MomentSeenList, MomentArchive, EmptyMomentsState
 │   ├── legal/        # LegalLayout
 │   └── ui/           # Button, Input, Avatar, Card, Modal, Checkbox,
 │                      #   Toggle, Badge, EmptyState, ErrorState, Skeleton
@@ -189,6 +210,7 @@ src/
 │   ├── useAuth.tsx               # full auth + profile context
 │   ├── useSocial.ts              # follow/block/mute/restrict, search, lists
 │   ├── useDrops.ts                # drops, comments, reflections, likes, interests, saves, hide, report
+│   ├── useMoments.ts              # moments, views, reactions, replies, archive
 │   ├── useUsernameAvailability.ts
 │   ├── useImageUpload.ts         # shared drag-drop/crop/upload pipeline
 │   ├── useInView.ts              # IntersectionObserver (video lazy-load, infinite scroll)
@@ -202,7 +224,8 @@ src/
 │   ├── index.ts       # Profile (mirrors the real table)
 │   ├── auth.ts
 │   ├── social.ts       # Relationship, SocialUser, SocialCounts, ...
-│   └── feed.ts          # Drop, DropComment, Reflection, DropTab, MemoryType, Mood, Visibility, InterestType, ReportReason
+│   ├── feed.ts          # Drop, DropComment, Reflection, DropTab, MemoryType, Mood, Visibility, InterestType, ReportReason
+│   └── moment.ts        # Moment, MomentTrayItem, MomentSeenEntry, MomentPrivacy, MomentDurationHours
 └── utils/
     ├── date.ts
     └── storage.ts      # upload/delete + storage-path parsing (for cleanup on replace)
@@ -212,7 +235,11 @@ supabase/
 ├── phase2_profiles.sql        # bio/privacy/completion, avatars bucket, public-profile RPC
 ├── phase2b_profile_polish.sql # website/location/pronouns/cover photo, username cooldown, covers bucket
 ├── phase3_social_graph.sql    # follows/blocks/mutes/restrictions, social RPCs
-└── phase4_feed.sql            # posts + 6 related tables, counter triggers, feed RPCs, post-media bucket
+├── phase4_feed.sql            # posts + 6 related tables, counter triggers, feed RPCs, post-media bucket
+├── phase4b_time_capsule_redesign.sql  # unlock_date/visibility/mood/audio_url, reflections
+├── phase4c_drop_visibility.sql        # three-tier drop visibility, can_view_drop()
+├── phase4d_engagement.sql             # drop_interests/drop_unlock_views, likes re-enabled, 2 new tabs
+└── phase5_moments.sql         # moments + 5 related tables, can_view_moment(), moments bucket, moment RPCs
 ```
 
 ---
@@ -224,8 +251,9 @@ supabase/
 | `avatars` | Yes (read) | 5 MB | `{user_id}/{file}` | Owner-only write via RLS on `storage.objects` |
 | `covers` | Yes (read) | 8 MB | `{user_id}/{file}` | Owner-only write via RLS on `storage.objects` |
 | `post-media` | Yes (read) | 50 MB | `{user_id}/{file}` | Photos and videos; owner-only write |
+| `moments` | Yes (read) | 50 MB | `{user_id}/{file}` | Photos and videos; owner-only write; nothing auto-deletes an expired moment's file, see Known limitations |
 
-All three are created and policed by their respective migration files — nothing to configure by hand beyond running the SQL.
+All four are created and policed by their respective migration files — nothing to configure by hand beyond running the SQL.
 
 ---
 
@@ -254,6 +282,19 @@ All three are created and policed by their respective migration files — nothin
 
 **Visibility tiers**, plain language — `public` (Everyone: appears in Public Drops / discovery once unlocked, still gated by the author's own account privacy), `followers` (only your accepted followers, regardless of whether your account itself is public), `private` (Only me — nobody but the owner, at any lock state, enforced everywhere a single drop's visibility matters: the permalink, Saved, comments, likes, and interests).
 
+## Database tables (Phase 5 — Moments)
+
+| Table | Purpose | Key rules |
+|---|---|---|
+| `moments` | One row per moment — `text_content`, `media_url`/`media_type` (photo/video/text), `mood`, `location_text`, `mentioned_user_id`, `privacy`, `duration_hours`, `expires_at`, `view_count` | `expires_at` is trigger-computed from `duration_hours` at insert, never trusted from the client; `media_url` must already exist at insert time for photo/video (unlike Drops, there's no "insert then attach" step); `view_count` is trigger-maintained and only ever meaningful for the owner |
+| `moment_media` | Groundwork for a future multi-attachment moment, same relationship `post_images` has to `posts` | Not written to by the app this phase — a moment has exactly one photo/video/text body, held directly on `moments` |
+| `moment_views` | One row per (moment, viewer) — "seen by", and what `view_count` derives from | Unique `(moment_id, viewer_id)`; self-views are rejected by the INSERT policy, so you never inflate your own count by looking at your own moment |
+| `moment_reactions` | One row per (moment, user) — a single emoji, changeable | Unique `(moment_id, user_id)`; can't react to your own moment; insert/update both require the moment to still be unexpired |
+| `moment_replies` | One row per reply — shaped like a future DM (`moment_id`, `user_id`, `content`, `created_at`) | Private between the replier and the moment's owner, nobody else can read a reply; can't reply to your own moment |
+| `close_friends` | owner_id → friend_id, a real relationship table behind the "Close Friends" privacy tier | No management UI ships this phase — the picker's copy says so; a close-friends-only moment is visible to nobody but its owner until a future phase adds list management |
+
+**Privacy tiers**, plain language — `everyone` (gated by the author's own account privacy, same as Drops' `public` tier), `followers` (only accepted followers, regardless of account privacy), `close_friends` (only people on your `close_friends` list — nobody's, yet), `only_me` (nobody but the owner, ever). All four are decided by one function, `can_view_moment(owner, privacy)`, used consistently by `moments`' own table RLS and every RPC — there's no separate path that only checks account-level privacy and forgets the moment's own tier.
+
 ## Security notes
 
 - **Row Level Security** on `profiles`: everyone can read/write only their own row directly. Reading *someone else's* profile goes through `get_profile_by_username`, a `SECURITY DEFINER` function that's the one place allowed to decide what a private account exposes — bio, location, and website are nulled out unless the viewer is the owner *or an accepted follower* (Phase 3 extended this from "owner only"); birthday is never returned by it at all, to anyone, ever. The function also hides the profile entirely between two users with a block relationship in either direction.
@@ -272,6 +313,11 @@ All three are created and policed by their respective migration files — nothin
 - **`drop_unlock_views` only ever answers to the drop's own owner** — its SELECT policy is `exists(post where post.user_id = auth.uid())`, so this notification groundwork can't be used to build a public "who viewed this" feature even by accident.
 - **Hiding a drop is invisible and personal** — `hidden_posts` only ever filters `get_drops_feed` for the person who hid it; there's no way to discover a drop was hidden from someone else's feed.
 - **Reports are a one-way mailbox** — no SELECT policy exists on `reports` at all, so nobody (including the reporter) can read reports back through the app; reviewing them is an admin-tool concern for a later phase.
+- **A moment's expiry is enforced at the RLS layer, not just filtered out of a read query.** `moments`' own SELECT policy is `user_id = auth.uid() or (expires_at > now() and can_view_moment(...))` — a non-owner can never read an expired moment via any path, direct table access included, while the owner's own row is always visible so the archive works.
+- **`moment_views`/`moment_reactions`/`moment_replies` all forbid acting on your own moment** — each INSERT policy requires `m.user_id <> auth.uid()`, so self-views don't inflate your own count, and reacting/replying to yourself isn't possible even by a direct API call.
+- **Seen lists and reaction rows are owner-only reads** — `moment_views`/`moment_reactions` SELECT policies only ever return another person's row to the moment's owner; a viewer can see their own reaction (to render their own toggle state) but never anyone else's, and never who else viewed.
+- **`moment_replies` are private between the replier and the owner** — shaped like a future DM on purpose (`moment_id`, `user_id`, `content`, `created_at`), never a public comment thread; each side's own SELECT policy only returns their own replies or replies-to-their-own-moments, never both directions for anyone else.
+- **A moment's `expires_at` is server-computed, not client-supplied** — `set_moment_expiry()` overwrites whatever the client sends based on `duration_hours` at insert time, the same defense `unlock_date` doesn't need (Drops trust the client's unlock date since it isn't a security boundary the same way) but a fixed 12/24/48h lifespan benefits from anyway.
 
 ---
 
@@ -319,6 +365,21 @@ All three are created and policed by their respective migration files — nothin
 - **Multiple users / RLS** — as User B, confirm you can't see User A's private or followers-only drops unless the relationship actually qualifies; confirm saving/commenting/reacting/liking on a drop you can't see is rejected by RLS even if you have its UUID.
 - **Share** — copy link (only shown once unlocked), open it in an incognito tab while logged out — should redirect to `/login` (see Known limitations), then load correctly once signed in.
 
+## Testing Phase 5 (Moments)
+
+- **Create each type** — text, photo, video; confirm the type picker swaps correctly and a photo/video moment won't submit without a file attached.
+- **Each duration** — 12h, 24h, 48h; after creating, confirm the viewer's "Expires in…" reads correctly and (if you're willing to wait, or adjust your Supabase server clock in a test project) that it actually disappears from the tray/tabs at that time, not before or after.
+- **Each privacy tier** — Everyone (confirm a non-follower on a public account can see it), Followers (confirm a non-follower cannot, even on a public account), Only Me (confirm literally nobody else can, including an accepted follower), Close Friends (confirm it behaves like Only Me until you manually insert a `close_friends` row for a test pair, then confirm that specific friend can see it).
+- **View a moment** — from the tray, confirm the ring goes from gradient to gray once every moment from that author is viewed; confirm `view_count` only ever shows a real number to the moment's own owner, and that your own view of your own moment never increments it.
+- **Next/previous** — tap the right half to advance, left half to go back; confirm tapping "previous" on the very first moment closes the viewer rather than doing nothing; confirm tapping "next" on the last one closes it too.
+- **React** — tap a quick emoji, confirm it highlights and toggles off on a second tap; confirm you cannot react to your own moment (button should be entirely absent, and a direct API insert should be rejected by RLS).
+- **Reply** — send a reply, confirm it can't be sent to your own moment; as the owner, there's currently no in-app reply inbox to read replies back (see Known limitations) — verify via the Supabase table editor that the row landed correctly instead.
+- **Seen list** — as the owner, tap "Seen by N" and confirm it lists viewers with timestamps, most recent first; as a non-owner, confirm there's no way to reach anyone else's seen list.
+- **Expired moment hidden from tray** — let a 12h moment's `expires_at` pass (or edit it directly in Supabase for testing), confirm it disappears from the tray and from every other user's access entirely.
+- **Owner archive** — confirm the same expired moment still appears in your own `/moments` grid, and tapping it still opens the full-screen viewer with real content.
+- **Blocked users** — block someone, confirm their moments never appear in your tray and yours never appear in theirs, in both directions.
+- **Mobile layout** — tray horizontal scroll, viewer tap zones, and the reply input's on-screen-keyboard behavior on an actual phone or device emulation.
+
 ## Known limitations
 
 - Mute and Restrict have no visible effect anywhere yet — the feed doesn't filter on them. The relationships are stored and toggle correctly; wiring `get_drops_feed` to exclude muted/restricted authors is a natural next step, deliberately not done here since it wasn't part of this phase's explicit scope.
@@ -332,6 +393,13 @@ All three are created and policed by their respective migration files — nothin
 - **Offset-based pagination**, not cursor/keyset — simpler and fine at this scale, but re-paginating after new drops arrive above the current page can occasionally skip or repeat a row. Worth revisiting if the feed needs to scale further.
 - **No feed virtualization** — drops accumulate in the DOM as you scroll rather than windowing them out. Not a problem at normal session lengths; a candidate for `react-window`/`react-virtual` if very long scroll sessions become common.
 - The account dropdown in `Navbar`, the kebab menu in `RelationshipMenu`, and the "..." menu in `DropCard` all implement the same open/outside-click/Escape pattern independently rather than sharing one primitive — noted as a refactor opportunity across several phases now, not done here to avoid touching working, tested code outside this phase's scope.
+- **No in-app reply inbox for the moment owner.** `moment_replies` rows are saved and readable via RLS (owner can SELECT replies to their own moments), but there's no UI screen listing them yet — that's explicitly the groundwork-for-messaging story, which is Phase 7's job, not this one's.
+- **Close Friends has no management UI.** The privacy tier and the `close_friends` table both work correctly, but there's no settings page to add or remove someone from your list — until one ships, a Close-Friends-only moment is effectively Only-Me for everyone. The picker's own copy says this rather than hiding it.
+- **No auto-advance to the next author's stack.** Closing or running off either end of one person's moments always exits the viewer, rather than chaining into whoever's next in the tray the way Instagram does — a deliberate scope cut, not an oversight, to keep the viewer simple this phase.
+- **Expired moments' storage files aren't cleaned up automatically.** There's no scheduled job clearing out `moments` bucket files once their row expires — only an explicit user delete removes the file. Same limitation the rest of the app already has for anything else stored in Supabase Storage; would need pg_cron or an edge function to fix.
+- **`get_user_moments`/`get_moments_tray` are called plainly (no caching) from the tray, profile rings, and archive** — fine at this scale, but a very active account being viewed by many people at once would mean many redundant reads. Not optimized here since it wasn't part of this phase's scope.
+- **The profile "moment ring" does an extra round trip** — `ProfilePage`/`PublicProfilePage` call `get_user_moments` just to check `length > 0` for the ring, rather than a dedicated lightweight existence check. Reused the existing RPC instead of adding a new one; worth a `has_active_moments(user_id)` boolean RPC if this page turns out to be hit hard.
+- No real-time updates here either, same as everywhere else in the app — a new reaction, reply, or view won't appear in an already-open viewer until it's reopened.
 
 ---
 
@@ -356,7 +424,7 @@ Environment variables required in Vercel (Project Settings → Environment Varia
 | 2 | Profiles (edit, avatar + cover upload, public `/u/username` page) | ✅ Complete |
 | 3 | Friend system (follow/unfollow, requests, block/mute/restrict, search, suggestions) | ✅ Complete |
 | 4 | Feed — Memory Drops (time-capsule redesign: unlock dates, mood, 3-tier visibility, reflections, pre/post-unlock reactions, 6 tabs) | ✅ Complete |
-| 5 | Stories | Planned |
+| 5 | Moments (12h/24h/48h ephemeral photo/video/text, 4-tier privacy, reactions, replies, seen list, owner archive) | ✅ Complete |
 | 6 | Time Capsules (dedicated capsule creation/management — multi-drop capsules, shared/group capsules, richer unlock rules beyond a single drop's date) | Planned |
 | 7 | Messages (DMs, conversation list) | Planned |
 | 8 | Notifications | Planned |

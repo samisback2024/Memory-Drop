@@ -20,9 +20,11 @@ interface ProfileHeaderProps {
   profile: HeaderProfile;
   isOwnProfile: boolean;
   bioHidden?: boolean;
+  hasActiveMoments?: boolean;
+  onViewMoments?: () => void;
 }
 
-export const ProfileHeader: React.FC<ProfileHeaderProps> = React.memo(({ profile, isOwnProfile, bioHidden = false }) => {
+export const ProfileHeader: React.FC<ProfileHeaderProps> = React.memo(({ profile, isOwnProfile, bioHidden = false, hasActiveMoments = false, onViewMoments }) => {
   const navigate = useNavigate();
   const displayName = profile.display_name || profile.username || 'Memory Drop user';
   const completion = isOwnProfile ? getProfileCompletion(profile) : null;
@@ -43,14 +45,30 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = React.memo(({ profile
 
       <div className="px-5 pb-5">
         <div className="flex items-end justify-between -mt-10 mb-4">
-          <Avatar
-            src={profile.profile_photo_url}
-            name={displayName}
-            size="2xl"
-            ring
-            ringColor="ring-white"
-            className="border-4 border-white shadow-md"
-          />
+          {hasActiveMoments ? (
+            <button
+              type="button"
+              onClick={onViewMoments}
+              aria-label={isOwnProfile ? 'View your moments' : `View ${displayName}'s moments`}
+              className="rounded-full p-[3px] bg-gradient-to-br from-purple-500 via-fuchsia-500 to-blue-500 focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none"
+            >
+              <Avatar
+                src={profile.profile_photo_url}
+                name={displayName}
+                size="2xl"
+                className="border-4 border-white shadow-md"
+              />
+            </button>
+          ) : (
+            <Avatar
+              src={profile.profile_photo_url}
+              name={displayName}
+              size="2xl"
+              ring
+              ringColor="ring-white"
+              className="border-4 border-white shadow-md"
+            />
+          )}
           {isOwnProfile && (
             <Button variant="outline" size="sm" onClick={() => navigate('/profile/edit')}>
               <Edit3 size={14} aria-hidden="true" />

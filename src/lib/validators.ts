@@ -144,6 +144,23 @@ export const validateAudioFile = (file: File): string | null => {
   return null;
 };
 
+export const validateMomentText = (text: string, required: boolean): string | null => {
+  if (required && !text.trim()) return 'Write something to remember, or add a photo or video.';
+  if (text.length > 500) return 'A moment can be 500 characters or fewer.';
+  return null;
+};
+
+export const validateMomentReply = (content: string): string | null => {
+  if (!content.trim()) return 'Write a reply first.';
+  if (content.length > 500) return 'Replies must be 500 characters or fewer.';
+  return null;
+};
+
+export const validateMomentLocation = (location: string): string | null => {
+  if (location.length > 60) return 'Location must be 60 characters or fewer.';
+  return null;
+};
+
 const USERNAME_COOLDOWN_DAYS = 30;
 
 // Mirrors enforce_username_cooldown() in supabase/phase2b_polish.sql — the

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Rss, Search, Users, User, LayoutGrid, Bookmark, Settings, LogOut, ChevronDown } from 'lucide-react';
+import { Rss, Search, Users, User, LayoutGrid, Bookmark, Sparkles, Settings, LogOut, ChevronDown } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useSocial } from '../../hooks/useSocial';
 import { Avatar } from '../ui/Avatar';
@@ -131,6 +131,13 @@ export const Navbar: React.FC = () => {
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   >
                     <Bookmark size={15} aria-hidden="true" /> Saved memories
+                  </button>
+                  <button
+                    role="menuitem"
+                    onClick={() => { navigate('/moments'); setDropdownOpen(false); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <Sparkles size={15} aria-hidden="true" /> Your moments
                   </button>
                   <div className="border-t border-gray-100 my-1" />
                   <button

@@ -6,6 +6,9 @@ import { usePullToRefresh } from '../hooks/usePullToRefresh';
 import { DropTabs } from '../components/feed/DropTabs';
 import { Feed } from '../components/feed/Feed';
 import { DropComposer } from '../components/feed/DropComposer';
+import { MomentTray } from '../components/moments/MomentTray';
+import { CreateMomentModal } from '../components/moments/CreateMomentModal';
+import { MomentViewer } from '../components/moments/MomentViewer';
 import { Avatar } from '../components/ui/Avatar';
 import type { Drop, DropTab } from '../types/feed';
 
@@ -38,6 +41,9 @@ export const FeedPage: React.FC = () => {
     unlocking_soon: emptyTabState(), today_unlocks: emptyTabState(), saved_to_unlock: emptyTabState(),
   });
   const [composerOpen, setComposerOpen] = useState(false);
+  const [momentComposerOpen, setMomentComposerOpen] = useState(false);
+  const [viewingMomentsFor, setViewingMomentsFor] = useState<string | null>(null);
+  const [momentTrayKey, setMomentTrayKey] = useState(0);
   const scrollPositions = useRef<Record<DropTab, number>>({
     my_drops: 0, following: 0, public_drops: 0, unlocking_soon: 0, today_unlocks: 0, saved_to_unlock: 0,
   });
@@ -130,6 +136,12 @@ export const FeedPage: React.FC = () => {
         </div>
       )}
 
+      <MomentTray
+        onCreate={() => setMomentComposerOpen(true)}
+        onOpenAuthor={setViewingMomentsFor}
+        refreshKey={momentTrayKey}
+      />
+
       <button
         type="button"
         onClick={() => setComposerOpen(true)}
@@ -157,6 +169,19 @@ export const FeedPage: React.FC = () => {
       />
 
       <DropComposer isOpen={composerOpen} onClose={() => setComposerOpen(false)} onDropped={handleDropped} />
+
+      <CreateMomentModal
+        isOpen={momentComposerOpen}
+        onClose={() => setMomentComposerOpen(false)}
+        onCreated={() => setMomentTrayKey(k => k + 1)}
+      />
+
+      {viewingMomentsFor && (
+        <MomentViewer
+          authorUserId={viewingMomentsFor}
+          onClose={() => { setViewingMomentsFor(null); setMomentTrayKey(k => k + 1); }}
+        />
+      )}
     </div>
   );
 };

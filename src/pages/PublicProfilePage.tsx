@@ -4,10 +4,12 @@ import { UserX } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { useSocial } from '../hooks/useSocial';
+import { useMoments } from '../hooks/useMoments';
 import { PublicPageHeader } from '../components/layout/PublicPageHeader';
 import { ProfileHeader } from '../components/profile/ProfileHeader';
 import { ProfileHeaderSkeleton } from '../components/profile/ProfileHeaderSkeleton';
 import { BadgesAndAchievements, BadgesAndAchievementsSkeleton } from '../components/profile/BadgesAndAchievements';
+import { MomentViewer } from '../components/moments/MomentViewer';
 import { FollowButton } from '../components/social/FollowButton';
 import { RelationshipMenu } from '../components/social/RelationshipMenu';
 import { MutualFriends } from '../components/social/MutualFriends';
@@ -37,9 +39,12 @@ export const PublicProfilePage: React.FC = () => {
   const { username } = useParams<{ username: string }>();
   const { user } = useAuth();
   const { getRelationship } = useSocial();
+  const { getUserMoments } = useMoments();
   const [data, setData] = useState<PublicProfile | null>(null);
   const [relationship, setRelationship] = useState<Relationship | null>(null);
   const [state, setState] = useState<FetchState>('loading');
+  const [hasActiveMoments, setHasActiveMoments] = useState(false);
+  const [viewerOpen, setViewerOpen] = useState(false);
 
   const load = useCallback(async () => {
     if (!username) return;
@@ -61,8 +66,12 @@ export const PublicProfilePage: React.FC = () => {
       const rel = await getRelationship(profile.id);
       setRelationship(rel);
     }
+    if (user) {
+      const moments = await getUserMoments(profile.id);
+      setHasActiveMoments(moments.length > 0);
+    }
     setState('ready');
-  }, [username, user, getRelationship]);
+  }, [username, user, getRelationship, getUserMoments]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -94,7 +103,13 @@ export const PublicProfilePage: React.FC = () => {
 
         {state === 'ready' && data && (
           <div className="flex flex-col gap-4">
-            <ProfileHeader profile={data} isOwnProfile={data.is_own_profile} bioHidden={bioHidden} />
+            <ProfileHeader
+              profile={data}
+              isOwnProfile={data.is_own_profile}
+              bioHidden={bioHidden}
+              hasActiveMoments={hasActiveMoments}
+              onViewMoments={() => setViewerOpen(true)}
+            />
 
             {!data.is_own_profile && user && relationship && (
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center justify-between gap-3">
@@ -124,6 +139,8 @@ export const PublicProfilePage: React.FC = () => {
             )}
 
             <BadgesAndAchievements />
+
+            {viewerOpen && <MomentViewer authorUserId={data.id} onClose={() => setViewerOpen(false)} />}
           </div>
         )}
       </main>

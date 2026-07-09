@@ -20,6 +20,9 @@ import { FollowingPage } from './pages/FollowingPage';
 import { FeedPage } from './pages/FeedPage';
 import { SavedDropsPage } from './pages/SavedDropsPage';
 import { DropPage } from './pages/DropPage';
+import { MomentsPage } from './pages/MomentsPage';
+import { MomentCreatePage } from './pages/MomentCreatePage';
+import { MomentViewerPage } from './pages/MomentViewerPage';
 import { TermsPage } from './pages/TermsPage';
 import { PrivacyPage } from './pages/PrivacyPage';
 
@@ -52,9 +55,15 @@ function App() {
               only granted to `authenticated`, not `anon` */}
           <Route path="/drop/:dropId" element={<AuthProtectedRoute><DropPage /></AuthProtectedRoute>} />
 
+          {/* Full-screen overlay, no navbar chrome either way — same
+              reasoning as /drop/:dropId, get_moment is authenticated-only */}
+          <Route path="/moments/:momentId" element={<AuthProtectedRoute><MomentViewerPage /></AuthProtectedRoute>} />
+
           <Route element={<AuthProtectedRoute><AppShell /></AuthProtectedRoute>}>
             <Route path="/feed" element={<FeedPage />} />
             <Route path="/saved" element={<SavedDropsPage />} />
+            <Route path="/moments" element={<MomentsPage />} />
+            <Route path="/moments/create" element={<MomentCreatePage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/profile/edit" element={<EditProfilePage />} />
