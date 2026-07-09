@@ -119,6 +119,19 @@ The emotional heart of the app once you've accumulated months and years of conte
 - **Memory Details** at `/memories/:memoryType/:memoryId` — for a capsule, this is a full `CapsuleCard` (complete reuse: the unlock ritual, Like/Comment/Reflect/Save/Share, everything Phase 6 already built). For an expired moment, a simpler read-oriented display (media/text, mood, historical reaction counts if you're the owner) — new reactions and replies aren't possible on an expired moment by design (see Phase 5's RLS), so this view doesn't pretend otherwise. Both get the same metadata footer this phase adds: tags, location, collection membership, favorite, and archive controls.
 - **Hide is reversible, delete is not.** Hiding sets `hidden_at` and removes a memory from every default view (Timeline, Calendar, Years, Collections, Favorites, Flashbacks, Highlights) without touching the row — "nothing disappears." Deleting permanently calls the same `deleteCapsule`/`deleteMoment` functions Phases 5/6 already built (including their storage cleanup), so that logic lives in exactly one place.
 
+### Settings & Privacy (Phase 8 — complete)
+Numbering note: the brief for this phase called itself "Phase 7," but Phase 7 had already shipped as Memories — everything here is filed as **Phase 8** instead (see Roadmap). One page at `/settings`, ten sections drilled into by `/settings/:section` — a list-then-detail shape, not a wall of tabs, matching how every mobile settings app actually works.
+
+- **Account** — change email (Supabase's own confirm-both-addresses flow), change password (re-verifies your *current* password via a real sign-in attempt first, not just trusting the session), username change (reuses Phase 2's existing 30-day-cooldown logic, not a duplicate), log out, and **delete account** — a real, working self-service deletion via a `SECURITY DEFINER` function that deletes the `auth.users` row directly; every table in this schema already cascades from `profiles.id → auth.users.id`, so one DELETE unwinds the entire account.
+- **Profile** — links out to Phase 2's existing full editor for display name/bio/avatar/cover rather than duplicating that UI, plus two settings that never had anywhere to live before: default Drop visibility and default Moment visibility, actually wired into `DropComposer`/`CreateMomentModal` (a fresh composer now opens pre-set to your default, not a hardcoded literal).
+- **Privacy** — the private-account toggle, and four "manage my list" screens (blocked, muted, restricted, Close Friends) that genuinely didn't exist anywhere before this phase — Phases 3 and 5 let you toggle these relationships from a profile's menu but never gave you a page listing everyone currently on each list. Close Friends finally gets real management, closing a gap Phase 5's own README flagged as a known limitation. "Download my data" is an honest placeholder; "Delete all my data" is real — it deletes every Drop/Moment/Capsule you own (not the account) by calling each phase's own delete function in a loop, so storage cleanup happens exactly the way it always does.
+- **Security** — password-last-changed, a self-reported sign-in history (`user_sessions`, one row per login, best-effort device label from the user agent — not a live view into Supabase's internal session store, which the client SDK doesn't expose and this app has no service-role backend to query), a real **"sign out of all devices"** (`supabase.auth.signOut({ scope: 'global' })`, which genuinely revokes every refresh token), and a two-factor authentication UI shell that's visibly "coming soon" rather than pretending to work — deferred exactly as scoped.
+- **Notification Preferences** — eight toggles, stored, nothing delivered yet (no push system exists — that's explicitly a later phase). Every choice made now is preserved for whenever it does.
+- **Appearance & Accessibility** — real infrastructure, honestly scoped. Font size, high contrast, reduced motion, and larger touch targets are **global CSS overrides** (classes on `<html>`, see `index.css`) that apply everywhere immediately, zero per-component changes needed. Dark mode is real switching infrastructure (`ThemeProvider`, instant apply, `localStorage` + `user_settings` persistence, live system-preference tracking) — but only the core shell (`Navbar`, `AppShell`) and the Settings page itself have `dark:` variants so far. The other ~90 components across Drops/Moments/Capsules/Memories/Profile were built entirely with light-mode literal colors; a full dark-mode visual pass is real, scoped follow-up work, not something this phase pretends to have finished — see Known limitations.
+- **Storage** — real numbers, not an estimate: lists every file you own across all five storage buckets via the Storage API's own size metadata and sums them by type. "Clear cached files" clears local drafts from this browser; "Manage uploaded media" links to Capsules/Memories rather than building a second file browser next to the ones that already exist.
+- **Help & Support** — a static FAQ accordion, plus one `FeedbackForm` component reused three times (Contact support / Report a bug / Send feedback), all landing in the same one-way `feedback_reports` mailbox — write-only from the client, same discipline as Phase 4's `reports` table.
+- **About** — version, and links to the Privacy Policy/Terms of Service routes Phase 1 already built.
+
 ---
 
 ## Getting started
@@ -153,6 +166,7 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
    - `supabase/phase5_moments.sql` — Memory Moments: `moments`/`moment_media`/`moment_views`/`moment_reactions`/`moment_replies`/`close_friends` tables, RLS, the `can_view_moment()`/`set_moment_expiry()` helpers, the `moments` storage bucket, and RPCs `get_moments_tray`/`get_user_moments`/`get_moment`/`get_moment_seen_list`/`get_moment_reactions`
    - `supabase/phase6_capsules.sql` — Time Capsules: `capsules`/`capsule_media`/`capsule_unlocks`/`capsule_views`/`capsule_reflections`/`capsule_likes`/`capsule_comments`/`capsule_saves` tables, RLS (including a stricter-than-Drops table-level lock on non-owner access to a still-sealed capsule), the `can_view_capsule()`/`validate_capsule_unlock_date()`/`unlock_capsule()` helpers, the `capsules` storage bucket, and RPCs `get_capsule`/`get_user_capsules`/`get_capsule_comments`/`get_capsule_reflections`
    - `supabase/phase7_memories.sql` — Memories: adds `tags`/`hidden_at` to `capsules` and `moments`, `location_text` to `capsules`; new tables `favorites`/`memory_collections`/`collection_items`/`flashbacks_cache`/`memory_highlights`; RPCs `get_memories`/`get_memory`/`get_memory_calendar`/`get_memory_year_counts`/`get_flashbacks`/`dismiss_flashback`/`get_highlight_candidates`/`get_memory_streak`/`get_collections`/`seed_default_collections` — no new `memories` table, everything is computed by UNIONing `capsules` and expired `moments` at read time
+   - `supabase/phase8_settings.sql` — Settings & Privacy: new tables `user_settings`/`notification_preferences`/`user_sessions`/`feedback_reports`, a trigger that auto-creates the first two rows the moment a profile exists (plus a one-time backfill for existing accounts), RPCs `get_blocked_users`/`get_muted_users`/`get_restricted_users`/`get_close_friends`/`delete_my_account`
 
 5. Restart the dev server.
 
@@ -211,6 +225,7 @@ src/
 │   ├── MemoriesPage.tsx         # 8-tab library (Timeline/Calendar/Years/Collections/
 │   │                            #   Favorites/Flashbacks/Highlights/Archive), at /memories
 │   ├── MemoryDetailPage.tsx     # single-memory permalink, at /memories/:memoryType/:memoryId
+│   ├── SettingsPage.tsx         # 10-section list-then-detail, at /settings and /settings/:section
 │   └── TermsPage.tsx, PrivacyPage.tsx
 ├── components/
 │   ├── auth/         # AuthLayout, GoogleButton, RouteGuards
@@ -240,6 +255,11 @@ src/
 │   │                 #   TimelineView, MemoryCalendar, YearView, CollectionGrid,
 │   │                 #   FavoriteButton, FlashbackCard, HighlightCard, MemorySearch,
 │   │                 #   MemoryFilters, MemoryViewer
+│   ├── settings/     # SettingsSection, SettingsCard, ToggleRow, DangerZone, SessionList,
+│   │                 #   NotificationSettings, ThemeSelector, StorageUsageCard, FeedbackForm,
+│   │                 #   AccountSettings, ProfileSettings, PrivacySettings, SecuritySettings,
+│   │                 #   AppearanceSettings, AccessibilitySettings, StorageSettings,
+│   │                 #   HelpSettings, AboutSettings
 │   ├── legal/        # LegalLayout
 │   └── ui/           # Button, Input, Avatar, Card, Modal, Checkbox,
 │                      #   Toggle, Badge, EmptyState, ErrorState, Skeleton
@@ -251,6 +271,9 @@ src/
 │   ├── useCapsules.ts             # capsules, media, unlocks, likes, comments, reflections
 │   ├── useMemories.ts             # get_memories/get_memory, calendar, years, flashbacks,
 │   │                              #   highlights, collections, favorites, hide/restore/delete
+│   ├── useSettings.ts             # settings, notification prefs, blocked/muted/restricted/close
+│   │                              #   friends lists, sessions, account/password/email, storage usage
+│   ├── useTheme.tsx               # ThemeProvider — dark mode, font size, accessibility toggles
 │   ├── useUsernameAvailability.ts
 │   ├── useImageUpload.ts         # shared drag-drop/crop/upload pipeline
 │   ├── useInView.ts              # IntersectionObserver (video lazy-load, infinite scroll)
@@ -267,7 +290,8 @@ src/
 │   ├── feed.ts          # Drop, DropComment, Reflection, DropTab, MemoryType, Mood, Visibility, InterestType, ReportReason
 │   ├── moment.ts        # Moment, MomentTrayItem, MomentSeenEntry, MomentPrivacy, MomentDurationHours
 │   ├── capsule.ts       # Capsule, CapsuleMediaItem, CapsuleVisibility, CapsuleMemoryType, CapsuleArchiveFilters
-│   └── memory.ts        # Memory (unified capsule+moment shape), MemoryFilters, MemoryCollection, Flashback, HighlightCandidate
+│   ├── memory.ts        # Memory (unified capsule+moment shape), MemoryFilters, MemoryCollection, Flashback, HighlightCandidate
+│   └── settings.ts      # UserSettings, NotificationPreferences, UserSession, ManagedUser, Theme, FontSize
 └── utils/
     ├── date.ts
     └── storage.ts      # upload/delete + storage-path parsing (for cleanup on replace)
@@ -283,7 +307,8 @@ supabase/
 ├── phase4d_engagement.sql             # drop_interests/drop_unlock_views, likes re-enabled, 2 new tabs
 ├── phase5_moments.sql         # moments + 5 related tables, can_view_moment(), moments bucket, moment RPCs
 ├── phase6_capsules.sql        # capsules + 7 related tables, can_view_capsule(), capsules bucket, capsule RPCs
-└── phase7_memories.sql        # tags/location/hidden_at on capsules+moments, 5 new tables, get_memories() union RPC
+├── phase7_memories.sql        # tags/location/hidden_at on capsules+moments, 5 new tables, get_memories() union RPC
+└── phase8_settings.sql        # user_settings, notification_preferences, user_sessions, feedback_reports, delete_my_account()
 ```
 
 > Note: `phase4b_time_capsule_redesign.sql` predates this phase and refers to the Drops feed's unlock-date redesign — it has nothing to do with the dedicated `capsules` tables in `phase6_capsules.sql`. Unfortunate naming collision, kept as-is rather than renaming an already-applied migration file.
@@ -371,6 +396,17 @@ No new content table — `capsules` and `moments` gained columns instead, and ev
 
 **Interpretation note on scope**: the phase brief said "every unlocked Time Capsule and expired Memory Moment" — Drops were deliberately not included in this union. A Drop already has a permanent home (the Feed's My Drops tab + `/saved`) and never disappears from its primary surface the way an expired Moment does or a sealed Capsule's content does; Capsules and Moments both needed somewhere to "graduate" to, Drops didn't. Worth revisiting explicitly before Phase 8 if the intent was actually all three content types.
 
+## Database tables (Phase 8 — Settings & Privacy)
+
+| Table | Purpose | Key rules |
+|---|---|---|
+| `user_settings` | One row per user — default Drop/Moment visibility, theme, font size, reduced motion, high contrast, larger touch targets, `password_changed_at` | Auto-created the moment a profile exists (`profiles_create_default_settings` trigger), plus a one-time backfill for accounts that predate this migration — the client never upserts this on first load |
+| `notification_preferences` | One row per user — the eight toggles listed above | Same auto-create trigger as `user_settings`; store-only, no delivery system reads this yet |
+| `user_sessions` | A self-reported login log — `device_label` guessed client-side from the user agent, one row per sign-in | Not a live view into Supabase Auth's session store (unavailable to a pure client SDK without a service-role backend); "sign out of all devices" is a separate, real feature (`auth.signOut({ scope: 'global' })`) that doesn't read this table at all |
+| `feedback_reports` | Bug reports, feedback, and support requests | Same one-way-mailbox shape as Phase 4's `reports` — insert-only, no SELECT policy at all, reviewing these is an admin-tool concern out of scope for this phase |
+
+**No new visibility model** — every table here is strictly personal (owner-only RLS), so there's no cross-user visibility question to reconcile the way Drops/Moments/Capsules each needed their own `can_view_*()` function. The two exceptions, `get_blocked_users()`/`get_muted_users()`/`get_restricted_users()`/`get_close_friends()` and `delete_my_account()`, are `SECURITY DEFINER` for narrower reasons: the first four join `profiles` for someone else's info (same reason as every other cross-user RPC in this app), and the last needs privilege an ordinary authenticated role doesn't have — DELETE on `auth.users`.
+
 ## Security notes
 
 - **Row Level Security** on `profiles`: everyone can read/write only their own row directly. Reading *someone else's* profile goes through `get_profile_by_username`, a `SECURITY DEFINER` function that's the one place allowed to decide what a private account exposes — bio, location, and website are nulled out unless the viewer is the owner *or an accepted follower* (Phase 3 extended this from "owner only"); birthday is never returned by it at all, to anyone, ever. The function also hides the profile entirely between two users with a block relationship in either direction.
@@ -403,6 +439,11 @@ No new content table — `capsules` and `moments` gained columns instead, and ev
 - **Favorites and collections can only ever reference a memory you can actually see** — `favorites`' and `collection_items`' INSERT policies re-check `can_view_capsule`/`can_view_moment` (favorites) or plain ownership (collection items — a personal library only ever organizes your own memories, not things shared with you) before the row is allowed to exist.
 - **Hiding is a soft, fully reversible flag** (`hidden_at`), not a delete — every default read path excludes hidden memories, but the row, its media, and its engagement history are all untouched. Only `deletePermanently` — which delegates to the same `deleteCapsule`/`deleteMoment` functions Phases 5/6 already built — actually removes anything, storage included.
 - **Tags are free-text, not a controlled vocabulary** — no server-side validation beyond length via the existing owner-only UPDATE policies on `capsules`/`moments` (the same blanket "owner can update their own row" policies those tables already had; nothing new was granted for this phase). A malicious client could still only ever edit their *own* memory's tags, same as any other column on those tables.
+- **Password change re-authenticates before allowing the change** — `changePassword()` calls `signInWithPassword()` with the current password first and only proceeds to `updateUser({ password })` if that succeeds, rather than trusting the existing session alone. Supabase doesn't require this step on its own; it's an extra layer this app adds.
+- **Account deletion cascades entirely through existing foreign keys, deliberately not a bespoke cleanup routine.** `delete_my_account()` is one statement — `delete from auth.users where id = auth.uid()` — and every table in this schema already has `user_id references profiles(id) on delete cascade` (with `profiles.id references auth.users(id) on delete cascade` closing the loop), so the whole account unwinds through referential integrity Postgres already enforces, not through a function that has to remember every table by name. It only works because a `SECURITY DEFINER` function created via the SQL editor runs with the owning `postgres` role's privileges, which includes DELETE on `auth.users` — an ordinary `authenticated` client role cannot do this directly.
+- **The four "manage my list" RPCs are unparameterized on purpose** — `get_blocked_users()` etc. take no arguments and always mean "my own list," so there's no `p_user_id` to ever pass someone else's id into by mistake.
+- **`feedback_reports` has no SELECT policy at all** — the same one-way-mailbox discipline as Phase 4's `reports`; nobody, including the person who submitted it, can read a feedback row back through the app.
+- **Appearance/Accessibility settings are pure client-side + `user_settings` state** — there's no RLS subtlety here since nothing but your own row is ever touched, but worth noting explicitly: the `dark`/`md-reduced-motion`/`md-high-contrast`/`md-large-touch` classes and the `--md-font-scale` CSS variable are applied by trusting `user_settings` values fetched from a table only you can write to, so there's no path for these to be tampered with by anyone but you.
 
 ---
 
@@ -501,6 +542,24 @@ No new content table — `capsules` and `moments` gained columns instead, and ev
 - **Production build** — `npm run build` clean.
 - **RLS** — as User B, confirm `get_memories`/`get_memory` never return User A's locked capsules or active moments, even by guessing UUIDs; confirm inserting a `favorites`/`collection_items` row against a memory you can't see (or, for collections, don't own) is rejected; confirm updating another user's `tags`/`hidden_at` via a direct table call is rejected.
 
+## Testing Phase 8 (Settings & Privacy)
+
+- **Every setting saves correctly** — change one value per section, reload the page from scratch, confirm it persisted (not just held in memory): default Drop/Moment visibility, theme, font size, every accessibility toggle, every notification preference.
+- **Theme changes work** — switch to Dark, confirm the shell (`Navbar`, page background) and the Settings page itself actually change immediately, no reload needed; switch to System, then toggle your OS/browser's dark mode preference, confirm the app follows it live; switch to Light, confirm it overrides System correctly.
+- **Accessibility settings apply globally** — turn on Reduced Motion, High Contrast, and Larger Touch Targets one at a time and visit a completely unrelated page (e.g. Feed or Capsules) — confirm the effect is visible there too, not just on the Settings page itself.
+- **Privacy settings persist** — toggle Private Account, reload, confirm it held; add and remove a Close Friend, confirm the list updates; block/mute/restrict someone from a profile's menu (Phase 3 UI), then confirm they now appear in Settings' respective "manage" list, and that unblocking/unmuting/unrestricting from Settings removes them from that list.
+- **Notification preferences persist** — toggle a few off, reload, confirm they held.
+- **Delete account flow** — on a disposable test account: confirm the confirmation phrase gate actually blocks the button until typed correctly; confirm deletion signs you out and the account is genuinely gone (its profile, drops, capsules, moments — try logging back in with the same credentials, should fail).
+- **Delete all my data** — confirm every Drop/Moment/Capsule is gone afterward (check Feed/Capsules/Memories) but the account itself still works — you can still log in and create new content.
+- **Logout** — confirm it actually ends your session (protected routes redirect to `/login` afterward).
+- **Change password** — confirm it rejects an incorrect current password with a clear message before ever attempting the change; confirm a correct current password + valid new password succeeds and updates "Password last changed."
+- **Change email** — confirm Supabase's confirmation email flow triggers (check both inboxes if your project has "confirm email change" enabled for both old and new addresses).
+- **Sign out of all devices** — sign in from two different browsers (or one normal + one incognito), trigger "Sign out of all devices" from one, confirm the other is also signed out on its next request.
+- **Accessibility settings** — see above; also confirm Font Size visibly changes text size app-wide, not just within Settings.
+- **Responsive layout** — the 10-section list, each section's forms, and the DangerZone confirmation flow on a narrow viewport or real device.
+- **TypeScript build** — `npx tsc -b` clean.
+- **Production build** — `npm run build` clean.
+
 ## Known limitations
 
 - Mute and Restrict have no visible effect anywhere yet — the feed doesn't filter on them. The relationships are stored and toggle correctly; wiring `get_drops_feed` to exclude muted/restricted authors is a natural next step, deliberately not done here since it wasn't part of this phase's explicit scope.
@@ -536,6 +595,14 @@ No new content table — `capsules` and `moments` gained columns instead, and ev
 - **Calendar and Year view fetch a full month/year of rows to compute their client-side day/grouping logic** rather than everything being pre-aggregated server-side beyond the day-count and year-count RPCs. Fine at personal-library scale; would want a leaner approach if someone accumulates thousands of memories.
 - **The moment-half of Memory Details has no reply thread** — same underlying limitation Phase 5 already documented (no reply inbox UI exists anywhere yet), just visible again here since Memories is the first place you'd naturally go looking for it.
 - No real-time updates in Memories either — a newly favorited-by-someone-else count, a new tag, or a newly hidden memory in another open tab won't reflect until the view is reloaded.
+- **Dark mode covers the core shell and Settings only, not the other ~90 components.** `Navbar`, `AppShell`, and everything under `components/settings/` have real `dark:` Tailwind variants; Drops, Moments, Capsules, Memories, Profile, and every other surface built in Phases 1–7 were written with light-mode literal colors (`bg-white`, `text-gray-900`, etc.) and haven't been touched. Switching to Dark today changes the frame around the app, not everything inside it — the infrastructure (`ThemeProvider`, persistence, live system-preference tracking) is complete and correct, but the visual rollout across the rest of the app is real, separate follow-up work, sized roughly in "hours across dozens of files," not something achievable inside this phase's scope.
+- **"Active sessions" is a self-reported log, not a live device registry.** There's no way to see a session's IP, precisely identify which of two tabs on the same browser is "this device," or force-terminate one specific *other* device — the client SDK doesn't expose Supabase Auth's internal session store, and this app has no service-role backend to query it with. "Sign out of all devices" is real (it revokes every refresh token globally) but it's all-or-nothing, not per-device.
+- **Two-factor authentication is a UI shell, not a working feature** — exactly as scoped ("implementation can be deferred"). Supabase Auth does support real TOTP enrollment via `supabase.auth.mfa`; wiring that up is a natural, contained follow-up.
+- **"Download my data" is a placeholder**, also exactly as scoped. A real export would want a background job (likely a Supabase Edge Function) bundling a user's rows and storage files into a downloadable archive — more than a client-only app can do today.
+- **Storage usage is computed live on every page visit** — `storage.list()` across five buckets, no caching. Fine at personal-library scale; would want caching or a denormalized running total if an account's file count grows very large.
+- **Notification preferences have nothing to actually gate yet** — there's no notification-sending system in this app at all (by design, out of scope for this phase). The toggles are real and persisted so that whenever Phase 9 or later adds delivery, it has user intent to read from day one rather than defaulting everyone to "on."
+- **`deleteAllContent()` loops through each item's own delete function** (reusing Phases 4/5/6's storage-aware deletes) rather than a single bulk SQL statement — correct and consistent, but means deleting a very large amount of content runs as many sequential round trips. Fine at personal-library scale; would want batching for a power user with thousands of items.
+- **Password re-authentication uses `signInWithPassword`**, which — depending on Supabase project settings — could theoretically trigger the same rate limiting real sign-in attempts do if someone repeatedly enters a wrong current password. Not expected to matter in normal use, worth knowing if testing this flow many times in a row.
 
 ---
 
@@ -563,5 +630,6 @@ Environment variables required in Vercel (Project Settings → Environment Varia
 | 5 | Moments (12h/24h/48h ephemeral photo/video/text, 4-tier privacy, reactions, replies, seen list, owner archive) | ✅ Complete |
 | 6 | Time Capsules (9-step guided creator, combinable memory types incl. in-browser voice recording, 3-tier visibility, ritual unlock + animation, Like/Comment/Reflect/Save/Share, searchable/filterable archive) | ✅ Complete |
 | 7 | Memories (unified library over unlocked Capsules + expired Moments — Timeline/Calendar/Years/Collections/Favorites/Flashbacks/Highlights/Archive, 4 layouts) | ✅ Complete |
-| 8 | Messages (DMs, conversation list) | Planned |
-| 9 | Notifications | Planned |
+| 8 | Settings & Privacy (10 sections, real dark mode infrastructure, global accessibility overrides, self-service account deletion, blocked/muted/restricted/Close-Friends management) | ✅ Complete |
+| 9 | Messages (DMs, conversation list) | Planned |
+| 10 | Notifications | Planned |

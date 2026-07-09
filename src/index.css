@@ -28,3 +28,29 @@ body {
 
 input[type='date']::-webkit-calendar-picker-indicator { cursor: pointer; }
 input[type='datetime-local']::-webkit-calendar-picker-indicator { cursor: pointer; }
+
+/* --------------------------------------------------------------------
+ * Accessibility settings (Phase 8) — applied globally via classes on
+ * <html>, toggled from Settings → Accessibility/Appearance and
+ * persisted to user_settings. Unlike dark mode (which needs `dark:`
+ * variants added per-component to look right, and this phase only adds
+ * those to the core shell — see the README), these four are universal
+ * overrides that work immediately across every existing page with zero
+ * per-component changes.
+ * ------------------------------------------------------------------ */
+
+html { font-size: calc(16px * var(--md-font-scale, 1)); }
+
+.md-reduced-motion, .md-reduced-motion * {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+.md-high-contrast { filter: contrast(1.2) saturate(1.15); }
+.md-high-contrast a, .md-high-contrast button { text-underline-offset: 2px; }
+
+.md-large-touch button, .md-large-touch a, .md-large-touch input, .md-large-touch select, .md-large-touch textarea {
+  min-height: 44px;
+}

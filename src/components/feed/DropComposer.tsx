@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Image as ImageIcon, Video, Mic, X, CalendarClock, Globe2, Users, Lock } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useDrops } from '../../hooks/useDrops';
+import { useSettings } from '../../hooks/useSettings';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Avatar } from '../ui/Avatar';
@@ -40,6 +41,7 @@ const nowForDatetimeLocal = (): string => {
 export const DropComposer: React.FC<DropComposerProps> = ({ isOpen, onClose, onDropped }) => {
   const { profile } = useAuth();
   const { createDrop } = useDrops();
+  const { getSettings } = useSettings();
   const [prompt] = useState(() => CAPTURE_PROMPTS[Math.floor(Math.random() * CAPTURE_PROMPTS.length)]);
   const [caption, setCaption] = useState('');
   const [images, setImages] = useState<PendingFile[]>([]);
@@ -58,6 +60,10 @@ export const DropComposer: React.FC<DropComposerProps> = ({ isOpen, onClose, onD
     if (!isOpen) return;
     const draft = localStorage.getItem(DRAFT_KEY);
     if (draft) setCaption(draft);
+    // Settings' default only ever applies to a fresh, untouched composer
+    // — never overrides a visibility the user already picked this session.
+    getSettings().then(settings => { if (settings) setVisibility(settings.default_drop_visibility); });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
   const releaseMedia = () => {

@@ -54,7 +54,7 @@ export const Navbar: React.FC = () => {
   const displayName = profile?.display_name || profile?.username || 'You';
 
   return (
-    <header className="sticky top-0 z-40 h-16 bg-white border-b border-gray-100 shadow-sm">
+    <header className="sticky top-0 z-40 h-16 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 shadow-sm transition-colors">
       <div className="flex items-center justify-between h-full max-w-2xl mx-auto px-4">
         <NavLink to="/feed" className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center flex-shrink-0">
@@ -143,6 +143,13 @@ export const Navbar: React.FC = () => {
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   >
                     <Sparkles size={15} aria-hidden="true" /> Your moments
+                  </button>
+                  <button
+                    role="menuitem"
+                    onClick={() => { navigate('/settings'); setDropdownOpen(false); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <Settings size={15} aria-hidden="true" /> Settings
                   </button>
                   <div className="border-t border-gray-100 my-1" />
                   <button

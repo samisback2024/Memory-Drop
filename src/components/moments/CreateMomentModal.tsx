@@ -3,6 +3,7 @@ import { Image as ImageIcon, Video, PenLine, X, MapPin, AtSign } from 'lucide-re
 import { useAuth } from '../../hooks/useAuth';
 import { useSocial } from '../../hooks/useSocial';
 import { useMoments } from '../../hooks/useMoments';
+import { useSettings } from '../../hooks/useSettings';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Avatar } from '../ui/Avatar';
@@ -39,6 +40,7 @@ export const CreateMomentModal: React.FC<CreateMomentModalProps> = ({ isOpen, on
   const { profile } = useAuth();
   const { searchUsers } = useSocial();
   const { createMoment } = useMoments();
+  const { getSettings } = useSettings();
 
   const [mediaType, setMediaType] = useState<MomentMediaType>('text');
   const [textContent, setTextContent] = useState('');
@@ -62,6 +64,14 @@ export const CreateMomentModal: React.FC<CreateMomentModalProps> = ({ isOpen, on
     }, 250);
     return () => { cancelled = true; clearTimeout(timer); };
   }, [mentionQuery, mentioned, searchUsers]);
+
+  // Applies once per fresh open — never overrides a privacy the user
+  // already picked this session.
+  useEffect(() => {
+    if (!isOpen) return;
+    getSettings().then(settings => { if (settings) setPrivacy(settings.default_moment_visibility); });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
 
   const reset = () => {
     if (media) URL.revokeObjectURL(media.previewUrl);
