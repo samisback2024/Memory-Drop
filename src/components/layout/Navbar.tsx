@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Rss, Clock, BookHeart, Search, Users, User, LayoutGrid, Bookmark, Sparkles, Settings, LogOut, ChevronDown } from 'lucide-react';
+import { Rss, Clock, BookHeart, Search, Compass, Users, User, LayoutGrid, Bookmark, Sparkles, Settings, LogOut, ChevronDown } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useSocial } from '../../hooks/useSocial';
 import { Avatar } from '../ui/Avatar';
@@ -15,6 +15,7 @@ const NAV_LINKS = [
   { to: '/capsules', label: 'Capsules', icon: Clock },
   { to: '/memories', label: 'Memories', icon: BookHeart },
   { to: '/search', label: 'Search', icon: Search },
+  { to: '/explore', label: 'Explore', icon: Compass },
   { to: '/friends', label: 'Friends', icon: Users },
   { to: '/profile', label: 'Profile', icon: User },
 ];

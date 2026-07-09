@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, MessageCircle, Feather, Bookmark, Share2, MoreHorizontal, Trash2, User, Send } from 'lucide-react';
+import { Heart, MessageCircle, Feather, Bookmark, Share2, MoreHorizontal, Trash2, User } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useCapsules } from '../../hooks/useCapsules';
 import { Avatar } from '../ui/Avatar';
@@ -8,9 +8,12 @@ import { Modal } from '../ui/Modal';
 import { CapsuleLockedCard } from './CapsuleLockedCard';
 import { CapsuleUnlockedCard } from './CapsuleUnlockedCard';
 import { UnlockAnimation } from './UnlockAnimation';
+import { ShareModal } from '../feed/ShareModal';
+import { CommentSection } from '../feed/CommentSection';
+import { RecentLikersPopover } from '../feed/RecentLikersPopover';
 import { formatRelativeTime } from '../../utils/date';
 import { validateCapsuleMemoryText } from '../../lib/validators';
-import type { Capsule, CapsuleComment, CapsuleReflection } from '../../types/capsule';
+import type { Capsule, CapsuleReflection } from '../../types/capsule';
 
 interface CapsuleCardProps {
   capsule: Capsule;
@@ -21,10 +24,10 @@ interface CapsuleCardProps {
 // Capsule" appears) → opening (UnlockAnimation plays once, content
 // fetched in parallel) → revealed (title/memory/media + Like, Comment,
 // Reflect, Save, Share — the only point any of those five appear).
-export const CapsuleCard: React.FC<CapsuleCardProps> = ({ capsule, onDeleted }) => {
+const CapsuleCardImpl: React.FC<CapsuleCardProps> = ({ capsule, onDeleted }) => {
   const { user } = useAuth();
   const { getCapsule, unlockCapsule, deleteCapsule, likeCapsule, unlikeCapsule, saveCapsule, unsaveCapsule,
-    getCapsuleComments, addComment, getCapsuleReflections, addReflection, incrementShareCount } = useCapsules();
+    getCapsuleReflections, addReflection } = useCapsules();
 
   const isOwn = capsule.user_id === user?.id;
   const displayName = capsule.display_name || capsule.username;
@@ -34,13 +37,13 @@ export const CapsuleCard: React.FC<CapsuleCardProps> = ({ capsule, onDeleted }) 
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
-  const [comments, setComments] = useState<CapsuleComment[]>([]);
-  const [commentDraft, setCommentDraft] = useState('');
   const [reflectOpen, setReflectOpen] = useState(false);
   const [reflections, setReflections] = useState<CapsuleReflection[]>([]);
   const [reflectionDraft, setReflectionDraft] = useState('');
   const [reflectionError, setReflectionError] = useState<string | null>(null);
-  const [shared, setShared] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [likePopKey, setLikePopKey] = useState(0);
+  const [showLikeFloat, setShowLikeFloat] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const pendingRevealRef = useRef<Capsule | null>(null);
 
@@ -75,6 +78,11 @@ export const CapsuleCard: React.FC<CapsuleCardProps> = ({ capsule, onDeleted }) 
   const toggleLike = async () => {
     const next = !content.is_liked;
     patchContent({ is_liked: next, like_count: Math.max(0, content.like_count + (next ? 1 : -1)) });
+    if (next) {
+      setLikePopKey(k => k + 1);
+      setShowLikeFloat(true);
+      setTimeout(() => setShowLikeFloat(false), 600);
+    }
     const { error } = next ? await likeCapsule(content.id) : await unlikeCapsule(content.id);
     if (error) patchContent({ is_liked: !next, like_count: content.like_count });
   };
@@ -84,33 +92,6 @@ export const CapsuleCard: React.FC<CapsuleCardProps> = ({ capsule, onDeleted }) 
     patchContent({ is_saved: next });
     const { error } = next ? await saveCapsule(content.id) : await unsaveCapsule(content.id);
     if (error) patchContent({ is_saved: !next });
-  };
-
-  const handleShare = async () => {
-    const url = `${window.location.origin}/capsules/${content.id}`;
-    try {
-      if (navigator.share) await navigator.share({ url, title: content.title ?? 'A memory on Memory Drop' });
-      else await navigator.clipboard.writeText(url);
-      setShared(true);
-      incrementShareCount(content.id);
-      patchContent({ share_count: content.share_count + 1 });
-      setTimeout(() => setShared(false), 2000);
-    } catch { /* user cancelled the native share sheet — not an error */ }
-  };
-
-  const openComments = async () => {
-    setCommentsOpen(p => !p);
-    if (!commentsOpen && comments.length === 0) setComments(await getCapsuleComments(content.id));
-  };
-
-  const submitComment = async () => {
-    if (!commentDraft.trim()) return;
-    const { comment } = await addComment(content.id, commentDraft);
-    if (comment) {
-      setComments(prev => [...prev, comment]);
-      setCommentDraft('');
-      patchContent({ comment_count: content.comment_count + 1 });
-    }
   };
 
   const openReflect = async () => {
@@ -131,7 +112,7 @@ export const CapsuleCard: React.FC<CapsuleCardProps> = ({ capsule, onDeleted }) 
   if (deleting) return null;
 
   return (
-    <article className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_8px_24px_-8px_rgba(124,58,237,0.12)] overflow-hidden">
+    <article className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_8px_24px_-8px_rgba(124,58,237,0.12)] overflow-hidden cv-auto">
       <div className="flex items-center gap-3 p-4">
         <Link to={`/u/${content.username}`} className="flex-shrink-0">
           <Avatar src={content.profile_photo_url} name={displayName} size="md" />
@@ -172,11 +153,16 @@ export const CapsuleCard: React.FC<CapsuleCardProps> = ({ capsule, onDeleted }) 
       {content.is_unlocked && content.has_opened && (
         <>
           <div className="flex items-center gap-4 px-4 py-3 border-t border-gray-50">
-            <button type="button" onClick={toggleLike} className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-pink-600 transition-colors">
-              <Heart size={16} className={content.is_liked ? 'fill-pink-600 text-pink-600' : ''} aria-hidden="true" />
-              {content.like_count > 0 ? content.like_count : ''}
-            </button>
-            <button type="button" onClick={openComments} className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">
+            <span className="relative inline-flex items-center gap-1.5 text-sm font-medium text-gray-600">
+              <button type="button" onClick={toggleLike} className="relative flex items-center hover:text-pink-600 transition-colors">
+                <Heart key={likePopKey} size={16} className={`${content.is_liked ? 'fill-pink-600 text-pink-600' : ''} ${likePopKey > 0 ? 'animate-reaction-pop' : ''}`} aria-hidden="true" />
+                {showLikeFloat && (
+                  <Heart size={14} className="absolute left-0 top-0 fill-pink-500 text-pink-500 pointer-events-none animate-reaction-float" aria-hidden="true" />
+                )}
+              </button>
+              <RecentLikersPopover contentType="capsule" contentId={content.id} count={content.like_count} />
+            </span>
+            <button type="button" onClick={() => setCommentsOpen(p => !p)} className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">
               <MessageCircle size={17} aria-hidden="true" />
               {content.comment_count > 0 ? content.comment_count : ''}
             </button>
@@ -186,34 +172,31 @@ export const CapsuleCard: React.FC<CapsuleCardProps> = ({ capsule, onDeleted }) 
             <button type="button" onClick={toggleSave} className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">
               <Bookmark size={17} className={content.is_saved ? 'fill-purple-600 text-purple-600' : ''} aria-hidden="true" />
             </button>
-            <button type="button" onClick={handleShare} aria-label="Share this memory" className="ml-auto flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">
+            <button type="button" onClick={() => setShareOpen(true)} aria-label="Share this memory" className="ml-auto flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">
               <Share2 size={16} aria-hidden="true" />
-              {shared && <span className="text-xs text-purple-600">Copied</span>}
             </button>
           </div>
 
+          <ShareModal
+            isOpen={shareOpen}
+            onClose={() => setShareOpen(false)}
+            memoryType="capsule"
+            memoryId={content.id}
+            title={content.title}
+            caption={content.memory_text}
+            mood={content.mood}
+            coverUrl={content.media.find(m => m.type === 'photo' || m.type === 'video')?.url ?? null}
+            username={content.username}
+            onShared={() => patchContent({ share_count: content.share_count + 1 })}
+          />
+
           {commentsOpen && (
-            <div className="px-4 pb-4 flex flex-col gap-2 border-t border-gray-50 pt-3">
-              {comments.map(c => (
-                <div key={c.id} className="flex items-start gap-2 text-sm">
-                  <Avatar src={c.profile_photo_url} name={c.display_name || c.username} size="xs" />
-                  <p className="text-gray-700"><span className="font-medium text-gray-900">{c.display_name || c.username}</span> {c.content}</p>
-                </div>
-              ))}
-              <div className="flex items-center gap-2 mt-1">
-                <input
-                  type="text"
-                  value={commentDraft}
-                  onChange={e => setCommentDraft(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter') submitComment(); }}
-                  placeholder="Add a comment…"
-                  className="flex-1 border border-gray-200 rounded-full px-3.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                />
-                <button type="button" onClick={submitComment} aria-label="Post comment" className="p-2 rounded-full bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors">
-                  <Send size={14} aria-hidden="true" />
-                </button>
-              </div>
-            </div>
+            <CommentSection
+              contentType="capsule"
+              contentId={content.id}
+              contentOwnerId={content.user_id}
+              onCountChange={count => patchContent({ comment_count: count })}
+            />
           )}
         </>
       )}
@@ -247,3 +230,8 @@ export const CapsuleCard: React.FC<CapsuleCardProps> = ({ capsule, onDeleted }) 
     </article>
   );
 };
+
+// Memoized — same reasoning as DropCard/MemoryCard: whichever list
+// renders these (CapsuleTimeline/CapsuleArchive) patches one capsule's
+// object reference at a time, so unchanged siblings skip re-rendering.
+export const CapsuleCard = React.memo(CapsuleCardImpl);

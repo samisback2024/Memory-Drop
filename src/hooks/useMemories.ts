@@ -7,7 +7,7 @@ import { useDrops } from './useDrops';
 import type { AuthResult } from '../types/auth';
 import type {
   Memory, MemoryFilters, MemoryCollection, Flashback, HighlightCandidate, HighlightType, MemoryStreak,
-  MemoryStats, PublicStats, MemorySort, MemorySourceType,
+  MemoryStats, PublicStats, MemorySort, MemorySourceType, PinnedMemory, ActivityItem,
 } from '../types/memory';
 
 // Reads all go through get_memories()/get_memory() and friends — the one
@@ -240,6 +240,46 @@ export const useMemories = () => {
     return data[0] as PublicStats;
   }, []);
 
+  // Pins are a "showcase on my own profile" feature — you can only ever
+  // pin something you own (enforced server-side by pinned_items' INSERT
+  // policy), capped at 6 (enforced by a trigger), same direct-table-write
+  // pattern favorites already uses.
+  const pinMemory = useCallback(async (memoryType: MemorySourceType, memoryId: string): Promise<AuthResult> => {
+    if (!user) return { error: 'Not authenticated' };
+    const payload: Record<string, string> = memoryType === 'capsule'
+      ? { user_id: user.id, capsule_id: memoryId }
+      : memoryType === 'moment'
+      ? { user_id: user.id, moment_id: memoryId }
+      : { user_id: user.id, drop_id: memoryId };
+    const { error } = await supabase.from('pinned_items').insert(payload);
+    if (error) {
+      if (/unique/i.test(error.message)) return { error: null };
+      return { error: error.message };
+    }
+    return { error: null };
+  }, [user]);
+
+  const unpinMemory = useCallback(async (memoryType: MemorySourceType, memoryId: string): Promise<AuthResult> => {
+    if (!user) return { error: 'Not authenticated' };
+    let query = supabase.from('pinned_items').delete().eq('user_id', user.id);
+    query = memoryType === 'capsule' ? query.eq('capsule_id', memoryId) : memoryType === 'moment' ? query.eq('moment_id', memoryId) : query.eq('drop_id', memoryId);
+    const { error } = await query;
+    return { error: error?.message ?? null };
+  }, [user]);
+
+  const getPinnedMemories = useCallback(async (targetUserId?: string): Promise<PinnedMemory[]> => {
+    const { data, error } = await supabase.rpc('get_pinned_memories', { p_user_id: targetUserId ?? null });
+    if (error || !data) return [];
+    return data as PinnedMemory[];
+  }, []);
+
+  // Live-computed from creation/comment timestamps — see phase10b_profile_polish.sql.
+  const getActivityTimeline = useCallback(async (targetUserId?: string, limit = 20, offset = 0): Promise<ActivityItem[]> => {
+    const { data, error } = await supabase.rpc('get_activity_timeline', { p_user_id: targetUserId ?? null, p_limit: limit, p_offset: offset });
+    if (error || !data) return [];
+    return data as ActivityItem[];
+  }, []);
+
   return {
     getMemories,
     getArchivedMemories,
@@ -265,5 +305,9 @@ export const useMemories = () => {
     updateLocation,
     getMemoryStats,
     getPublicStats,
+    pinMemory,
+    unpinMemory,
+    getPinnedMemories,
+    getActivityTimeline,
   };
 };

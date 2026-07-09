@@ -144,6 +144,66 @@ Not a new feature — a wiring/consistency pass across everything Phases 4–7 a
 - **Memories' Timeline tab gained two preview strips** — Recently Unlocked and Locked Until Later — above the full filterable list, so the lifecycle is visible at a glance without digging into filters.
 - **Favorites and Collections now support Drops too** (`favorites.drop_id`, `collection_items.drop_id`), the same three-way-XOR-FK pattern already used for Capsules/Moments.
 
+### Search + Explore (Phase 10a — complete)
+The first of six Phase 10 ("Social Experience & Product Polish") sub-phases, split by agreement so each lands as one reviewable unit instead of one enormous migration — see Roadmap for 10b–10f.
+
+- **Unified search** (`/search`) — one search bar now finds Users (Phase 3's `search_users`, unchanged), Drops, Capsules, expired Moments, your own Collections, tags, and locations, with type filter chips (All/Users/Drops/Capsules/Moments/Collections) to narrow results. Cross-user content search goes through a new `search_memories()` RPC — the counterpart to `get_memories()` (which is deliberately single-owner-scoped and only ever searches *your own* content): same `can_view_drop`/`can_view_capsule`/`can_view_moment` visibility predicates as everywhere else, same "no peeking early" rule (only ever surfaces unlocked/matured content), returning the identical row shape `get_memories()` does so results render with the exact same `GridView`/`MemoryCard` used across the app.
+- **Recent searches** — every search you run is recorded (`search_history`, own-rows-only RLS); shown as clickable chips when the search box is empty, with a one-tap "Clear."
+- **Trending searches** — a site-wide aggregate of the last 7 days' search terms (`get_trending_searches()`), counts only, never who searched what.
+- **Search suggestions** — as-you-type dropdown combining matching usernames and matching trending terms (`get_search_suggestions()`).
+- **Explore page** (`/explore`, new nav link) — eleven tabs: Trending, Newest, Popular Memories, Popular Drops, Today's Unlocks, and six tag-based categories (Travel/Nature/Family/Graduation/Birthday/Achievements). Built entirely on `search_memories()`/`get_explore_feed()` — "only show content users are allowed to view" is inherited directly from the same predicates, not a separate looser rule.
+
+### Profile Polish (Phase 10b — complete)
+Before writing anything new, this phase's nine-item brief was checked against what already shipped: **six of the nine already existed** — Memory Statistics dashboard (`ProfileStatsCard`, Phase 9), Achievement section (`BadgesAndAchievements`, Phase 2), Recently unlocked memories ("Recent Memories", Phase 9), and Mutual friends display (`MutualFriends`, Phase 3 — shown on `PublicProfilePage` only, since a mutual-friends count with yourself isn't meaningful). Public Capsules/Public Moments sections needed no new SQL — same client-filter-after-fetch pattern Phase 9's "Locked Drops" preview already used. That left two genuinely new capabilities:
+
+- **Pinned Memories / Pinned Drops** — pin up to 6 of your own unlocked Drops/Capsules/Moments to showcase at the top of your profile. New `pinned_items` table (own-content-only, enforced server-side, not just in the UI) and `get_pinned_memories()` RPC, same visibility-and-block gating as everything else. Toggled from a new "Pin to profile" control in Memory Details (`MemoryViewer`); rendered as two separate sections on Profile — Pinned Memories (Capsules/Moments) and Pinned Drops — per the brief's two distinct bullets, backed by one shared mechanism.
+- **Activity timeline** — a live-computed feed of "created a Drop/Capsule/Moment" and "commented on a Drop/Capsule," via a new `get_activity_timeline()` RPC. Deliberately *not* a trigger-populated log table: a log only starts recording the moment it's added (empty history for every existing account), while a live query over existing `created_at`/comment timestamps has full history from day one — the same "derive it fresh" philosophy `memory_items_view`/`get_memory_stats()` already established in Phase 9. Reactions/likes and private threads (reflections, moment replies) are deliberately excluded — see Known limitations.
+
+### Bookmark + Share Experience (Phase 10c — complete)
+An audit before writing anything found a real, pre-existing gap: Capsules have had their own `capsule_saves` table since Phase 6 (the Like/Comment/Save trio), but nothing ever built a page to browse them — saving a Capsule toggled a bookmark icon that led nowhere. `/saved` (renamed from Drop-only `SavedDropsPage` to `SavedPage`) now unifies both:
+
+- **One Saved page, two content types** — Drops and Capsules together, via the new `get_saved_memories()` RPC (same Memory-shaped rows as Search/Explore/Pinned). Moments still have no save concept anywhere in this app — they're ephemeral by design, not an oversight.
+- **Folders** reuse Phase 7's existing Collections rather than a new parallel concept — the brief's "Folders" and "Collections" bullets are one and the same mechanism here, since Drops/Capsules were already collection-eligible (Phase 9).
+- **Notes** — a free-text note (280 chars) per saved item, your own private annotation, stored directly on `saved_posts`/`capsule_saves` (new `note` column + a new UPDATE policy on each — neither table had one before).
+- **Sort, filter, search** — newest/oldest saved, filter by content type or folder, and full-text search across title/caption/note, all server-side via `get_saved_memories()`'s params.
+- **Share, generalized.** `ShareModal` was Drop-only; it's now shared by Drops and Capsules (`memoryType: 'drop' | 'capsule'`), and gained three new things: a **downloadable preview card** (pure `<canvas>`, no new dependency — gradient background, cover photo if it loads without a CORS taint, mood emoji, caption, "Memory Drop" wordmark), a **QR code** (via a public QR image API — the one external network call this phase adds, documented in Known limitations), and **"Copy shareable text"** (a formatted caption+link, replacing the old disabled "Share inside Memory Drop — Coming soon" stub). Deep linking itself needed no new work — `/drop/:id`, `/capsules/:id`, `/memories/:type/:id`, and `/u/:username` already existed; this phase just made sure every shareable surface builds those same canonical URLs consistently.
+
+### Comments + Reactions (Phase 10d — complete)
+An audit before writing anything found `comments` (Drops) has carried a dormant `parent_comment_id` column since Phase 4 — declared "nested replies preparation," never read or written by any RPC or frontend code. `capsule_comments` had no threading column at all, and neither table had an UPDATE policy, so editing was impossible even at the database level. Capsule comments also had noticeably less UI than Drop comments (no delete button, despite the backend already supporting it). This phase closes all of that, and — since both comment tables ended up with the identical shape — **unifies what were two separate, unequal comment UIs into one shared `CommentSection`/`CommentItem` pair**, used by both `DropCard` and `CapsuleCard`.
+
+- **Replies** — one level deep, not infinitely nested. `parent_comment_id` (finally activated on `comments`, newly added to `capsule_comments`) plus a trigger that rejects replying to a reply. Top-level comments render with their replies indented directly beneath, grouped client-side from one flat fetch.
+- **Edit comment** — a real UPDATE policy exists now (it didn't before), enforced by a trigger that checks *which* column changed and *who's* allowed to change it (see Security notes) rather than a blanket "owner can update anything" policy.
+- **Delete comment** — already worked for Drops end-to-end; now has real UI for Capsules too (it only ever lacked a button, not backend support).
+- **Mention users** — typing `@` in any comment/reply box opens a live username-search dropdown (reusing Phase 3's `search_users`); mentions render as clickable profile links. No `comment_mentions` table and no notification hookup — there's nothing for one to feed yet (Notifications stay out of scope for all of Phase 10), so this is parsing + a nice link, not a tracked relationship.
+- **Emoji reactions** — a new `comment_reactions` table, one active reaction per user per comment (swap by picking a different emoji, remove by picking the same one again), same model `moment_reactions` already established. Reuses the existing `EmojiPicker` component.
+- **Comment timestamps** — already existed for Drops; now rendered for Capsule comments too, plus an "· edited" marker when `edited_at` is set.
+- **Pinned comments** — only the Drop/Capsule owner can pin (checked by the same trigger that gates edits), never the comment's own author unless they're also the content owner. Pinned comments sort first.
+- **Reactions, more broadly** — Drops'/Capsules' own Like stays a single reaction type (a heart); widening it into full multi-emoji reactions was judged too large/risky a change for this pass (see Known limitations). What *did* ship: an **animated pop + floating heart** on like (pure CSS keyframes, no library), and **"Recent reactions"** — tap a like count to see an avatar list of who recently liked, via a new `get_recent_likers()` RPC (likes' own SELECT policy is own-rows-only, same reasoning as every other cross-user read in this app). "Top reactions" already exists for Moments (`get_moment_reactions`, Phase 5) — nothing new needed there, since Moments already support multiple emoji types.
+
+### Feed Polish + UX + Performance (Phase 10e — complete)
+An audit before writing anything found most of the "Feed Polish" brief already shipped in earlier phases and genuinely solid: infinite scroll (`InfiniteLoader`/`useInView`), pull-to-refresh (`usePullToRefresh`, already wired into `FeedPage`), optimistic updates (consistent across `LikeButton`/`SaveButton`/`DropActions` since Phase 4), and real composed skeletons/empty states (`FeedSkeleton`, `EmptyDropState`) — none of that was rebuilt. Keyboard accessibility was also already a mature, consistent pattern (`Modal`'s real focus trap, Escape-to-close everywhere, visible focus rings throughout) — light-touch only here. What was genuinely thin is what this phase actually built:
+
+- **Offline detection + retry** — a new `useOnlineStatus()` hook (`navigator.onLine` + `online`/`offline` events) and a persistent `OfflineBanner` in `AppShell`. Every read hook in this app (`useDrops`, `useMemories`, `useSearch`, ...) already swallows fetch errors into an empty array rather than surfacing them — a pre-existing pattern, not something this phase changed — so a failed request today looks identical to a genuinely empty result. Rather than the much larger, more invasive change of reworking every hook's return contract to distinguish "empty" from "errored," Feed/Explore/Search/Memories/Capsules now check "is the result empty *and* are we offline" and show a real `ErrorState` with Retry for that specific, common case, while true server-error-while-online still reads as "empty" — an honest, scoped fix, not a complete one (see Known limitations).
+- **Page transitions** — `AppShell`'s `<main>` is now keyed by `location.pathname` with a `page-enter` fade/slide-up (no `framer-motion`, not installed; a route-change wrapper wasn't attempted, this is a lighter CSS-only touch).
+- **Unlock reveal animation** — Drops now play a subtle scale/fade `unlock-reveal` the moment a card's own countdown hits zero and its real content arrives (not on every render of an already-unlocked drop, only the live transition). Capsules already had a dedicated `UnlockAnimation` component (Phase 6) — untouched, already good.
+- **Reduced motion is respected automatically** — every new animation here uses standard Tailwind `animate-`/`transition-` classes, which the existing global `.md-reduced-motion` override (Phase 8) already neutralizes app-wide; no new opt-out logic was needed.
+- **Performance — memoization**: `MemoryCard`, `DropCard`, `CapsuleCard` (the three components behind every list/grid in the app) are now `React.memo`-wrapped. This works because their parent pages patch one item's object reference in an array at a time (`prev.map(x => x.id === id ? {...x, ...patch} : x)`) rather than replacing the whole array's contents — unchanged siblings keep the same object reference, so memo correctly skips re-rendering them on every interaction with one card.
+- **Performance — a dependency-free stand-in for virtualization**: no `react-window`/`react-virtual` is installed, and hand-rolling a windowed scroller for variable-height cards (photos, videos, text, all mixed within one list) was judged too large and error-prone for this polish-focused phase. Instead, `DropCard`/`CapsuleCard` get a new `.cv-auto` CSS utility (`content-visibility: auto` + `contain-intrinsic-size`) — the browser skips layout/paint work for off-screen cards without unmounting them from React, which is most of virtualization's actual win at a fraction of the complexity. Deliberately *not* applied to `MemoryCard`'s small grid/list variants — their aspect-square/compact sizing doesn't match the utility's tuned placeholder height and would misjudge scrollbar length.
+- **Performance — image loading**: `Avatar.tsx` — the single most-reused image component in the app (navbar, comments, likers popovers, every card header) — gained `loading="lazy" decoding="async"`, closing the one real gap an audit found (`MemoryCard`/`ImageGrid` already had it consistently).
+- **Performance — reduced refetching**: Memories' Favorites/Flashbacks/Archive tabs now cache per-session the same way `FeedPage`'s tabs already did (Phase 4) — revisiting a tab within one page visit no longer refires its RPC.
+
+### Admin Preparation (Phase 10f — complete)
+The last of six Phase 10 sub-phases, and explicitly architecture-only per the brief: **"No admin UI yet. Just architecture."** Nothing added here is reachable from the app today — there's no admin screen anywhere, and every existing account has `is_admin = false` by default, so the two new functions below currently have zero real-world callers. That's the intended end state for this phase, not an unfinished one.
+
+An audit found three real gaps: reporting was Drop-only (`reports`, a one-way mailbox — Capsules and Moments had no equivalent); there was no admin/moderator role concept anywhere in the schema; and there was no soft-delete anywhere — every deletion in this app is a hard, cascading DELETE, which is right for a user deleting their own content but wrong for moderation, since it destroys the evidence a review process would need.
+
+- **`profiles.is_admin`** — the role concept itself. Defaults `false` for everyone; nothing sets it to `true` anywhere in this codebase (that's a manual, direct-database step for whoever operates a real deployment).
+- **`capsule_reports` / `moment_reports`** — parity with Drops' existing `reports`: same one-way-mailbox shape, no SELECT policy at all, kept as separate per-content-type tables rather than one polymorphic table (matching how `capsule_likes`/`capsule_comments`/`capsule_saves` already mirror their Drop equivalents elsewhere in this app).
+- **`moderation_status`** (`'active'` / `'hidden'` / `'removed'`) plus `moderated_at`/`moderated_by`/`moderation_reason` on `posts`/`capsules`/`moments` — the auditable alternative to a silent hard delete. The only way this can change is through `moderate_content()`, a new admin-only `SECURITY DEFINER` RPC — there's deliberately no direct-UPDATE RLS policy for these columns, so "who changed this and why" always has exactly one answer.
+- **`get_content_reports()`** — a new admin-only RPC that unions all three report tables into one normalized shape (content type, content, reporter, reason, timestamp). This *is* the "content reports dashboard structure" the brief asks for — a ready-made data source for a future admin screen, without building that screen.
+- **Deliberately not done in this pass**: no existing read RPC (`get_drops_feed`, `get_memories`, `search_memories`, ...) was modified to exclude `moderation_status <> 'active'` content. See Known limitations for why.
+- **Scale-test seed data** — a separate, clearly-marked `supabase/dev_seed_scale_test.sql` (not a schema migration — never run it against production) that generates ~60 fake accounts and roughly 1000 Drops, 500 Moments, 500 Capsules, ~900 follows, ~4,500 comments, ~6,000 likes/reactions, and ~600 bookmarks, all tagged `scaletest_*`/`Scale-test *` for easy identification and one-command cleanup via cascade delete.
+
 ---
 
 ## Getting started
@@ -180,6 +240,12 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
    - `supabase/phase7_memories.sql` — Memories: adds `tags`/`hidden_at` to `capsules` and `moments`, `location_text` to `capsules`; new tables `favorites`/`memory_collections`/`collection_items`/`flashbacks_cache`/`memory_highlights`; RPCs `get_memories`/`get_memory`/`get_memory_calendar`/`get_memory_year_counts`/`get_flashbacks`/`dismiss_flashback`/`get_highlight_candidates`/`get_memory_streak`/`get_collections`/`seed_default_collections` — no new `memories` table, everything is computed by UNIONing `capsules` and expired `moments` at read time
    - `supabase/phase8_settings.sql` — Settings & Privacy: new tables `user_settings`/`notification_preferences`/`user_sessions`/`feedback_reports`, a trigger that auto-creates the first two rows the moment a profile exists (plus a one-time backfill for existing accounts), RPCs `get_blocked_users`/`get_muted_users`/`get_restricted_users`/`get_close_friends`/`delete_my_account`
    - `supabase/phase9_unified_memory_wiring.sql` — Unified Memory Wiring: adds the `memory_items_view` (internal-only, never granted to `authenticated`/`anon`), widens `get_memories()`/`get_memory()` to include Drops as a third source, adds `drop_id` to `favorites`/`collection_items`, and adds RPCs `get_memory_stats()`/`get_public_stats()`
+   - `supabase/phase10_search_explore.sql` — Search + Explore (Phase 10a): new `search_history` table + `record_search`/`get_recent_searches`/`clear_search_history`/`get_trending_searches` RPCs, cross-user `search_memories()`/`search_collections()` RPCs, and `get_explore_feed()`/`get_search_suggestions()` built on top of `search_memories()`
+   - `supabase/phase10b_profile_polish.sql` — Profile Polish (Phase 10b): new `pinned_items` table (max 6, own-content-only, trigger-enforced) + `get_pinned_memories()`, and the live-computed `get_activity_timeline()` RPC
+   - `supabase/phase10c_saved_share.sql` — Bookmark Experience (Phase 10c): adds a `note` column + UPDATE policy to `saved_posts`/`capsule_saves`, and the `get_saved_memories()`/`update_saved_note()` RPCs (no schema changes for Share — that part is entirely client-side)
+   - `supabase/phase10d_comments_reactions.sql` — Comments + Reactions (Phase 10d): activates `parent_comment_id` on `comments`, adds it plus `edited_at`/`is_pinned` to both comment tables, adds the `enforce_comment_rules()`/`enforce_capsule_comment_rules()` triggers + new UPDATE policies, a new `comment_reactions` table, widened `get_drop_comments()`/`get_capsule_comments()` (DROP + CREATE — return shape changed), and the `get_comment_reactions()`/`get_recent_likers()` RPCs
+   - `supabase/phase10f_admin_prep.sql` — Admin Preparation (Phase 10f): adds `profiles.is_admin`, new `capsule_reports`/`moment_reports` tables, `moderation_status`/audit columns on `posts`/`capsules`/`moments`, and the admin-only `moderate_content()`/`get_content_reports()` RPCs — architecture only, no admin UI ships in this phase (Phase 10e has no dedicated SQL file — it was a frontend-only sub-phase)
+   - `supabase/dev_seed_scale_test.sql` — **not a migration, do not run against production** — optional scale-test fixture data (see Phase 10f docs below) for load/consistency testing only
 
 5. Restart the dev server.
 
@@ -221,13 +287,14 @@ src/
 │   ├── ProfilePage.tsx          # own profile, at /profile
 │   ├── EditProfilePage.tsx      # at /profile/edit
 │   ├── PublicProfilePage.tsx    # anyone's profile, at /u/:username
-│   ├── SearchPage.tsx           # at /search
+│   ├── SearchPage.tsx           # unified search (users/drops/capsules/moments/collections), at /search
+│   ├── ExplorePage.tsx          # 11-tab discovery feed, at /explore
 │   ├── FriendsPage.tsx          # at /friends
 │   ├── FriendRequestsPage.tsx   # at /friends/requests
 │   ├── FollowersPage.tsx        # at /followers and /u/:username/followers
 │   ├── FollowingPage.tsx        # at /following and /u/:username/following
 │   ├── FeedPage.tsx             # at /feed — primary landing after login
-│   ├── SavedDropsPage.tsx       # at /saved
+│   ├── SavedPage.tsx            # saved Drops + Capsules, folders/notes/sort/filter/search, at /saved
 │   ├── DropPage.tsx             # single-drop permalink, at /drop/:dropId
 │   ├── MomentsPage.tsx          # your own archive (active + expired), at /moments
 │   ├── MomentCreatePage.tsx     # linkable composer, at /moments/create
@@ -242,21 +309,23 @@ src/
 │   └── TermsPage.tsx, PrivacyPage.tsx
 ├── components/
 │   ├── auth/         # AuthLayout, GoogleButton, RouteGuards
-│   ├── layout/       # AppShell, Navbar, PublicPageHeader
+│   ├── layout/       # AppShell (page-transition wrapper), Navbar, OfflineBanner, PublicPageHeader
 │   ├── profile/      # ProfileHeader (+ skeleton), AvatarUpload,
 │   │                 #   CoverPhotoUpload, ImageCropModal, StatsRow,
 │   │                 #   BadgesAndAchievements (+ skeleton), ProfileCompletionBar,
-│   │                 #   ProfileStatsCard
+│   │                 #   ProfileStatsCard, ActivityTimeline
 │   ├── social/       # UserCard, UserList (+ skeleton), FollowButton,
 │   │                 #   RelationshipMenu, FriendRequestCard, MutualFriends,
 │   │                 #   SocialStats, EmptySocialState, UserSearchBar,
 │   │                 #   UserSearchResults, FollowersList, FollowingList,
 │   │                 #   SuggestedFriends
 │   ├── feed/         # Feed, DropTabs, DropCard, DropComposer, DropActions,
-│   │                 #   SaveButton, LikeButton, InterestActions, CommentSection,
-│   │                 #   CommentItem, ReflectionModal, MoodPicker, VisibilityPicker,
-│   │                 #   CountdownPill, LockedDropPlaceholder,
-│   │                 #   ImageGrid, VideoPlayer, AudioPlayer, ShareModal, ReportModal,
+│   │                 #   SaveButton, LikeButton (animated), InterestActions,
+│   │                 #   CommentSection, CommentItem, CommentComposer (shared by
+│   │                 #   Drops+Capsules), RecentLikersPopover, ReflectionModal,
+│   │                 #   MoodPicker, VisibilityPicker, CountdownPill, LockedDropPlaceholder,
+│   │                 #   ImageGrid, VideoPlayer, AudioPlayer, ShareModal (Drop+Capsule, QR +
+│   │                 #   preview card download), ReportModal,
 │   │                 #   EmojiPicker, EmptyDropState, FeedSkeleton, InfiniteLoader
 │   ├── moments/      # MomentTray, MomentBubble, CreateMomentModal,
 │   │                 #   MomentDurationSelector, MomentPrivacySelector, MomentViewer,
@@ -267,13 +336,14 @@ src/
 │   │                 #   CapsuleTimeline, CapsuleArchive, CapsuleFilters, CapsuleViewer
 │   ├── memories/     # MemoryCard, MemoryTimeline, ListView, GridView, JournalView,
 │   │                 #   TimelineView, MemoryCalendar, YearView, CollectionGrid,
-│   │                 #   FavoriteButton, FlashbackCard, HighlightCard, MemorySearch,
+│   │                 #   FavoriteButton, PinButton, FlashbackCard, HighlightCard, MemorySearch,
 │   │                 #   MemoryFilters, MemoryViewer
 │   ├── settings/     # SettingsSection, SettingsCard, ToggleRow, DangerZone, SessionList,
 │   │                 #   NotificationSettings, ThemeSelector, StorageUsageCard, FeedbackForm,
 │   │                 #   AccountSettings, ProfileSettings, PrivacySettings, SecuritySettings,
 │   │                 #   AppearanceSettings, AccessibilitySettings, StorageSettings,
 │   │                 #   HelpSettings, AboutSettings
+│   ├── saved/        # SavedMemoryRow (notes, folders, unsave)
 │   ├── legal/        # LegalLayout
 │   └── ui/           # Button, Input, Avatar, Card, Modal, Checkbox,
 │                      #   Toggle, Badge, EmptyState, ErrorState, Skeleton
@@ -286,13 +356,18 @@ src/
 │   ├── useMemories.ts             # get_memories/get_memory (Drops+Capsules+Moments), calendar,
 │   │                              #   years, flashbacks, highlights, collections, favorites,
 │   │                              #   hide/restore/delete, get_memory_stats/get_public_stats
+│   ├── useSearch.ts               # search_memories/search_collections/get_explore_feed,
+│   │                              #   recent/trending searches, search suggestions
+│   ├── useSaved.ts                # get_saved_memories/update_saved_note
+│   ├── useComments.ts             # shared comment CRUD/reply/pin/react for Drops+Capsules
 │   ├── useSettings.ts             # settings, notification prefs, blocked/muted/restricted/close
 │   │                              #   friends lists, sessions, account/password/email, storage usage
 │   ├── useTheme.tsx               # ThemeProvider — dark mode, font size, accessibility toggles
 │   ├── useUsernameAvailability.ts
 │   ├── useImageUpload.ts         # shared drag-drop/crop/upload pipeline
 │   ├── useInView.ts              # IntersectionObserver (video lazy-load, infinite scroll)
-│   └── usePullToRefresh.ts       # touch-only pull-to-refresh
+│   ├── usePullToRefresh.ts       # touch-only pull-to-refresh
+│   └── useOnlineStatus.ts        # navigator.onLine + online/offline events
 ├── lib/
 │   ├── supabase.ts    # Supabase client + isSupabaseConfigured()
 │   ├── validators.ts  # every field's validation rules
@@ -306,11 +381,15 @@ src/
 │   ├── moment.ts        # Moment, MomentTrayItem, MomentSeenEntry, MomentPrivacy, MomentDurationHours
 │   ├── capsule.ts       # Capsule, CapsuleMediaItem, CapsuleVisibility, CapsuleMemoryType, CapsuleArchiveFilters
 │   ├── memory.ts        # Memory (unified drop+capsule+moment shape), MemoryFilters, MemoryCollection,
-│   │                    #   Flashback, HighlightCandidate, MemoryStats, PublicStats
+│   │                    #   Flashback, HighlightCandidate, MemoryStats, PublicStats, RecentSearch,
+│   │                    #   TrendingSearch, SearchSuggestion, CollectionSearchResult, ExploreTab,
+│   │                    #   PinnedMemory, ActivityItem, SavedMemory
+│   ├── comment.ts        # Comment (shared Drop+Capsule shape), CommentReactionBreakdown, RecentLiker
 │   └── settings.ts      # UserSettings, NotificationPreferences, UserSession, ManagedUser, Theme, FontSize
 └── utils/
     ├── date.ts
-    └── storage.ts      # upload/delete + storage-path parsing (for cleanup on replace)
+    ├── storage.ts       # upload/delete + storage-path parsing (for cleanup on replace)
+    └── sharePreview.ts  # canvas-based downloadable share card + QR image URL builder
 
 supabase/
 ├── phase1_auth.sql            # profiles table, RLS, triggers, username RPC
@@ -325,7 +404,13 @@ supabase/
 ├── phase6_capsules.sql        # capsules + 7 related tables, can_view_capsule(), capsules bucket, capsule RPCs
 ├── phase7_memories.sql        # tags/location/hidden_at on capsules+moments, 5 new tables, get_memories() union RPC
 ├── phase8_settings.sql        # user_settings, notification_preferences, user_sessions, feedback_reports, delete_my_account()
-└── phase9_unified_memory_wiring.sql  # memory_items_view, get_memories()/get_memory() widened to Drops, get_memory_stats(), get_public_stats()
+├── phase9_unified_memory_wiring.sql   # memory_items_view, get_memories()/get_memory() widened to Drops, get_memory_stats(), get_public_stats()
+├── phase10_search_explore.sql         # search_history, search_memories()/search_collections(), get_explore_feed(), get_search_suggestions()
+├── phase10b_profile_polish.sql        # pinned_items (max 6, own-only), get_pinned_memories(), get_activity_timeline()
+├── phase10c_saved_share.sql           # note column + UPDATE policy on saved_posts/capsule_saves, get_saved_memories(), update_saved_note()
+├── phase10d_comments_reactions.sql    # parent_comment_id/edited_at/is_pinned + rules triggers on both comment tables, comment_reactions, widened get_drop_comments()/get_capsule_comments(), get_comment_reactions(), get_recent_likers()
+├── phase10f_admin_prep.sql            # profiles.is_admin, capsule_reports/moment_reports, moderation_status + audit columns, moderate_content(), get_content_reports()
+└── dev_seed_scale_test.sql            # NOT a migration — optional scale-test fixture data, never run against production
 ```
 
 > Note: `phase4b_time_capsule_redesign.sql` predates this phase and refers to the Drops feed's unlock-date redesign — it has nothing to do with the dedicated `capsules` tables in `phase6_capsules.sql`. Unfortunate naming collision, kept as-is rather than renaming an already-applied migration file.
@@ -437,6 +522,57 @@ No new content table — this phase is schema-light on purpose, since it's a wir
 
 **`get_memories()`/`get_memory()` do *not* literally `SELECT FROM memory_items_view`** — they keep their own richer, independently-maintained UNION (full multi-image `media` jsonb arrays, like/comment counts, favorite/hidden flags) rather than joining back from a flattened view to the source tables for that richer data. The view and the RPCs are kept *logically* consistent by sharing the same status/visibility rules, not by sharing SQL text — a deliberate tradeoff to avoid a riskier rewrite of two already-correct, already-tested functions.
 
+## Database tables (Phase 10a — Search & Explore)
+
+| Table | Purpose | Key rules |
+|---|---|---|
+| `search_history` | One row per search a user runs (`user_id`, `query`, `created_at`) | Own-rows-only RLS for SELECT/INSERT/DELETE — a user can only ever see or clear their own search history directly. `get_trending_searches()` aggregates across everyone via `SECURITY DEFINER`, but only ever returns a query string + a count, never who searched it |
+
+**`search_memories()` is the cross-user counterpart to `get_memories()`.** `get_memories()` is deliberately single-owner-scoped (`p_user_id`, defaulting to the caller) and only searches your *own* content, even when browsing someone else's Memories isn't the point — it's a personal archive tool. `search_memories()` has no owner scope at all: it UNIONs Drops/Capsules/Moments across *every* user, filtered down by the same `can_view_drop()`/`can_view_capsule()`/`can_view_moment()` predicates `get_public_stats()` already uses, plus `is_blocked_either_way()`. Both `get_explore_feed()` (tab → tag/sort mapping) and the Search page's content results call into this one function, so there's exactly one place that decides "what am I allowed to discover," not two slowly-diverging copies.
+
+**Why Collections search stays separate and own-only**: unlike Drops/Capsules/Moments, `memory_collections` has no visibility model at all in this app — every collection is implicitly private to its owner, nobody has ever been able to see someone else's collections. `search_collections()` reflects that: `where mc.user_id = auth.uid()`, no predicate function needed because there's no cross-user case to handle.
+
+## Database tables (Phase 10b — Profile Polish)
+
+| Table | Purpose | Key rules |
+|---|---|---|
+| `pinned_items` | Up to 6 pinned Drops/Capsules/Moments per user (`capsule_id`/`moment_id`/`drop_id`, exactly one set — same three-way-XOR pattern as `favorites`/`collection_items`) | INSERT requires *ownership* of the underlying content, not just visibility — pins are a "showcase what's mine" feature, never a repost of someone else's content. A `before insert` trigger rejects a 7th pin with a clear error rather than silently allowing unbounded growth. SELECT is own-rows-only; cross-user reads only ever happen through `get_pinned_memories()` |
+
+**No new table for the activity timeline** — `get_activity_timeline()` is entirely computed live from `posts`/`capsules`/`moments`/`comments`/`capsule_comments`' own `created_at` columns, reusing the exact same `can_view_drop`/`can_view_capsule`/`can_view_moment` + `is_blocked_either_way` predicates as every other cross-user read in this app. This means it has complete history back to each row's original creation date, not just activity that happened after this migration ran — a trigger-populated log table couldn't offer that.
+
+## Database tables (Phase 10c — Bookmark + Share)
+
+| Table change | Purpose | Key rules |
+|---|---|---|
+| `saved_posts` / `capsule_saves` — new `note` column | A private, 280-character note per saved item | New UPDATE policy on each (`auth.uid() = user_id`, both `using` and `with check`) — neither table had one before, since nothing about a save row was ever editable until Notes existed. `update_saved_note()` is a single RPC that branches on content type server-side rather than the client picking which table/column to hit directly |
+
+**`get_saved_memories()` is the third member of the "returns the same Memory shape" family**, alongside `search_memories()`/`get_explore_feed()`/`get_pinned_memories()` — all four exist to answer a different question (search results, discovery, showcased pins, bookmarks) over the same underlying visibility-gated content, and all four hand back rows the frontend already knows how to render. No new table backs any of them except where genuinely new state needed storing (`search_history`, `pinned_items`, and now the `note` columns here).
+
+**No schema changes for Share** — every URL `ShareModal` builds already existed as a route (`/drop/:id`, `/capsules/:id`). The QR code is a third-party image URL, not app data; the preview card is generated entirely client-side and never touches the database.
+
+## Database tables (Phase 10d — Comments + Reactions)
+
+| Table / change | Purpose | Key rules |
+|---|---|---|
+| `comments` / `capsule_comments` — new `parent_comment_id` (activated / added), `edited_at`, `is_pinned` | Replies, edit tracking, pinning | A combined `before insert or update` trigger on each table (`enforce_comment_rules()` / `enforce_capsule_comment_rules()`) is the real enforcement — see Security notes. RLS's UPDATE policy just decides *which rows* you can attempt to touch (comment author OR content owner); the trigger decides *which columns* you're actually allowed to change and only if you're the right person for that specific column |
+| `comment_reactions` | One active emoji reaction per user per comment across both comment tables | Same XOR-FK pattern as `favorites`/`collection_items`/`pinned_items`, just two columns here instead of three (`drop_comment_id`/`capsule_comment_id`, exactly one set). Swapping reactions is an UPDATE (own-rows-only), removing is a DELETE (own-rows-only) — same "swap via UPDATE, remove via DELETE" model `moment_reactions` already established in Phase 5 |
+
+**`get_drop_comments()`/`get_capsule_comments()` needed DROP + CREATE, not `CREATE OR REPLACE`** — Postgres won't let a function's return columns change in place. Both now return `edited_at`, `parent_comment_id`, `is_pinned`, `reaction_count`, and `my_reaction` alongside the original seven columns, ordered pinned-first then chronological.
+
+**No `comment_mentions` table.** @mentions are parsed and linked client-side only (`CommentItem`'s `renderContent`) and autocompleted via Phase 3's existing `search_users` (`CommentComposer`) — there's no notification system for a tracked mention to feed into (explicitly out of scope for all of Phase 10), so a tracking table would have no consumer yet.
+
+## Database tables (Phase 10f — Admin Preparation)
+
+| Table / change | Purpose | Key rules |
+|---|---|---|
+| `profiles.is_admin` | The entire role concept | Defaults `false`; nothing in the app sets it — flipping it to `true` for a real account is a manual, direct-database action outside this codebase, by design |
+| `capsule_reports` / `moment_reports` | Reporting parity with Drops' existing `reports` | Identical one-way-mailbox shape (insert-only, no SELECT policy even for the reporter) — see the Phase 4 Security notes bullet on `reports` for why |
+| `posts` / `capsules` / `moments` — new `moderation_status`/`moderated_at`/`moderated_by`/`moderation_reason` | An auditable alternative to a silent hard DELETE for moderation purposes | Changeable **only** through `moderate_content()` — there is no UPDATE RLS policy on these columns for any role, so a direct table write can't set them even by accident |
+
+**`moderate_content(content_type, content_id, status, reason)`** and **`get_content_reports(limit, offset)`** are both `SECURITY DEFINER` and both begin with `if not exists (select 1 from profiles where id = auth.uid() and is_admin) then raise exception ...` — the exact same admin-gate, written twice rather than factored into a shared helper (matching this app's established preference for each function re-stating its own predicate over a shared abstraction that could silently drift, e.g. `can_view_drop`/`can_view_capsule`/`can_view_moment` remaining three separate functions rather than one parameterized one).
+
+**`dev_seed_scale_test.sql` is explicitly not part of the migration sequence** — it's a load-testing fixture, meant to be run against a disposable local/staging project and then discarded (a one-line cascade DELETE removes everything it creates, since every seeded row hangs off a `scaletest_*` `auth.users` row via the same FK-cascade chain real account deletion already relies on).
+
 ## Security notes
 
 - **Row Level Security** on `profiles`: everyone can read/write only their own row directly. Reading *someone else's* profile goes through `get_profile_by_username`, a `SECURITY DEFINER` function that's the one place allowed to decide what a private account exposes — bio, location, and website are nulled out unless the viewer is the owner *or an accepted follower* (Phase 3 extended this from "owner only"); birthday is never returned by it at all, to anyone, ever. The function also hides the profile entirely between two users with a block relationship in either direction.
@@ -477,6 +613,23 @@ No new content table — this phase is schema-light on purpose, since it's a wir
 - **`memory_items_view` is the one object in this entire schema deliberately kept unreachable by any client role.** No `GRANT SELECT` exists for it at all, on purpose (see Database tables above) — the risk of a future change accidentally exposing it is real enough that it's worth calling out twice: a view inherits its owner's ability to bypass RLS on the tables it reads, so granting it to `authenticated` would silently undo every visibility rule `can_view_drop`/`can_view_capsule`/`can_view_moment` enforce elsewhere.
 - **`get_memory_stats()` and `get_public_stats()` read from completely different, non-overlapping sets of columns**, not the same query with a permission check bolted on. The public version was written from scratch to only ever touch `visibility = 'public'`/`privacy = 'everyone'` rows that are already unlocked/expired and not hidden — there's no code path that could accidentally leak a locked, private, or archived count to a non-owner, because that data is never selected in the first place, not merely filtered out after the fact.
 - **Widening `get_memories()`/`get_memory()` to Drops reused the exact same predicate Drops' own Feed RPCs already use** (`can_view_drop`, `is_blocked_either_way`, `unlock_date <= now()`) — no new visibility logic was invented for this phase, only extended to a query that didn't previously run it.
+- **`search_history` rows are own-rows-only, even from the aggregate side.** `get_trending_searches()`/`get_search_suggestions()` are `SECURITY DEFINER` specifically so they can count *across* everyone's search terms without ever granting cross-user `SELECT` on the table itself — a client can never query `search_history` directly for anyone but themselves; the only thing that leaves the table for other users is an aggregated `(query, count)` pair, never a `user_id`.
+- **`search_memories()`/`get_explore_feed()` introduce no new visibility rule** — same discipline as widening `get_memories()` to Drops in Phase 9: `can_view_drop`/`can_view_capsule`/`can_view_moment` plus `is_blocked_either_way` are reused exactly as `get_public_stats()` already uses them, not reimplemented. Locked/unmatured content is excluded by the same `unlock_date <= now()`/`expires_at <= now()` checks as every other read path in this app, so search and Explore can never be used to peek at something early.
+- **You can only ever pin your own content** — `pinned_items`' INSERT policy checks ownership of the target Drop/Capsule/Moment directly, not visibility, so there's no path (client bug or direct API call) to pin someone else's content onto your own profile. The 6-pin cap is a database trigger, not a client-side check a modified request could skip.
+- **`get_pinned_memories()`/`get_activity_timeline()` both start with an explicit `is_blocked_either_way(v_target)` early return** — if the viewer and the profile owner have any block relationship in either direction, both functions return zero rows immediately, before evaluating anything else. This mirrors `get_public_stats()`'s own posture, just applied up front rather than per-row, since every row in both functions is about the same one profile.
+- **Activity timeline reuses existing content predicates for every event**, and additionally excludes reflections (`is_reflection = true`) and moment replies entirely — both are private-by-construction everywhere else in this app (see the Phase 4/5 bullets above), so surfacing "X reflected on Y" or "X replied to Y" as public activity would have been a new leak, not a feature. Only real (non-reflection) Drop comments and Capsule comments count as "commented" activity.
+- **Saved notes are exactly as private as the save itself** — `saved_posts`/`capsule_saves` SELECT policies were already own-rows-only before this phase; the new `note` column and its UPDATE policy inherit that same posture automatically, since Postgres RLS applies per-row regardless of which columns a query touches. There's no path for anyone but the person who saved something to ever read or edit their note.
+- **`get_saved_memories()` still re-checks visibility on every row**, even though both `saved_posts` and `capsule_saves` only ever let you save something you could already see and that was already unlocked at save time. This matters because visibility can change *after* the save — if a Capsule owner later flips it from Public to Only Me, the save row still exists (harmless, it's just a bookmark reference) but `get_saved_memories()` correctly stops returning it, the same "re-checked on every read, not just at save time" discipline `favorites`/`collection_items` already established in Phase 9.
+- **The share preview card is generated entirely in the browser and never uploaded anywhere** — `generateSharePreview()` draws to an in-memory `<canvas>` and hands the user a local download; the app's servers/database never see or store the image. The QR code is the one new external network call this phase adds (a public QR-image API), which necessarily means that service can see the URLs users generate QR codes for — see Known limitations.
+- **Comment edit/pin correctness lives in a trigger, not just RLS — on purpose.** The UPDATE policy on `comments`/`capsule_comments` allows either the comment's author or the content's owner to target a row at all (`using`), but says nothing about which columns — that's `enforce_comment_rules()`/`enforce_capsule_comment_rules()`'s job: only the original author may change `content` (and doing so stamps `edited_at`), only the content owner may flip `is_pinned`, and `post_id`/`capsule_id`/`user_id`/`parent_comment_id`/`created_at` are silently pinned back to their old values no matter who's asking or what they send. This two-layer design (RLS decides *which rows*, a trigger decides *which columns, by whom*) is the same pattern Capsules' own unlock-date validation already uses elsewhere in this app — reused here, not invented.
+- **Replies are enforced server-side to be exactly one level deep**, not just hidden in the UI — the same trigger rejects an INSERT whose `parent_comment_id` points at a comment that itself already has a parent, with a clear error rather than a silent constraint violation.
+- **`comment_reactions`' SELECT/INSERT policies both re-derive visibility from the parent content**, nested through `comments → posts` or `capsule_comments → capsules`, reusing `can_view_drop`/`can_view_capsule` + `is_blocked_either_way` exactly as everywhere else — there's no independent, potentially-looser visibility rule for reactions.
+- **`get_recent_likers()` re-checks the content's own visibility before returning anyone's name** — even though `likes`/`capsule_likes` rows themselves are already gated by the content having been visible at like-time, visibility can change afterward (see the equivalent Phase 10c bullet about saved items), so this RPC checks fresh on every call rather than trusting that the like was valid once.
+- **@mention autocomplete never suggests a blocked relationship** — `CommentComposer` calls the same `search_users()` RPC the Search page uses, which already excludes blocked-either-way accounts; there's no separate, unguarded lookup path for mentions.
+- **`useOnlineStatus()` is a pure UX affordance, not a security boundary** — `navigator.onLine` is trivially spoofable client-side and nothing in this app ever trusts it for anything beyond "should I show a retry button." Every actual read/write still goes through the same RLS-and-RPC enforcement as always regardless of what the browser claims about its connection.
+- **`is_admin` grants nothing by itself — every capability it unlocks re-checks it explicitly.** Setting the column to `true` on a row doesn't change what that user's own client-side RLS access looks like anywhere else in the app; it only changes the outcome of the two new functions that explicitly query it. There is no "if admin, bypass RLS generally" path anywhere.
+- **Moderation status changes are impossible to make untraceable** — `moderate_content()` always stamps `moderated_by = auth.uid()` itself (never trusts a client-supplied value), so there's no way to attribute a moderation action to the wrong admin, accidentally or otherwise.
+- **Content reports remain a one-way mailbox for reporters, exactly as before** — `get_content_reports()` is admin-only; a user who files a report still can't read it back afterward, the same as Drops' original `reports` behavior since Phase 4. Extending "can I see my own report" would be a deliberate, separate decision, not a side effect of this phase.
 
 ---
 
@@ -610,6 +763,90 @@ Validate with two accounts, User A (owner) and User B (follower/public viewer), 
 - **TypeScript build** — `npx tsc -b` clean.
 - **Production build** — `npm run build` clean.
 
+## Testing Phase 10a (Search + Explore)
+
+- **Cross-user search respects visibility** — as User B, search for text that matches User A's Only-Me drop and Followers-only capsule (not following yet): neither should appear. Follow User A, wait for/force acceptance, search again: the Followers-only capsule should now appear (once unlocked), the Only-Me drop still should not, ever.
+- **Search never surfaces locked content, even your own** — create a capsule that unlocks next week, search for its exact title as its owner: it should not appear in search results (it will still appear in Memories' own locked-until-later view — that's a different, intentionally separate page).
+- **Tag and location search** — search a word that only appears in one of your capsule's tags, then one that only appears in its location field; both should return that capsule. Search a word from a Drop's caption — should also work; search a tag or location term against a Drop specifically — should never match one, since Drops have no tags/location columns.
+- **Recent searches** — run a few different searches, reload the page, confirm they appear as chips in the same order (most recent first), deduped if you searched the same term twice. Hit Clear, confirm the list empties and stays empty on reload.
+- **Trending searches** — have two test accounts search the same term a few times; confirm it climbs in `get_trending_searches()`'s ordering relative to a term only searched once. Confirm the trending list never reveals *who* searched something, only the term and a count.
+- **Suggestions** — type a partial username that matches an existing account (not yourself, not a blocked relationship) and confirm it appears in the suggestion dropdown; type a partial term matching a trending search and confirm that appears too; confirm a blocked user's username never appears as a suggestion.
+- **Explore respects visibility identically to Search** — as User B, cycle through all eleven Explore tabs and confirm nothing appears that User B wouldn't also be able to find via Search or Memories directly; confirm a category tab (e.g. Travel) only returns content actually tagged `Travel` (case-insensitive) on a Capsule or Moment — Drops never appear in category tabs since they have no tags.
+- **Today's Unlocks is date-accurate** — confirm only content that matured (Drop/Capsule `unlock_date`) or expired (Moment `expires_at`) today, in the database's own clock, appears — not yesterday's or tomorrow's.
+- **Security** — as User B, attempt to call `search_memories`/`get_explore_feed` with content that should be invisible (a third account's Only-Me content) and confirm it's never returned regardless of query/tab; confirm a blocked-either-way relationship excludes that user's content from both Search and Explore entirely.
+- **TypeScript build** — `npx tsc -b` clean.
+- **Production build** — `npm run build` clean.
+
+## Testing Phase 10b (Profile Polish)
+
+- **Pinning respects ownership and the cap** — as User A, pin a Drop, a Capsule, and a Moment from Memory Details; confirm all three appear split correctly across "Pinned Memories" (Capsule/Moment) and "Pinned Drops" on your own profile. Try pinning a 7th item after already having 6 pinned; confirm it's rejected with a clear message, not a silent failure or a generic DB error. Confirm there is no UI path to pin something you don't own, and that a direct `pinned_items` insert attempting to reference someone else's content is rejected by RLS.
+- **Pinned content still respects "no peeking early"** — pin a capsule that hasn't unlocked yet (should be allowed, since pinning only checks ownership); confirm it does *not* appear in the Pinned Memories section until it actually unlocks.
+- **Pins are visible on your public profile correctly** — as User B, visit User A's profile and confirm pinned items only show if User B could otherwise view that content (an Only-Me pinned drop should never appear to User B; a Followers-only pinned capsule should only appear once User B is an accepted follower).
+- **Public Capsules / Public Moments sections** — confirm these show only `visibility: public` (Capsules) / `privacy: everyone` (Moments) content, already unlocked/expired, and stay empty (not shown at all) when there's nothing to show rather than rendering an awkward empty card.
+- **Activity timeline reflects real activity** — create a Drop, a Capsule, and a Moment as User A; confirm all three appear in your own Activity section in the correct order (newest first). Comment on someone else's public Drop; confirm "Commented on a Drop" appears on your own timeline. Post a private reflection or a moment reply; confirm neither ever appears in anyone's activity timeline, including your own.
+- **Activity timeline respects visibility** — as User B (not following User A), confirm User A's activity around a Followers-only or Only-Me item never appears; follow User A and confirm Followers-only activity now appears, Only-Me activity still never does.
+- **Blocked users see nothing** — as a blocked user, confirm both the pinned sections and the Activity section return empty on the blocker's profile, rather than partial/filtered data.
+- **TypeScript build** — `npx tsc -b` clean.
+- **Production build** — `npm run build` clean.
+
+## Testing Phase 10c (Bookmark + Share)
+
+- **Unified Saved page** — save a Drop and a Capsule; confirm both appear together on `/saved`, correctly labeled, and that the "Capsules" filter chip narrows to just the Capsule while "Drops" narrows to just the Drop.
+- **Notes persist and are searchable** — add a note to a saved item, reload the page, confirm the note is still there; search for a word that only appears in the note (not the title/caption) and confirm it's found.
+- **Notes are private** — as a different user who can also see the same public Drop/Capsule (e.g. because they also saved it), confirm they never see your note — there's no path in the UI or the RPC that would expose it.
+- **Folders reuse Collections correctly** — add a saved item to a Collection from the Saved page, then confirm it also shows up in that Collection from the Memories page's Collections tab, and vice versa — same underlying `collection_items` rows either way.
+- **Sort and filter compose correctly** — combine a type filter, a folder filter, and a search term at once; confirm the result set matches all three conditions together (an AND, not an OR).
+- **Unsaving removes it from Saved but not from Memories** — remove a saved Capsule from `/saved`; confirm it's gone from Saved but still fully intact and viewable from `/memories` (unsaving is not the same as deleting or hiding).
+- **A save row survives a visibility change correctly** — as the owner, save your own Capsule (allowed — owners can save their own), then as a different viewer who saved a friend's Public capsule, have the friend flip it to Only Me; confirm the viewer's saved item disappears from their `/saved` on next load (still exists as a row, `get_saved_memories()` just stops returning it).
+- **Share modal works for both content types** — open Share from a Drop and from a Capsule; confirm Copy Link produces the correct `/drop/:id` vs `/capsules/:id` URL in each case, Copy Shareable Text includes that same URL, the QR code image encodes the same URL (scan it to confirm), and Download Preview Card produces a PNG with the right caption/mood/cover for that specific item.
+- **Preview card degrades gracefully** — trigger card generation for a memory whose cover image fails to load or taints the canvas (e.g. an unusual external URL); confirm the card still downloads successfully as a text-only card rather than failing silently or throwing.
+- **TypeScript build** — `npx tsc -b` clean.
+- **Production build** — `npm run build` clean.
+
+## Testing Phase 10d (Comments + Reactions)
+
+- **Replies work and stay one level deep** — reply to a top-level comment on both a Drop and a Capsule; confirm it renders indented directly beneath its parent. Attempt to reply to a reply (e.g. via a direct API call with an existing reply's id as `parent_comment_id`); confirm it's rejected with the "one level deep" error, not silently nested or silently flattened.
+- **Edit respects authorship** — edit your own comment, confirm "· edited" appears and the content updates for everyone viewing it. As a different user (not the author, not the content owner), attempt to edit someone else's comment via a direct API call; confirm it's rejected.
+- **Delete works for both content types** — delete your own comment on a Drop and on a Capsule; confirm both the row and any of its replies disappear, and the comment count updates correctly.
+- **Pin is owner-only, not author-only** — as the Drop/Capsule owner, pin someone else's comment; confirm it moves to the top and shows the "Pinned" label for every viewer. As the comment's own author (not the content owner), attempt to pin your own comment via a direct API call; confirm it's rejected. As the content owner, pin one of your own comments; confirm that succeeds.
+- **Mentions autocomplete and link correctly** — type `@` followed by a few letters of a real username in a comment/reply box; confirm the dropdown shows matching users (never a blocked one), and that selecting one inserts `@username`. Post the comment; confirm `@username` renders as a clickable link to that profile.
+- **Comment reactions** — react to a comment with an emoji, confirm the count increments and your emoji shows as active; pick a different emoji, confirm it swaps (not adds a second reaction); pick the same emoji again, confirm it's removed and the count decrements.
+- **Comment reactions respect visibility** — as a user who can't view the underlying Drop/Capsule (blocked, or Only-Me visibility), confirm any attempt to read or write a reaction on one of its comments is rejected.
+- **Like animation and recent likers** — like a Drop or Capsule, confirm the pop + floating-heart animation plays once (not on every re-render); tap the like count, confirm a small list of recent likers' avatars/names appears, sourced correctly (never showing a blocked user, never showing likes on content you can no longer see).
+- **TypeScript build** — `npx tsc -b` clean.
+- **Production build** — `npm run build` clean.
+
+## Testing Phase 10e (Feed Polish + UX + Performance)
+
+- **Offline banner + retry** — use your browser devtools to simulate offline (Chrome DevTools → Network → Offline); confirm the amber banner appears within `AppShell` immediately, and disappears immediately on going back online, without a page reload. With an empty result showing (e.g. a Search with no matches, or Explore on a tab with nothing public), go offline; confirm the empty state swaps to "You're offline" with a working Retry button; go back online and click Retry, confirm it actually refetches.
+- **Page transitions respect reduced motion** — with Settings → Accessibility → Reduced Motion off, navigate between pages and confirm a brief fade/slide-up plays; turn Reduced Motion on and confirm the transition becomes instant (no animation), same as every other animation in the app.
+- **Unlock reveal plays once, at the right moment** — have a Drop with an unlock date a minute or two away open in a browser tab; wait for the countdown to hit zero; confirm the revealed content animates in once. Reload the page after it's already unlocked; confirm no animation plays this time (it's a "just now revealed" moment, not a permanent decoration).
+- **Memoization doesn't break optimistic updates** — like/comment/save/pin on one card in a long Feed or Memories list; confirm only that card visibly updates and no sibling cards flicker or re-render (open React DevTools' "Highlight updates" if you want to see this directly).
+- **`content-visibility: auto` doesn't clip anything that should be visible** — scroll a long Feed or Capsules list, open a card's "..." menu or comment section near the top and bottom of the viewport; confirm nothing is unexpectedly clipped or missing, and that scrolling past off-screen cards and back doesn't lose their state (likes, open menus should reset on scroll-away the same way they always did — `content-visibility` doesn't change React's own mount/unmount behavior).
+- **Memories tab caching** — visit Favorites, switch to another tab, switch back; confirm it doesn't reflash a loading skeleton (served from cache). Favorite a new item, switch tabs and back; note it won't appear until the tab is truly reloaded (a known limitation — see below) — confirm that's the actual, documented behavior, not a crash.
+- **TypeScript build** — `npx tsc -b` clean.
+- **Production build** — `npm run build` clean.
+
+## Testing Phase 10f (Admin Preparation + Scale Test)
+
+**Admin-prep architecture** — do this against a disposable/staging project, not production, since it involves manually flipping `is_admin`:
+- **Non-admins are rejected, not just denied data** — as an ordinary account, call `moderate_content()` and `get_content_reports()` directly (e.g. via `supabase.rpc(...)` in a browser console); confirm both raise an exception rather than silently returning nothing or succeeding.
+- **Grant yourself `is_admin` for testing**: `update profiles set is_admin = true where id = '<your-test-account-id>';` — then confirm both RPCs now work: report a Drop, a Capsule, and a Moment from three different accounts, then call `get_content_reports()` as the admin account and confirm all three appear, correctly typed, with the right reporter/reason/details.
+- **`moderate_content()` actually changes state and stamps the audit columns** — call it with `status: 'hidden'` on a test Capsule; confirm `moderation_status`/`moderated_at`/`moderated_by`/`moderation_reason` all update on the row (query the table directly). Confirm existing reads (Feed, Memories, Search, Explore) still show it — this phase deliberately didn't wire enforcement into any read path yet (see Known limitations), so seeing it still appear everywhere is expected, not a bug.
+- **The audit trail can't be spoofed** — attempt to call `moderate_content()` in a way that would set `moderated_by` to someone else's id (the function signature doesn't even accept one); confirm it's always the calling admin's own id.
+- **Revoke `is_admin`** when done testing and confirm both RPCs immediately reject that account again.
+
+**Scale test** — run `supabase/dev_seed_scale_test.sql` against a disposable local/staging project (never production), then work through:
+- **No broken navigation** — with ~1000 Drops/500 Moments/500 Capsules in the database, click through Feed (all 6 tabs), Explore (all 11 tabs), Memories (all 8 tabs), Capsules (both modes), Search, and a handful of the fake profiles; confirm nothing 404s, infinite-spins, or throws a console error under the larger dataset.
+- **No inconsistent stats** — check `get_memory_stats()`'s numbers on a seeded account against manually counting a sample of its rows; confirm Profile's stats card, Explore's Popular tabs, and a Capsule's own like/comment/save counts all agree with what's actually in the tables (no drift between a trigger-maintained counter and the rows it's supposed to be counting).
+- **No duplicated memories** — spot-check that no Drop/Capsule/Moment appears twice in Memories' Timeline, Search results, or Explore — the seed script's `on conflict do nothing` clauses prevent duplicate reaction/save/comment rows, but this checks the read side, not just the write side.
+- **No RLS leaks** — as a *non-seeded*, ordinary test account, confirm you never see a seeded `only_me`/`private` Drop, Capsule, or Moment anywhere (Search, Explore, a seeded user's profile) — the seed script deliberately created a realistic mix of all visibility tiers specifically so this is a meaningful check, not a trivially-empty one.
+- **No loading loops** — open Feed/Explore/Memories/Search with the seeded dataset and confirm `loadMore`/infinite-scroll terminates correctly once `hasMore` goes `false`, rather than looping or hammering the network.
+- **No console errors** — open the browser console while navigating the pages above; confirm no errors or unhandled promise rejections surface under the larger, more varied dataset (empty arrays, nulls, and edge-case combinations that a small hand-tested dataset might not have exercised).
+- **Cleanup** — run `delete from auth.users where email like 'scaletest_%@memorydrop.test';` and confirm every seeded row (profiles, posts, capsules, moments, follows, comments, likes, saves — everything) is gone via cascade, with nothing left behind to manually clean up.
+- **TypeScript build** — `npx tsc -b` clean.
+- **Production build** — `npm run build` clean.
+
 ## Known limitations
 
 - Mute and Restrict have no visible effect anywhere yet — the feed doesn't filter on them. The relationships are stored and toggle correctly; wiring `get_drops_feed` to exclude muted/restricted authors is a natural next step, deliberately not done here since it wasn't part of this phase's explicit scope.
@@ -653,6 +890,35 @@ Validate with two accounts, User A (owner) and User B (follower/public viewer), 
 - **Notification preferences have nothing to actually gate yet** — there's no notification-sending system in this app at all (by design, out of scope for this phase). The toggles are real and persisted so that whenever Phase 9 or later adds delivery, it has user intent to read from day one rather than defaulting everyone to "on."
 - **`deleteAllContent()` loops through each item's own delete function** (reusing Phases 4/5/6's storage-aware deletes) rather than a single bulk SQL statement — correct and consistent, but means deleting a very large amount of content runs as many sequential round trips. Fine at personal-library scale; would want batching for a power user with thousands of items.
 - **Password re-authentication uses `signInWithPassword`**, which — depending on Supabase project settings — could theoretically trigger the same rate limiting real sign-in attempts do if someone repeatedly enters a wrong current password. Not expected to matter in normal use, worth knowing if testing this flow many times in a row.
+- **Search only ever finds unlocked/matured content, including your own.** Drops/Capsules search results (as opposed to "Users") never include something still locked, even when you're its owner searching for your own upcoming capsule by title — that's Memories' own `p_search` (own-content-only) territory, a deliberately separate tool. Not a bug; worth knowing if a search for your own in-progress capsule comes up empty.
+- **Drops remain unsearchable by tag or location**, same root cause as every other Drops-vs-Capsules/Moments gap in this app: `posts` has no `tags`/`location_text` columns. Drops are only findable in search via their caption text. Adding those columns to `posts` would resolve this but felt like scope creep beyond "search," same reasoning Phase 9 used for tags/archiving.
+- **"Achievements" as an Explore tab is a literal tag filter (`tag = 'Achievements'`), not a query over the badges/achievements system.** Nothing in this app auto-tags content when a badge is earned — the tab only surfaces content a user manually tagged "Achievements" themselves. A real integration between `BadgesAndAchievements` and Explore would be a reasonable, separate follow-up.
+- **Collections have no visibility model, so "Search collections" only ever searches your own** — there's no concept of a public/shared collection anywhere in this app to search across users for.
+- **No full-text search, no fuzzy matching, no ranking beyond exact substring `ilike`** — `search_memories()`/`search_users()` are both plain `ilike '%term%'` matches. A typo returns nothing; Postgres full-text search (`tsvector`/`tsquery`) or a trigram index (`pg_trgm`) would be the natural upgrade if search quality becomes a complaint, not attempted here to avoid a new extension dependency in this pass.
+- **Trending searches has no floor and no spam protection** — a single user searching the same nonsense term 20 times in a row will make it "trending" site-wide for the next 7 days. Fine for a small/trusted user base; a real launch would want per-user rate limiting or a minimum-distinct-searcher threshold before a term counts as trending.
+- **Explore's pagination is offset-based with a fixed page size (21) and a client-side "Load more" button**, not infinite scroll — infinite loading is explicitly Phase 10e's job (Feed Polish), not duplicated here ahead of time.
+- **Pins have no manual reordering** — `get_pinned_memories()` orders by when something was pinned (most recent first), not a user-chosen position. A `position` column with drag-to-reorder UI would be the natural upgrade if a fixed showcase order turns out to matter; deliberately left out to avoid shipping a column with no UI to set it.
+- **Activity timeline excludes reactions/likes entirely.** This was a deliberate product choice as much as a scope cut: most social apps intentionally don't surface "X liked Y" in a public activity feed (Instagram removed it years ago) since it's high-volume, low-narrative-value, and mildly privacy-sensitive (a like on a Followers-only post reveals you follow that person, even if the post itself doesn't leak). Creation and comment events tell a much better "here's what this person has been up to" story on their own.
+- **Activity timeline has no pagination UI yet** — `get_activity_timeline()` supports `p_limit`/`p_offset`, but the Profile page only ever calls it with the first 20 rows and no "load more." Fine for a personal-library-scale profile; a "view all activity" page would be a reasonable follow-up.
+- **Moments have no save/bookmark concept, on purpose.** They're ephemeral by design — expiring, then landing in the owner's own Memories archive — so "save this for later" doesn't map cleanly onto something that already either exists forever (once expired, for the owner) or has already vanished (for everyone else). If a demand for "bookmark someone else's Moment before it expires" ever emerges, it would need real new schema, not a fit into the existing Drop/Capsule save pattern.
+- **"Share inside Memory Drop" is "Copy shareable text," not a repost/embed feature.** The original stub said "Coming soon" for a reason — building a real in-app share (reposting into your own feed, or sending to a specific person) would mean either a lightweight repost system (new feature, out of this phase's "wiring/polish" scope) or messaging (explicitly excluded from all of Phase 10). "Copy shareable text" gives you a paste-ready caption+link for your own next Drop's caption, a comment, anywhere — genuinely useful, deliberately not more than that.
+- **QR codes call a third-party image API** (`api.qrserver.com`) rather than generating the code fully offline — no QR-encoding library was added to keep the dependency list unchanged. This means generating a QR code sends the shared URL to that external service and requires the user to be online; it's a public link either way (never a private/locked one, since Share only ever appears on already-unlocked content), but worth knowing before assuming everything in this app is self-contained.
+- **The share preview card is a fixed, simple layout** — gradient background, one cover image, mood emoji, caption, wordmark — not a themeable/customizable template. A cover photo that fails to load (CORS, network) silently degrades to a text-only card rather than blocking the download, which is the right failure mode but means the card's appearance can vary based on network conditions in a way that's not obvious to the user.
+- **Replies are one level deep, permanently, not a temporary cut.** Reddit-style infinite nesting was considered and deliberately rejected — it needs recursive queries, recursive rendering, and unbounded indentation for a benefit this app's comment volume doesn't need. If deeper threads ever become a real request, this would be a genuine redesign (recursive CTE in the RPC, a tree-rendering component), not an incremental tweak to what's here.
+- **Drops'/Capsules' Like stays a single reaction type (a heart), not multi-emoji.** `moment_reactions` already proves the multi-emoji pattern works in this app, but retrofitting it onto `likes`/`capsule_likes` would mean changing what `like_count` means everywhere it's already read (Feed, Profile stats, Explore's "popular" sort, `get_memory_stats()`) — a bigger, riskier change than this polish-focused sub-phase should take on. "Top reactions" therefore only really applies to Moments today.
+- **`@mention` detection is "the token after the last `@` in the whole input," not true cursor-aware parsing.** Fine for a single-line comment box where people type mentions and keep going, but editing a mention in the middle of a longer message (cursor not at the end) won't retrigger the right suggestions. A richer text-input component would fix this; not attempted here to avoid a much bigger input-handling rewrite.
+- **No `comment_mentions` tracking table, and mentioning someone doesn't notify them.** This is intentional, not an oversight — there's no notification system anywhere in this app yet (explicitly excluded from all of Phase 10), so a table recording who-mentioned-whom would have no consumer. Revisit when Notifications actually ships.
+- **The emoji reaction picker doesn't highlight your current reaction.** `EmojiPicker` is a shared component with its own self-contained trigger button; reusing it here (rather than forking it) means the grid it opens has no way to show "this is the one you already picked" — functionally reacting/swapping/removing all still work correctly, it's just not visually indicated inside the picker itself.
+- **Reply notifications, mention notifications, and pin notifications don't exist**, same reasoning as mentions above — there's simply nowhere for any of them to go yet.
+- **Offline detection only catches the "genuinely offline" case, not "server returned an error while you're online."** This was a deliberate, scoped tradeoff — the real fix is having every read hook distinguish and surface `{data, error}` instead of collapsing failures into an empty array, which is how this app has worked since Phase 4 and touches far more files than a polish phase should rewrite at once. A 500 error, a timeout, or a misconfigured RLS policy while genuinely online will still render as "nothing here" today, same as before this phase.
+- **Memories' tab caching means a favorite/hide/archive action taken elsewhere won't retroactively appear in an already-visited tab within the same page visit** — e.g., favorite something from a Search result, then check the already-cached Favorites tab: it won't show up until you navigate away and back (which resets the `loadedTabs` cache) or reload the page. A cross-tab invalidation system (or just always refetching on favorite/unfavorite) would fix this; not attempted here to keep the caching change small and low-risk.
+- **No true list virtualization** — `content-visibility: auto` (see above) recovers most of the *rendering-cost* benefit without unmounting off-screen items, but every fetched item is still a real DOM node and still counts toward memory/DOM-size; a list that grows into the thousands within one session would still eventually get heavy. A real windowing library (`@tanstack/react-virtual` is the natural choice) is the correct next step if that ever becomes a real problem — deliberately not added as a new dependency in this pass.
+- **No page-transition library, no shared-element/hero transitions** — `framer-motion` isn't installed, and the CSS-only `page-enter` fade/slide is a page-shell-level effect, not per-element choreography (e.g. a card growing into its detail view). A richer transition system would be a real, separate scope decision (new dependency, more design work) rather than an incremental addition here.
+- **No admin UI exists anywhere, on purpose** — exactly as scoped. `moderate_content()`/`get_content_reports()` are real, correctly-secured, and completely unreachable without either direct SQL access or a future admin screen that doesn't exist yet.
+- **`moderation_status` isn't enforced by any existing read path yet.** `get_drops_feed`, `get_memories`, `search_memories`, `get_explore_feed`, and every other content RPC in this app still return `'hidden'`/`'removed'` content exactly as if it were `'active'`. This was a deliberate risk decision, not an oversight: wiring `and moderation_status = 'active'` into every one of those functions would mean touching 15+ already-correct, already-tested RPCs across nine migration files in a single pass with no real-world admin to exercise the change (since no account has `is_admin = true` today) — a bad risk/reward trade for a feature explicitly scoped as "architecture, no UI yet." When an actual admin UI is built, wiring this in should happen alongside it, informed by how that UI actually needs moderated content to behave (fully invisible vs. visible-with-a-banner vs. owner-still-sees-it, etc. — a real design decision, not just a WHERE clause).
+- **No moderation UI also means no way to *reverse* a `moderate_content()` call except calling it again** — there's no history/log table beyond the single current `moderated_at`/`moderated_by`/`moderation_reason` snapshot on the row itself, so a second moderation action overwrites the first one's record rather than appending to a trail. Fine for "architecture," not sufficient for a real moderation team's audit needs — a proper `moderation_log` table recording every action (not just the latest) would be the natural next step.
+- **The scale-test seed script's `auth.users` insert is best-effort, not guaranteed** — `auth.users` is Supabase-managed and not defined in this repo's own migrations, so its exact required columns can vary by project/Postgres version. The script's own header says to dry-run the "Fake accounts" section alone first; if it fails, the fix is adjusting that one INSERT's column list to match your specific instance, not the rest of the script.
+- **Seed data is text-only for Drops/Moments/Capsules** — no photo/video/audio content, since that would require actually uploading files to Storage per row (slow, and unnecessary for a data-consistency/scale test rather than a visual/media-rendering one). If you specifically need to load-test image-heavy rendering, this script isn't that tool.
 - **Phase 9's "service layer" is the existing hooks, widened, not five newly-named files.** The brief asked for `memoryService`/`capsuleService`/`dropService`/`momentService`/`statsService`; rather than creating parallel files that would duplicate or shadow the already-correct, already-tested `useMemories`/`useCapsules`/`useDrops`/`useMoments` hooks, those hooks were widened in place and `getMemoryStats`/`getPublicStats` were added to `useMemories` as the stats-service equivalent. Flagging this explicitly in case literally-named service files were the intent — reorganizing later is a rename/re-export, not a rewrite.
 - **Drops still don't support tags, location, or archiving (hide/restore).** Widening `get_memories()` to include Drops surfaces them everywhere Capsules/Moments appear, but `posts` has no `hidden_at`, `tags`, or `location_text` columns — `MemoryViewer` hides those controls for Drops rather than erroring, and `updateTags`/`hideMemory`/`restoreMemory` return an explicit "not available for Drops yet" error if called on one. Adding real support would mean adding those columns to `posts`, which felt like scope creep beyond "wiring."
 - **"Locked Until Later" on the Memories page sorts client-side, not via a new SQL sort mode.** `get_memories()`'s `p_sort` only orders by `created_at` (newest/oldest); soonest-to-unlock ordering needed a different column (`matured_at`/`unlock_at`) entirely. Rather than adding a new sort parameter (a signature change to an already-widened, already-tested function), the page fetches a wider locked set and re-sorts the 20 rows client-side, keeping the top 5. Fine at personal-library scale; would want a real `sort: 'unlocking_soon'` mode server-side if the locked set grows large.
@@ -688,5 +954,11 @@ Environment variables required in Vercel (Project Settings → Environment Varia
 | 7 | Memories (unified library over unlocked Capsules + expired Moments — Timeline/Calendar/Years/Collections/Favorites/Flashbacks/Highlights/Archive, 4 layouts) | ✅ Complete |
 | 8 | Settings & Privacy (10 sections, real dark mode infrastructure, global accessibility overrides, self-service account deletion, blocked/muted/restricted/Close-Friends management) | ✅ Complete |
 | 9 | Unified Memory Wiring (Drops joined into Memories, `memory_items_view`, real Profile/public stats, Capsules lifecycle sections, Memories preview strips, Favorites/Collections widened to Drops) | ✅ Complete |
-| 10 | Messages (DMs, conversation list) | Planned |
-| 11 | Notifications | Planned |
+| 10a | Search + Explore (cross-user `search_memories()`, recent/trending searches, suggestions, 11-tab Explore page) | ✅ Complete |
+| 10b | Profile polish (pinned Memories/Drops, public Capsules/Moments sections, live activity timeline) | ✅ Complete |
+| 10c | Bookmark experience (unified saved Drops+Capsules, folders via Collections, notes, sort/filter/search) + Share experience (generalized ShareModal, QR, downloadable preview cards) | ✅ Complete |
+| 10d | Comments (unified Drop+Capsule UI, one-level replies, edit/delete, @mentions, emoji reactions, pinned) + Reactions polish (animated likes, recent likers) | ✅ Complete |
+| 10e | Feed polish (offline detection + retry) + UX (page transitions, unlock reveal animation) + Performance (memoization, content-visibility, lazy Avatar, tab caching) | ✅ Complete |
+| 10f | Admin-prep architecture (`is_admin`, Capsule/Moment reports, auditable `moderation_status`, admin-gated RPCs — no UI) + scale-test seed data | ✅ Complete |
+| 11 | Messages (DMs, conversation list) | Planned |
+| 12 | Notifications | Planned |

@@ -11,6 +11,7 @@ import { CapsuleCard } from '../capsules/CapsuleCard';
 import { DropCard } from '../feed/DropCard';
 import { Avatar } from '../ui/Avatar';
 import { FavoriteButton } from './FavoriteButton';
+import { PinButton } from './PinButton';
 import { MOOD_META } from '../../types/feed';
 import { CAPSULE_VISIBILITY_META } from '../../types/capsule';
 import { formatDate } from '../../utils/date';
@@ -77,13 +78,14 @@ export const MemoryViewer: React.FC<MemoryViewerProps> = ({ memoryType, memoryId
   const navigate = useNavigate();
   const { getCapsule } = useCapsules();
   const { getDrop } = useDrops();
-  const { getMemory, getCollections, addToCollection, removeFromCollection, updateTags, updateLocation, hideMemory, restoreMemory, deletePermanently } = useMemories();
+  const { getMemory, getCollections, addToCollection, removeFromCollection, updateTags, updateLocation, hideMemory, restoreMemory, deletePermanently, getPinnedMemories } = useMemories();
 
   const [memory, setMemory] = useState<Memory | null | undefined>(undefined);
   const [capsule, setCapsule] = useState<Capsule | null>(null);
   const [drop, setDrop] = useState<Drop | null>(null);
   const [collections, setCollections] = useState<MemoryCollection[]>([]);
   const [memoryCollectionIds, setMemoryCollectionIds] = useState<Set<string>>(new Set());
+  const [isPinned, setIsPinned] = useState(false);
   const [tagDraft, setTagDraft] = useState('');
   const [locationDraft, setLocationDraft] = useState('');
   const [editingLocation, setEditingLocation] = useState(false);
@@ -102,6 +104,7 @@ export const MemoryViewer: React.FC<MemoryViewerProps> = ({ memoryType, memoryId
       if (data) setLocationDraft(data.location_text ?? '');
       if (data?.memory_type === 'capsule') setCapsule(await getCapsule(memoryId));
       if (data?.memory_type === 'drop') setDrop(await getDrop(memoryId));
+      if (data?.is_own) getPinnedMemories().then(pins => setIsPinned(pins.some(p => p.id === memoryId)));
     });
     getCollections().then(setCollections);
     supabase
@@ -272,6 +275,10 @@ export const MemoryViewer: React.FC<MemoryViewerProps> = ({ memoryType, memoryId
               </div>
             )}
           </div>
+        )}
+
+        {isOwn && (
+          <PinButton memoryType={memoryType} memoryId={memoryId} isPinned={isPinned} onChange={setIsPinned} />
         )}
 
         {isOwn && (

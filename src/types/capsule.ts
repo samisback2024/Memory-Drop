@@ -41,15 +41,8 @@ export interface Capsule {
   created_at: string;
 }
 
-export interface CapsuleComment {
-  id: string;
-  user_id: string;
-  username: string;
-  display_name: string | null;
-  profile_photo_url: string | null;
-  content: string;
-  created_at: string;
-}
+// Regular comments now live in types/comment.ts (Comment) — shared with
+// Drops since Phase 10d unified both comment UIs into one component.
 
 export interface CapsuleReflection {
   id: string;

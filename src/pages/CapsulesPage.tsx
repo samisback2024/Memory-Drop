@@ -8,6 +8,8 @@ import { CapsuleArchive } from '../components/capsules/CapsuleArchive';
 import { CapsuleTimeline } from '../components/capsules/CapsuleTimeline';
 import { CapsuleWizard } from '../components/capsules/CapsuleWizard';
 import { EmptyState } from '../components/ui/EmptyState';
+import { ErrorState } from '../components/ui/ErrorState';
+import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { EMPTY_CAPSULE_FILTERS, type Capsule } from '../types/capsule';
 
 const SOON_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
@@ -46,6 +48,7 @@ const CapsuleSection: React.FC<SectionProps> = ({ title, icon: Icon, capsules, l
 // something specific.
 export const CapsulesPage: React.FC = () => {
   const { user } = useAuth();
+  const isOnline = useOnlineStatus();
   const { getUserCapsules } = useCapsules();
   const { getArchivedMemories } = useMemories();
   const [wizardOpen, setWizardOpen] = useState(false);
@@ -132,7 +135,11 @@ export const CapsulesPage: React.FC = () => {
           )}
           {!loading && locked.length === 0 && unlocked.length === 0 && (
             <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm">
-              <EmptyState icon={Clock} title="No capsules yet" description="Create your first Time Capsule — a memory you send into the future." />
+              {!isOnline ? (
+                <ErrorState title="You're offline" description="Reconnect and try again." onRetry={loadOverview} />
+              ) : (
+                <EmptyState icon={Clock} title="No capsules yet" description="Create your first Time Capsule — a memory you send into the future." />
+              )}
             </div>
           )}
         </div>

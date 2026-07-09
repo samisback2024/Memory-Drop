@@ -165,6 +165,7 @@ export const FeedPage: React.FC = () => {
         onLoadMore={loadMore}
         onDeleted={removeFromAllTabs}
         onHidden={removeFromAllTabs}
+        onRetry={() => loadTab(activeTab)}
         emptyVariant={activeTab}
       />
 

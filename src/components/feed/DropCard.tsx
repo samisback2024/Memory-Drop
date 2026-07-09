@@ -23,7 +23,7 @@ interface DropCardProps {
   onUnsaved?: (dropId: string) => void;
 }
 
-export const DropCard: React.FC<DropCardProps> = ({ drop, onDeleted, onHidden, onUnsaved }) => {
+const DropCardImpl: React.FC<DropCardProps> = ({ drop, onDeleted, onHidden, onUnsaved }) => {
   const { user } = useAuth();
   const { deleteDrop, hideDrop, getDrop, recordUnlockView } = useDrops();
   const isOwn = drop.user_id === user?.id;
@@ -38,6 +38,7 @@ export const DropCard: React.FC<DropCardProps> = ({ drop, onDeleted, onHidden, o
   const [reflectOpen, setReflectOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [justUnlocked, setJustUnlocked] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const viewRecorded = useRef(false);
 
@@ -86,13 +87,16 @@ export const DropCard: React.FC<DropCardProps> = ({ drop, onDeleted, onHidden, o
   // data it was never sent.
   const handleUnlocked = async () => {
     const fresh = await getDrop(content.id);
-    if (fresh) setContent(fresh);
+    if (fresh) {
+      setContent(fresh);
+      setJustUnlocked(true);
+    }
   };
 
   if (deleting) return null;
 
   return (
-    <div className="flex gap-3">
+    <div className="flex gap-3 cv-auto">
       <div className="flex flex-col items-center w-5 flex-shrink-0 pt-6" aria-hidden="true">
         <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 ring-4 ring-gray-50 shadow-sm flex-shrink-0" />
         <div className="w-px flex-1 bg-gradient-to-b from-purple-200 to-transparent mt-1" />
@@ -163,7 +167,7 @@ export const DropCard: React.FC<DropCardProps> = ({ drop, onDeleted, onHidden, o
           </div>
         </div>
 
-        <div className="px-4 pb-3">
+        <div className={`px-4 pb-3 ${justUnlocked ? 'animate-unlock-reveal' : ''}`}>
           {!content.is_unlocked ? (
             <LockedDropPlaceholder
               memoryType={content.post_type}
@@ -182,9 +186,11 @@ export const DropCard: React.FC<DropCardProps> = ({ drop, onDeleted, onHidden, o
           )}
         </div>
 
-        {content.is_unlocked && content.post_type === 'photo' && content.images.length > 0 && <ImageGrid images={content.images} />}
-        {content.is_unlocked && content.post_type === 'video' && content.video_url && <VideoPlayer src={content.video_url} />}
-        {content.is_unlocked && content.post_type === 'audio' && content.audio_url && <AudioPlayer src={content.audio_url} />}
+        <div className={justUnlocked ? 'animate-unlock-reveal' : ''}>
+          {content.is_unlocked && content.post_type === 'photo' && content.images.length > 0 && <ImageGrid images={content.images} />}
+          {content.is_unlocked && content.post_type === 'video' && content.video_url && <VideoPlayer src={content.video_url} />}
+          {content.is_unlocked && content.post_type === 'audio' && content.audio_url && <AudioPlayer src={content.audio_url} />}
+        </div>
 
         <DropActions
           drop={content}
@@ -198,13 +204,18 @@ export const DropCard: React.FC<DropCardProps> = ({ drop, onDeleted, onHidden, o
         />
 
         {content.is_unlocked && commentsOpen && (
-          <CommentSection dropId={content.id} onCountChange={count => patchContent({ comment_count: count })} />
+          <CommentSection contentType="drop" contentId={content.id} contentOwnerId={content.user_id} onCountChange={count => patchContent({ comment_count: count })} />
         )}
 
         <ShareModal
           isOpen={shareOpen}
           onClose={() => setShareOpen(false)}
-          dropId={content.id}
+          memoryType="drop"
+          memoryId={content.id}
+          caption={content.caption}
+          mood={content.mood}
+          coverUrl={content.images[0]?.url ?? null}
+          username={content.username}
           onShared={() => patchContent({ share_count: content.share_count + 1 })}
         />
         <ReportModal isOpen={reportOpen} onClose={() => setReportOpen(false)} dropId={content.id} />
@@ -213,3 +224,9 @@ export const DropCard: React.FC<DropCardProps> = ({ drop, onDeleted, onHidden, o
     </div>
   );
 };
+
+// Memoized — Feed renders one of these per drop; FeedPage's patch
+// functions (removeFromAllTabs, etc.) replace one item's object
+// reference in the array without touching its siblings, so this skips
+// re-rendering every other card in a long feed on each interaction.
+export const DropCard = React.memo(DropCardImpl);

@@ -1,62 +1,100 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
-import { useDrops } from '../../hooks/useDrops';
-import { Avatar } from '../ui/Avatar';
+import { useComments } from '../../hooks/useComments';
 import { Skeleton } from '../ui/Skeleton';
 import { CommentItem } from './CommentItem';
-import type { DropComment } from '../../types/feed';
+import { CommentComposer } from './CommentComposer';
+import type { Comment, CommentContentType } from '../../types/comment';
 
 interface CommentSectionProps {
-  dropId: string;
+  contentType: CommentContentType;
+  contentId: string;
+  contentOwnerId: string;
   onCountChange?: (count: number) => void;
 }
 
-// Only ever mounted once a drop has unlocked — see DropCard, which doesn't
-// render this at all while a drop is still sealed.
-export const CommentSection: React.FC<CommentSectionProps> = ({ dropId, onCountChange }) => {
+// Shared by Drops and Capsules (Phase 10d) — previously two separate,
+// unequal implementations (Capsule comments had no delete/edit/reply/
+// reactions UI at all). Only ever mounted once the content has
+// unlocked. Replies are one level deep: top-level comments render with
+// their replies nested directly beneath, grouped client-side after one
+// flat fetch — no recursive queries or recursive rendering needed at
+// that depth.
+export const CommentSection: React.FC<CommentSectionProps> = ({ contentType, contentId, contentOwnerId, onCountChange }) => {
   const { user, profile } = useAuth();
-  const { getDropComments, addComment, deleteComment } = useDrops();
-  const [comments, setComments] = useState<DropComment[]>([]);
+  const { getComments, addComment, updateComment, deleteComment, setCommentPinned, reactToComment, unreactToComment } = useComments();
+  const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [text, setText] = useState('');
-  const [posting, setPosting] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+
+  const isModerator = user?.id === contentOwnerId;
 
   useEffect(() => {
     let cancelled = false;
-    getDropComments(dropId).then(data => {
+    getComments(contentType, contentId).then(data => {
       if (cancelled) return;
       setComments(data);
       setLoading(false);
     });
     return () => { cancelled = true; };
-  }, [dropId, getDropComments]);
+  }, [contentType, contentId, getComments]);
 
-  const handleAdd = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!text.trim() || posting) return;
-    setPosting(true);
-    const { error, comment } = await addComment(dropId, text);
-    setPosting(false);
+  const topLevelCount = () => comments.filter(c => !c.parent_comment_id).length;
+
+  const patchComment = (id: string, patch: Partial<Comment>) =>
+    setComments(prev => prev.map(c => (c.id === id ? { ...c, ...patch } : c)));
+
+  const handleAdd = async (text: string, parentCommentId: string | null = null) => {
+    const { error, comment } = await addComment(contentType, contentId, text, parentCommentId);
     if (!error && comment) {
       setComments(prev => {
         const next = [...prev, comment];
-        onCountChange?.(next.length);
+        onCountChange?.(next.filter(c => !c.parent_comment_id).length);
         return next;
       });
-      setText('');
+      setReplyingTo(null);
     }
   };
 
   const handleDelete = async (commentId: string) => {
-    const { error } = await deleteComment(commentId);
+    const { error } = await deleteComment(contentType, commentId);
     if (!error) {
       setComments(prev => {
-        const next = prev.filter(c => c.id !== commentId);
-        onCountChange?.(next.length);
+        const next = prev.filter(c => c.id !== commentId && c.parent_comment_id !== commentId);
+        onCountChange?.(next.filter(c => !c.parent_comment_id).length);
         return next;
       });
     }
   };
+
+  const handleEdit = async (commentId: string, content: string) => {
+    const { error } = await updateComment(contentType, commentId, content);
+    if (!error) patchComment(commentId, { content, edited_at: new Date().toISOString() });
+  };
+
+  const handleTogglePin = async (comment: Comment) => {
+    const next = !comment.is_pinned;
+    patchComment(comment.id, { is_pinned: next });
+    const { error } = await setCommentPinned(contentType, comment.id, next);
+    if (error) patchComment(comment.id, { is_pinned: !next });
+  };
+
+  const handleReact = async (comment: Comment, emoji: string) => {
+    const prevReaction = comment.my_reaction;
+    patchComment(comment.id, {
+      my_reaction: emoji,
+      reaction_count: comment.reaction_count + (prevReaction ? 0 : 1),
+    });
+    await reactToComment(contentType, comment.id, emoji);
+  };
+
+  const handleUnreact = async (comment: Comment) => {
+    patchComment(comment.id, { my_reaction: null, reaction_count: Math.max(0, comment.reaction_count - 1) });
+    await unreactToComment(contentType, comment.id);
+  };
+
+  const topLevel = comments.filter(c => !c.parent_comment_id);
+  const repliesFor = (id: string) => comments.filter(c => c.parent_comment_id === id);
 
   return (
     <div className="border-t border-gray-100 px-4 py-3">
@@ -69,35 +107,61 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ dropId, onCountC
             </div>
           ))}
         </div>
-      ) : comments.length === 0 ? (
+      ) : topLevelCount() === 0 ? (
         <p className="text-sm text-gray-400 py-1.5">No comments yet.</p>
       ) : (
-        <div className="flex flex-col divide-y divide-gray-50 max-h-72 overflow-y-auto">
-          {comments.map(c => (
-            <CommentItem key={c.id} comment={c} isOwn={c.user_id === user?.id} onDelete={() => handleDelete(c.id)} />
+        <div className="flex flex-col divide-y divide-gray-50 max-h-96 overflow-y-auto">
+          {topLevel.map(c => (
+            <div key={c.id}>
+              <CommentItem
+                comment={c}
+                isOwn={c.user_id === user?.id}
+                canModerate={isModerator}
+                onDelete={() => handleDelete(c.id)}
+                onEdit={content => handleEdit(c.id, content)}
+                onReact={emoji => handleReact(c, emoji)}
+                onUnreact={() => handleUnreact(c)}
+                onTogglePin={() => handleTogglePin(c)}
+                onReplyClick={() => setReplyingTo(p => (p === c.id ? null : c.id))}
+              />
+              {repliesFor(c.id).map(reply => (
+                <CommentItem
+                  key={reply.id}
+                  comment={reply}
+                  isReply
+                  isOwn={reply.user_id === user?.id}
+                  canModerate={isModerator}
+                  onDelete={() => handleDelete(reply.id)}
+                  onEdit={content => handleEdit(reply.id, content)}
+                  onReact={emoji => handleReact(reply, emoji)}
+                  onUnreact={() => handleUnreact(reply)}
+                  onTogglePin={() => handleTogglePin(reply)}
+                />
+              ))}
+              {replyingTo === c.id && (
+                <div className="pl-9 pb-2">
+                  <CommentComposer
+                    avatarUrl={profile?.profile_photo_url}
+                    avatarName={profile?.display_name || profile?.username || 'You'}
+                    placeholder="Write a reply..."
+                    autoFocus
+                    onCancel={() => setReplyingTo(null)}
+                    onSubmit={text => handleAdd(text, c.id)}
+                  />
+                </div>
+              )}
+            </div>
           ))}
         </div>
       )}
 
-      <form onSubmit={handleAdd} className="flex items-center gap-2 mt-3">
-        <Avatar src={profile?.profile_photo_url} name={profile?.display_name || profile?.username || 'You'} size="xs" />
-        <input
-          type="text"
-          value={text}
-          onChange={e => setText(e.target.value)}
-          placeholder="Add a comment..."
-          maxLength={1000}
-          aria-label="Add a comment"
-          className="flex-1 text-sm border border-gray-200 rounded-full px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+      <div className="mt-3">
+        <CommentComposer
+          avatarUrl={profile?.profile_photo_url}
+          avatarName={profile?.display_name || profile?.username || 'You'}
+          onSubmit={text => handleAdd(text)}
         />
-        <button
-          type="submit"
-          disabled={!text.trim() || posting}
-          className="text-sm font-semibold text-purple-600 disabled:text-gray-300 transition-colors flex-shrink-0"
-        >
-          Post
-        </button>
-      </form>
+      </div>
     </div>
   );
 };

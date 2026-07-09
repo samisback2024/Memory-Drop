@@ -21,7 +21,7 @@ interface MemoryCardProps {
 // memory is still sealed), a title/snippet, and a date. Tapping any of
 // them opens the full Memory Details page — this card never tries to
 // replicate the unlock ritual or engagement UI inline.
-export const MemoryCard: React.FC<MemoryCardProps> = ({ memory, variant = 'timeline' }) => {
+const MemoryCardImpl: React.FC<MemoryCardProps> = ({ memory, variant = 'timeline' }) => {
   const moodMeta = memory.mood ? MOOD_META[memory.mood] : null;
   const cover = memory.media.find(m => m.type === 'photo' || m.type === 'video');
   const primaryType = memory.memory_types[0] ?? 'text';
@@ -124,3 +124,10 @@ export const MemoryCard: React.FC<MemoryCardProps> = ({ memory, variant = 'timel
     </Link>
   );
 };
+
+// Memoized — this renders in every Grid/List/Timeline/Journal view
+// across Search, Explore, Memories, Profile, and Saved. Each of those
+// pages patches individual items in an array (creating a new array but
+// reusing unchanged item object references), so memoizing here means an
+// update to one memory doesn't force every sibling card to re-render.
+export const MemoryCard = React.memo(MemoryCardImpl);

@@ -54,3 +54,22 @@ html { font-size: calc(16px * var(--md-font-scale, 1)); }
 .md-large-touch button, .md-large-touch a, .md-large-touch input, .md-large-touch select, .md-large-touch textarea {
   min-height: 44px;
 }
+
+/* --------------------------------------------------------------------
+ * Phase 10e — a dependency-free alternative to real list virtualization
+ * (no react-window/react-virtual is installed; hand-rolling a windowed
+ * scroller for variable-height cards — photos, videos, text, all mixed
+ * — was judged too large/error-prone for this polish-focused phase, see
+ * README Known limitations). `content-visibility: auto` asks the
+ * browser to skip layout/paint work for off-screen elements without
+ * unmounting them from React, which is most of virtualization's actual
+ * performance win for long feed/grid lists at a fraction of the
+ * complexity. `contain-intrinsic-size` gives the browser a placeholder
+ * size so scrollbar length doesn't jump as items enter/exit the
+ * viewport. Safari support lagged historically; unsupported browsers
+ * just render normally (a plain CSS custom property is inert there).
+ * ------------------------------------------------------------------ */
+.cv-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 400px;
+}

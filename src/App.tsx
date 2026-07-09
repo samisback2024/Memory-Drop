@@ -14,12 +14,13 @@ import { ProfilePage } from './pages/ProfilePage';
 import { EditProfilePage } from './pages/EditProfilePage';
 import { PublicProfilePage } from './pages/PublicProfilePage';
 import { SearchPage } from './pages/SearchPage';
+import { ExplorePage } from './pages/ExplorePage';
 import { FriendsPage } from './pages/FriendsPage';
 import { FriendRequestsPage } from './pages/FriendRequestsPage';
 import { FollowersPage } from './pages/FollowersPage';
 import { FollowingPage } from './pages/FollowingPage';
 import { FeedPage } from './pages/FeedPage';
-import { SavedDropsPage } from './pages/SavedDropsPage';
+import { SavedPage } from './pages/SavedPage';
 import { DropPage } from './pages/DropPage';
 import { MomentsPage } from './pages/MomentsPage';
 import { MomentCreatePage } from './pages/MomentCreatePage';
@@ -69,7 +70,7 @@ function App() {
 
             <Route element={<AuthProtectedRoute><AppShell /></AuthProtectedRoute>}>
               <Route path="/feed" element={<FeedPage />} />
-              <Route path="/saved" element={<SavedDropsPage />} />
+              <Route path="/saved" element={<SavedPage />} />
               <Route path="/moments" element={<MomentsPage />} />
               <Route path="/moments/create" element={<MomentCreatePage />} />
               <Route path="/capsules" element={<CapsulesPage />} />
@@ -83,6 +84,7 @@ function App() {
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/profile/edit" element={<EditProfilePage />} />
               <Route path="/search" element={<SearchPage />} />
+              <Route path="/explore" element={<ExplorePage />} />
               <Route path="/friends" element={<FriendsPage />} />
               <Route path="/friends/requests" element={<FriendRequestsPage />} />
             </Route>

@@ -4,7 +4,7 @@ import { useAuth } from './useAuth';
 import { uploadFile, deleteFile, generateStoragePath, extractStoragePath } from '../utils/storage';
 import { compressImageFile } from '../lib/image';
 import type { AuthResult } from '../types/auth';
-import type { Drop, DropComment, DropTab, InterestType, MemoryType, Mood, Reflection, ReportReason, Visibility } from '../types/feed';
+import type { Drop, DropTab, InterestType, MemoryType, Mood, Reflection, ReportReason, Visibility } from '../types/feed';
 
 interface CreateDropParams {
   caption: string;
@@ -49,12 +49,6 @@ export const useDrops = () => {
     const { data, error } = await supabase.rpc('get_drop', { p_post_id: dropId });
     if (error || !data || data.length === 0) return null;
     return data[0] as Drop;
-  }, []);
-
-  const getDropComments = useCallback(async (dropId: string, limit = 50, offset = 0): Promise<DropComment[]> => {
-    const { data, error } = await supabase.rpc('get_drop_comments', { p_post_id: dropId, p_limit: limit, p_offset: offset });
-    if (error || !data) return [];
-    return data as DropComment[];
   }, []);
 
   const getMyReflections = useCallback(async (dropId: string): Promise<Reflection[]> => {
@@ -249,44 +243,6 @@ export const useDrops = () => {
     return { error: null };
   }, [user]);
 
-  // A real comment — only allowed once the drop has unlocked (enforced by
-  // RLS too, this just gives a friendlier message than a raw policy
-  // rejection would).
-  const addComment = useCallback(async (dropId: string, content: string): Promise<{ error: string | null; comment: DropComment | null }> => {
-    if (!user) return { error: 'Not authenticated', comment: null };
-    const trimmed = content.trim();
-    if (!trimmed) return { error: 'Comment cannot be empty.', comment: null };
-
-    const { data, error } = await supabase
-      .from('comments')
-      .insert({ post_id: dropId, user_id: user.id, content: trimmed })
-      .select()
-      .single();
-    if (error || !data) {
-      if (error && /row-level security/i.test(error.message)) {
-        return { error: 'Comments unlock with the memory.', comment: null };
-      }
-      return { error: error?.message ?? 'Could not post comment.', comment: null };
-    }
-
-    const comment: DropComment = {
-      id: data.id,
-      user_id: user.id,
-      username: profile?.username ?? '',
-      display_name: profile?.display_name ?? null,
-      profile_photo_url: profile?.profile_photo_url ?? null,
-      content: trimmed,
-      created_at: data.created_at,
-    };
-    return { error: null, comment };
-  }, [user, profile]);
-
-  const deleteComment = useCallback(async (commentId: string): Promise<AuthResult> => {
-    if (!user) return { error: 'Not authenticated' };
-    const { error } = await supabase.from('comments').delete().eq('id', commentId).eq('user_id', user.id);
-    return { error: error?.message ?? null };
-  }, [user]);
-
   // A private note-to-self — allowed any time, locked or unlocked, and
   // never visible to anyone but the person who wrote it.
   const addReflection = useCallback(async (dropId: string, content: string): Promise<{ error: string | null; reflection: Reflection | null }> => {
@@ -310,7 +266,6 @@ export const useDrops = () => {
     getDropsFeed,
     getSavedDrops,
     getDrop,
-    getDropComments,
     getMyReflections,
     createDrop,
     deleteDrop,
@@ -323,8 +278,6 @@ export const useDrops = () => {
     recordUnlockView,
     hideDrop,
     reportDrop,
-    addComment,
-    deleteComment,
     addReflection,
     incrementShareCount,
   };

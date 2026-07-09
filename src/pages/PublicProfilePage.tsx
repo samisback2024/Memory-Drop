@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { UserX, Clock, Globe2, Users, UserPlus } from 'lucide-react';
+import { UserX, Clock, Globe2, Users, UserPlus, Pin, Send, Activity as ActivityIcon } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { useSocial } from '../hooks/useSocial';
@@ -10,6 +10,7 @@ import { PublicPageHeader } from '../components/layout/PublicPageHeader';
 import { ProfileHeader } from '../components/profile/ProfileHeader';
 import { ProfileHeaderSkeleton } from '../components/profile/ProfileHeaderSkeleton';
 import { BadgesAndAchievements, BadgesAndAchievementsSkeleton } from '../components/profile/BadgesAndAchievements';
+import { ActivityTimeline } from '../components/profile/ActivityTimeline';
 import { MomentViewer } from '../components/moments/MomentViewer';
 import { CapsuleArchive } from '../components/capsules/CapsuleArchive';
 import { GridView } from '../components/memories/GridView';
@@ -18,7 +19,7 @@ import { RelationshipMenu } from '../components/social/RelationshipMenu';
 import { MutualFriends } from '../components/social/MutualFriends';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
-import { EMPTY_MEMORY_FILTERS, type Memory, type PublicStats } from '../types/memory';
+import { EMPTY_MEMORY_FILTERS, type Memory, type PinnedMemory, type PublicStats } from '../types/memory';
 import type { Relationship } from '../types/social';
 
 interface PublicProfile {
@@ -44,14 +45,15 @@ export const PublicProfilePage: React.FC = () => {
   const { user } = useAuth();
   const { getRelationship } = useSocial();
   const { getUserMoments } = useMoments();
-  const { getPublicStats, getMemories } = useMemories();
+  const { getPublicStats, getMemories, getPinnedMemories } = useMemories();
   const [data, setData] = useState<PublicProfile | null>(null);
   const [relationship, setRelationship] = useState<Relationship | null>(null);
   const [state, setState] = useState<FetchState>('loading');
   const [hasActiveMoments, setHasActiveMoments] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [publicStats, setPublicStats] = useState<PublicStats | null>(null);
-  const [publicMemories, setPublicMemories] = useState<Memory[]>([]);
+  const [publicPool, setPublicPool] = useState<Memory[]>([]);
+  const [pinned, setPinned] = useState<PinnedMemory[]>([]);
 
   const load = useCallback(async () => {
     if (!username) return;
@@ -77,12 +79,19 @@ export const PublicProfilePage: React.FC = () => {
       const moments = await getUserMoments(profile.id);
       setHasActiveMoments(moments.length > 0);
       getPublicStats(profile.id).then(setPublicStats);
-      getMemories({ ...EMPTY_MEMORY_FILTERS, lockStatus: 'unlocked', visibility: 'public' }, 'newest', 9, 0, profile.id).then(setPublicMemories);
+      getMemories({ ...EMPTY_MEMORY_FILTERS, lockStatus: 'unlocked', visibility: 'public' }, 'newest', 30, 0, profile.id).then(setPublicPool);
+      getPinnedMemories(profile.id).then(setPinned);
     }
     setState('ready');
-  }, [username, user, getRelationship, getUserMoments, getPublicStats, getMemories]);
+  }, [username, user, getRelationship, getUserMoments, getPublicStats, getMemories, getPinnedMemories]);
 
   useEffect(() => { load(); }, [load]);
+
+  const publicMemories = publicPool.slice(0, 9);
+  const publicCapsules = publicPool.filter(m => m.memory_type === 'capsule').slice(0, 6);
+  const publicMoments = publicPool.filter(m => m.memory_type === 'moment').slice(0, 6);
+  const pinnedMemories = pinned.filter(m => m.memory_type !== 'drop');
+  const pinnedDrops = pinned.filter(m => m.memory_type === 'drop');
 
   const bioHidden = Boolean(data?.is_private && !data.is_own_profile && !relationship?.is_following);
 
@@ -169,6 +178,26 @@ export const PublicProfilePage: React.FC = () => {
               </div>
             )}
 
+            {user && pinnedMemories.length > 0 && (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
+                <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+                  <Pin size={15} className="text-purple-500" aria-hidden="true" />
+                  Pinned Memories
+                </h2>
+                <GridView memories={pinnedMemories} />
+              </div>
+            )}
+
+            {user && pinnedDrops.length > 0 && (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
+                <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+                  <Pin size={15} className="text-purple-500" aria-hidden="true" />
+                  Pinned Drops
+                </h2>
+                <GridView memories={pinnedDrops} />
+              </div>
+            )}
+
             {user && publicMemories.length > 0 && (
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
                 <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
@@ -176,6 +205,36 @@ export const PublicProfilePage: React.FC = () => {
                   Public Memories
                 </h2>
                 <GridView memories={publicMemories} />
+              </div>
+            )}
+
+            {user && publicCapsules.length > 0 && (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
+                <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+                  <Clock size={15} className="text-purple-500" aria-hidden="true" />
+                  Public Capsules
+                </h2>
+                <GridView memories={publicCapsules} />
+              </div>
+            )}
+
+            {user && publicMoments.length > 0 && (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
+                <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+                  <Send size={15} className="text-purple-500" aria-hidden="true" />
+                  Public Moments
+                </h2>
+                <GridView memories={publicMoments} />
+              </div>
+            )}
+
+            {user && (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
+                <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+                  <ActivityIcon size={15} className="text-purple-500" aria-hidden="true" />
+                  Activity
+                </h2>
+                <ActivityTimeline userId={data.id} />
               </div>
             )}
 

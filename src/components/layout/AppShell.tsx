@@ -1,12 +1,14 @@
 import React, { useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { Navbar } from './Navbar';
+import { OfflineBanner } from './OfflineBanner';
 import { useAuth } from '../../hooks/useAuth';
 import { useSettings } from '../../hooks/useSettings';
 
 export const AppShell: React.FC = () => {
   const { user } = useAuth();
   const { recordSession } = useSettings();
+  const location = useLocation();
 
   // Once per browser tab per login, not on every route change within
   // the app — a plain per-navigation record would flood user_sessions.
@@ -21,7 +23,11 @@ export const AppShell: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex flex-col transition-colors">
       <Navbar />
-      <main className="flex-1 max-w-2xl w-full mx-auto px-4 py-6">
+      <OfflineBanner />
+      {/* Keyed by pathname so the fade/slide-up replays on every route
+          change — a lightweight page-transition without framer-motion
+          (not installed) or a route-transition library. */}
+      <main key={location.pathname} className="flex-1 max-w-2xl w-full mx-auto px-4 py-6 animate-page-enter">
         <Outlet />
       </main>
     </div>

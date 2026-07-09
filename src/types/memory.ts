@@ -133,3 +133,74 @@ export const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December',
 ];
+
+// Phase 10a — Search + Explore. search_memories()/get_explore_feed()
+// return the exact same row shape as get_memories()/get_memory() above
+// (Memory), reused as-is so GridView/ListView/MemoryCard need no changes
+// to render search results or Explore. Only these smaller, search-only
+// shapes are new.
+export interface RecentSearch {
+  query: string;
+  searched_at: string;
+}
+
+export interface TrendingSearch {
+  query: string;
+  search_count: number;
+}
+
+export type SearchSuggestionType = 'user' | 'trending';
+
+export interface SearchSuggestion {
+  suggestion: string;
+  suggestion_type: SearchSuggestionType;
+}
+
+export interface CollectionSearchResult {
+  id: string;
+  name: string;
+  icon: string | null;
+  is_default: boolean;
+  item_count: number;
+}
+
+export type ExploreTab =
+  | 'trending' | 'newest' | 'popular_memories' | 'popular_drops' | 'todays_unlocks'
+  | 'travel' | 'nature' | 'family' | 'graduation' | 'birthday' | 'achievements';
+
+// Phase 10c — Bookmark Experience. get_saved_memories() unifies
+// saved_posts (Drops) + capsule_saves (Capsules) — Moments have no save
+// concept anywhere in this app.
+export interface SavedMemory extends Memory {
+  saved_at: string;
+  note: string | null;
+}
+
+// Phase 10b — Profile Polish.
+export interface PinnedMemory extends Memory {
+  pinned_at: string;
+}
+
+export type ActivityEventType = 'created' | 'commented';
+
+export interface ActivityItem {
+  activity_type: ActivityEventType;
+  source_type: MemorySourceType;
+  source_id: string;
+  snippet: string | null;
+  created_at: string;
+}
+
+export const EXPLORE_TABS: { id: ExploreTab; label: string }[] = [
+  { id: 'trending', label: 'Trending' },
+  { id: 'newest', label: 'Newest' },
+  { id: 'popular_memories', label: 'Popular Memories' },
+  { id: 'popular_drops', label: 'Popular Drops' },
+  { id: 'todays_unlocks', label: "Today's Unlocks" },
+  { id: 'travel', label: 'Travel' },
+  { id: 'nature', label: 'Nature' },
+  { id: 'family', label: 'Family' },
+  { id: 'graduation', label: 'Graduation' },
+  { id: 'birthday', label: 'Birthday' },
+  { id: 'achievements', label: 'Achievements' },
+];

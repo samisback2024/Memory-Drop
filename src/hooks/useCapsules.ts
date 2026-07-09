@@ -6,7 +6,7 @@ import { compressImageFile } from '../lib/image';
 import type { AuthResult } from '../types/auth';
 import type { Mood } from '../types/feed';
 import type {
-  Capsule, CapsuleComment, CapsuleReflection, CapsuleArchiveFilters,
+  Capsule, CapsuleReflection, CapsuleArchiveFilters,
   CapsuleMediaItem, CapsuleMemoryType, CapsuleVisibility,
 } from '../types/capsule';
 
@@ -186,41 +186,6 @@ export const useCapsules = () => {
     return { error: error?.message ?? null };
   }, [user]);
 
-  const getCapsuleComments = useCallback(async (capsuleId: string, limit = 50, offset = 0): Promise<CapsuleComment[]> => {
-    const { data, error } = await supabase.rpc('get_capsule_comments', { p_capsule_id: capsuleId, p_limit: limit, p_offset: offset });
-    if (error || !data) return [];
-    return data as CapsuleComment[];
-  }, []);
-
-  const addComment = useCallback(async (capsuleId: string, content: string): Promise<{ error: string | null; comment: CapsuleComment | null }> => {
-    if (!user) return { error: 'Not authenticated', comment: null };
-    const trimmed = content.trim();
-    if (!trimmed) return { error: 'Comment cannot be empty.', comment: null };
-    const { data, error } = await supabase
-      .from('capsule_comments')
-      .insert({ capsule_id: capsuleId, user_id: user.id, content: trimmed })
-      .select()
-      .single();
-    if (error || !data) {
-      if (error && /row-level security/i.test(error.message)) {
-        return { error: 'Comments unlock with the capsule.', comment: null };
-      }
-      return { error: error?.message ?? 'Could not post comment.', comment: null };
-    }
-    const comment: CapsuleComment = {
-      id: data.id, user_id: user.id,
-      username: profile?.username ?? '', display_name: profile?.display_name ?? null, profile_photo_url: profile?.profile_photo_url ?? null,
-      content: trimmed, created_at: data.created_at,
-    };
-    return { error: null, comment };
-  }, [user, profile]);
-
-  const deleteComment = useCallback(async (commentId: string): Promise<AuthResult> => {
-    if (!user) return { error: 'Not authenticated' };
-    const { error } = await supabase.from('capsule_comments').delete().eq('id', commentId).eq('user_id', user.id);
-    return { error: error?.message ?? null };
-  }, [user]);
-
   const getCapsuleReflections = useCallback(async (capsuleId: string): Promise<CapsuleReflection[]> => {
     const { data, error } = await supabase.rpc('get_capsule_reflections', { p_capsule_id: capsuleId });
     if (error || !data) return [];
@@ -254,9 +219,6 @@ export const useCapsules = () => {
     unlikeCapsule,
     saveCapsule,
     unsaveCapsule,
-    getCapsuleComments,
-    addComment,
-    deleteComment,
     getCapsuleReflections,
     addReflection,
     incrementShareCount,

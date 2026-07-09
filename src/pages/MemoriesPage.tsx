@@ -12,6 +12,8 @@ import { HighlightCard } from '../components/memories/HighlightCard';
 import { TimelineView } from '../components/memories/TimelineView';
 import { ListView } from '../components/memories/ListView';
 import { EmptyState } from '../components/ui/EmptyState';
+import { ErrorState } from '../components/ui/ErrorState';
+import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { EMPTY_MEMORY_FILTERS, type Flashback, type HighlightType, type Memory, type MemoryCollection } from '../types/memory';
 
 type MemoriesTab = 'timeline' | 'calendar' | 'years' | 'collections' | 'favorites' | 'flashbacks' | 'highlights' | 'archive';
@@ -35,6 +37,7 @@ const HIGHLIGHT_TYPES: HighlightType[] = ['best_month', 'most_viewed', 'most_rea
 // ways of looking back at them.
 export const MemoriesPage: React.FC = () => {
   const { getMemories, getCollections, getFlashbacks, getArchivedMemories } = useMemories();
+  const isOnline = useOnlineStatus();
   const [tab, setTab] = useState<MemoriesTab>('timeline');
   const [collections, setCollections] = useState<MemoryCollection[]>([]);
   const [collectionsKey, setCollectionsKey] = useState(0);
@@ -47,6 +50,11 @@ export const MemoriesPage: React.FC = () => {
   const [recentlyUnlocked, setRecentlyUnlocked] = useState<Memory[]>([]);
   const [lockedUntilLater, setLockedUntilLater] = useState<Memory[]>([]);
   const [overviewLoading, setOverviewLoading] = useState(true);
+  // Loaded once per session per tab, same "don't refetch on every
+  // revisit" pattern FeedPage already established — favorites/
+  // flashbacks/archive don't change often enough to justify refetching
+  // every time this tab is reopened within one visit to the page.
+  const [loadedTabs, setLoadedTabs] = useState<Set<MemoriesTab>>(new Set());
 
   useEffect(() => { getCollections().then(setCollections); }, [getCollections, collectionsKey]);
 
@@ -66,23 +74,47 @@ export const MemoriesPage: React.FC = () => {
     });
   }, [tab, getMemories]);
 
-  useEffect(() => {
-    if (tab !== 'favorites') return;
+  const loadFavorites = useCallback(() => {
     setFavoritesLoading(true);
-    getMemories({ ...EMPTY_MEMORY_FILTERS, favoritesOnly: true }, 'newest', 50, 0).then(data => { setFavorites(data); setFavoritesLoading(false); });
-  }, [tab, getMemories]);
+    getMemories({ ...EMPTY_MEMORY_FILTERS, favoritesOnly: true }, 'newest', 50, 0).then(data => {
+      setFavorites(data);
+      setFavoritesLoading(false);
+      setLoadedTabs(prev => new Set(prev).add('favorites'));
+    });
+  }, [getMemories]);
 
   useEffect(() => {
-    if (tab !== 'flashbacks') return;
+    if (tab !== 'favorites' || loadedTabs.has('favorites')) return;
+    loadFavorites();
+  }, [tab, loadedTabs, loadFavorites]);
+
+  const loadFlashbacks = useCallback(() => {
     setFlashbacksLoading(true);
-    getFlashbacks().then(data => { setFlashbacks(data); setFlashbacksLoading(false); });
-  }, [tab, getFlashbacks]);
+    getFlashbacks().then(data => {
+      setFlashbacks(data);
+      setFlashbacksLoading(false);
+      setLoadedTabs(prev => new Set(prev).add('flashbacks'));
+    });
+  }, [getFlashbacks]);
 
   useEffect(() => {
-    if (tab !== 'archive') return;
+    if (tab !== 'flashbacks' || loadedTabs.has('flashbacks')) return;
+    loadFlashbacks();
+  }, [tab, loadedTabs, loadFlashbacks]);
+
+  const loadArchived = useCallback(() => {
     setArchivedLoading(true);
-    getArchivedMemories(50, 0).then(data => { setArchived(data); setArchivedLoading(false); });
-  }, [tab, getArchivedMemories]);
+    getArchivedMemories(50, 0).then(data => {
+      setArchived(data);
+      setArchivedLoading(false);
+      setLoadedTabs(prev => new Set(prev).add('archive'));
+    });
+  }, [getArchivedMemories]);
+
+  useEffect(() => {
+    if (tab !== 'archive' || loadedTabs.has('archive')) return;
+    loadArchived();
+  }, [tab, loadedTabs, loadArchived]);
 
   const dismissFlashbackCard = useCallback((id: string) => {
     setTimeout(() => setFlashbacks(prev => prev.filter(f => f.id !== id)), 300);
@@ -152,7 +184,11 @@ export const MemoriesPage: React.FC = () => {
           <div className="h-32 rounded-2xl bg-white/60 animate-pulse" />
         ) : favorites.length === 0 ? (
           <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm">
-            <EmptyState icon={Heart} title="No favorites yet" description="Tap the heart on any memory to keep it close." />
+            {!isOnline ? (
+              <ErrorState title="You're offline" description="Reconnect and try again." onRetry={loadFavorites} />
+            ) : (
+              <EmptyState icon={Heart} title="No favorites yet" description="Tap the heart on any memory to keep it close." />
+            )}
           </div>
         ) : (
           <TimelineView memories={favorites} />
@@ -164,7 +200,11 @@ export const MemoriesPage: React.FC = () => {
           <div className="h-24 rounded-2xl bg-white/60 animate-pulse" />
         ) : flashbacks.length === 0 ? (
           <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm">
-            <EmptyState icon={Sparkles} title="Nothing to look back on today" description="Come back another day — flashbacks appear once you have memories from a year or more ago." />
+            {!isOnline ? (
+              <ErrorState title="You're offline" description="Reconnect and try again." onRetry={loadFlashbacks} />
+            ) : (
+              <EmptyState icon={Sparkles} title="Nothing to look back on today" description="Come back another day — flashbacks appear once you have memories from a year or more ago." />
+            )}
           </div>
         ) : (
           <div className="flex flex-col gap-3">
@@ -184,7 +224,11 @@ export const MemoriesPage: React.FC = () => {
           <div className="h-32 rounded-2xl bg-white/60 animate-pulse" />
         ) : archived.length === 0 ? (
           <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm">
-            <EmptyState icon={Archive} title="Nothing archived" description="Memories you hide show up here — nothing is ever truly gone unless you delete it permanently." />
+            {!isOnline ? (
+              <ErrorState title="You're offline" description="Reconnect and try again." onRetry={loadArchived} />
+            ) : (
+              <EmptyState icon={Archive} title="Nothing archived" description="Memories you hide show up here — nothing is ever truly gone unless you delete it permanently." />
+            )}
           </div>
         ) : (
           <TimelineView memories={archived} />

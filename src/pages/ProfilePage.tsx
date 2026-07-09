@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Clock, BookHeart, Lock, Globe2 } from 'lucide-react';
+import { Clock, BookHeart, Lock, Globe2, Pin, Send, Activity as ActivityIcon } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useMoments } from '../hooks/useMoments';
 import { useMemories } from '../hooks/useMemories';
@@ -9,6 +9,7 @@ import { ProfileHeaderSkeleton } from '../components/profile/ProfileHeaderSkelet
 import { ProfileCompletionBar } from '../components/profile/ProfileCompletionBar';
 import { ProfileStatsCard } from '../components/profile/ProfileStatsCard';
 import { BadgesAndAchievements, BadgesAndAchievementsSkeleton } from '../components/profile/BadgesAndAchievements';
+import { ActivityTimeline } from '../components/profile/ActivityTimeline';
 import { MomentViewer } from '../components/moments/MomentViewer';
 import { CapsuleArchive } from '../components/capsules/CapsuleArchive';
 import { GridView } from '../components/memories/GridView';
@@ -16,18 +17,19 @@ import { ListView } from '../components/memories/ListView';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { getProfileCompletion } from '../lib/profile';
-import { EMPTY_MEMORY_FILTERS, type Memory } from '../types/memory';
+import { EMPTY_MEMORY_FILTERS, type Memory, type PinnedMemory } from '../types/memory';
 
 export const ProfilePage: React.FC = () => {
   const { profile, loading, refreshUser } = useAuth();
   const { getUserMoments } = useMoments();
-  const { getMemories } = useMemories();
+  const { getMemories, getPinnedMemories } = useMemories();
   const completion = useMemo(() => (profile ? getProfileCompletion(profile) : null), [profile]);
   const [hasActiveMoments, setHasActiveMoments] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [recentMemories, setRecentMemories] = useState<Memory[]>([]);
   const [lockedDrops, setLockedDrops] = useState<Memory[]>([]);
-  const [publicMemories, setPublicMemories] = useState<Memory[]>([]);
+  const [publicPool, setPublicPool] = useState<Memory[]>([]);
+  const [pinned, setPinned] = useState<PinnedMemory[]>([]);
   const [recentLoading, setRecentLoading] = useState(true);
 
   useEffect(() => {
@@ -41,14 +43,22 @@ export const ProfilePage: React.FC = () => {
     Promise.all([
       getMemories({ ...EMPTY_MEMORY_FILTERS, lockStatus: 'unlocked' }, 'newest', 9, 0),
       getMemories({ ...EMPTY_MEMORY_FILTERS, lockStatus: 'locked' }, 'newest', 20, 0),
-      getMemories({ ...EMPTY_MEMORY_FILTERS, lockStatus: 'unlocked', visibility: 'public' }, 'newest', 9, 0),
-    ]).then(([recent, locked, pub]) => {
+      getMemories({ ...EMPTY_MEMORY_FILTERS, lockStatus: 'unlocked', visibility: 'public' }, 'newest', 30, 0),
+      getPinnedMemories(),
+    ]).then(([recent, locked, pub, pins]) => {
       setRecentMemories(recent);
       setLockedDrops(locked.filter(m => m.memory_type === 'drop').slice(0, 5));
-      setPublicMemories(pub);
+      setPublicPool(pub);
+      setPinned(pins);
       setRecentLoading(false);
     });
-  }, [profile, getMemories]);
+  }, [profile, getMemories, getPinnedMemories]);
+
+  const publicMemories = publicPool.slice(0, 9);
+  const publicCapsules = publicPool.filter(m => m.memory_type === 'capsule').slice(0, 6);
+  const publicMoments = publicPool.filter(m => m.memory_type === 'moment').slice(0, 6);
+  const pinnedMemories = pinned.filter(m => m.memory_type !== 'drop');
+  const pinnedDrops = pinned.filter(m => m.memory_type === 'drop');
 
   if (loading) {
     return (
@@ -91,6 +101,26 @@ export const ProfilePage: React.FC = () => {
 
       <BadgesAndAchievements />
 
+      {pinnedMemories.length > 0 && (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
+          <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+            <Pin size={15} className="text-purple-500" aria-hidden="true" />
+            Pinned Memories
+          </h2>
+          <GridView memories={pinnedMemories} />
+        </div>
+      )}
+
+      {pinnedDrops.length > 0 && (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
+          <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+            <Pin size={15} className="text-purple-500" aria-hidden="true" />
+            Pinned Drops
+          </h2>
+          <GridView memories={pinnedDrops} />
+        </div>
+      )}
+
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
@@ -106,6 +136,14 @@ export const ProfilePage: React.FC = () => {
         ) : (
           <GridView memories={recentMemories} />
         )}
+      </div>
+
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
+        <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+          <ActivityIcon size={15} className="text-purple-500" aria-hidden="true" />
+          Activity
+        </h2>
+        <ActivityTimeline />
       </div>
 
       {lockedDrops.length > 0 && (
@@ -131,6 +169,26 @@ export const ProfilePage: React.FC = () => {
           <GridView memories={publicMemories} />
         )}
       </div>
+
+      {!recentLoading && publicCapsules.length > 0 && (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
+          <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+            <Clock size={15} className="text-purple-500" aria-hidden="true" />
+            Public Capsules
+          </h2>
+          <GridView memories={publicCapsules} />
+        </div>
+      )}
+
+      {!recentLoading && publicMoments.length > 0 && (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
+          <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+            <Send size={15} className="text-purple-500" aria-hidden="true" />
+            Public Moments
+          </h2>
+          <GridView memories={publicMoments} />
+        </div>
+      )}
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
         <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
