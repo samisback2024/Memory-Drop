@@ -4,15 +4,18 @@ import { MapPin, Tag, FolderPlus, EyeOff, ArchiveRestore, Trash2, X, Plus, Lock,
 import { useAuth } from '../../hooks/useAuth';
 import { useCapsules } from '../../hooks/useCapsules';
 import { useMoments } from '../../hooks/useMoments';
+import { useDrops } from '../../hooks/useDrops';
 import { useMemories } from '../../hooks/useMemories';
 import { supabase } from '../../lib/supabase';
 import { CapsuleCard } from '../capsules/CapsuleCard';
+import { DropCard } from '../feed/DropCard';
 import { Avatar } from '../ui/Avatar';
 import { FavoriteButton } from './FavoriteButton';
 import { MOOD_META } from '../../types/feed';
 import { CAPSULE_VISIBILITY_META } from '../../types/capsule';
 import { formatDate } from '../../utils/date';
 import type { Capsule } from '../../types/capsule';
+import type { Drop } from '../../types/feed';
 import type { Memory, MemoryCollection, MemorySourceType } from '../../types/memory';
 
 interface MemoryViewerProps {
@@ -61,19 +64,24 @@ const MomentMemoryBody: React.FC<{ memory: Memory }> = ({ memory }) => {
 };
 
 // The Memory Details page: the type-specific content (a full CapsuleCard
-// for capsules — complete reuse of its unlock ritual and engagement; a
-// simpler read-oriented display for expired moments, since new
-// reactions/replies aren't possible once expired) plus the metadata
-// this phase adds on top of both: tags, location, collections, and the
-// hide/restore/delete-permanently archive controls.
+// for capsules or DropCard for drops — complete reuse of their unlock
+// ritual/reveal and engagement; a simpler read-oriented display for
+// expired moments, since new reactions/replies aren't possible once
+// expired) plus the metadata this phase adds on top: tags, location,
+// collections, and the hide/restore/delete-permanently archive controls
+// — the last of which works for all three types, the first three only
+// for Capsules/Moments (Drops have no `tags`/`location_text`/`hidden_at`
+// columns yet, see the README).
 export const MemoryViewer: React.FC<MemoryViewerProps> = ({ memoryType, memoryId }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { getCapsule } = useCapsules();
+  const { getDrop } = useDrops();
   const { getMemory, getCollections, addToCollection, removeFromCollection, updateTags, updateLocation, hideMemory, restoreMemory, deletePermanently } = useMemories();
 
   const [memory, setMemory] = useState<Memory | null | undefined>(undefined);
   const [capsule, setCapsule] = useState<Capsule | null>(null);
+  const [drop, setDrop] = useState<Drop | null>(null);
   const [collections, setCollections] = useState<MemoryCollection[]>([]);
   const [memoryCollectionIds, setMemoryCollectionIds] = useState<Set<string>>(new Set());
   const [tagDraft, setTagDraft] = useState('');
@@ -82,6 +90,10 @@ export const MemoryViewer: React.FC<MemoryViewerProps> = ({ memoryType, memoryId
   const [collectionsOpen, setCollectionsOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
+  const supportsTagsAndLocation = memoryType !== 'drop';
+  const supportsArchive = memoryType !== 'drop';
+  const collectionColumn = memoryType === 'capsule' ? 'capsule_id' : memoryType === 'moment' ? 'moment_id' : 'drop_id';
+
   useEffect(() => {
     let cancelled = false;
     getMemory(memoryType, memoryId).then(async data => {
@@ -89,12 +101,13 @@ export const MemoryViewer: React.FC<MemoryViewerProps> = ({ memoryType, memoryId
       setMemory(data);
       if (data) setLocationDraft(data.location_text ?? '');
       if (data?.memory_type === 'capsule') setCapsule(await getCapsule(memoryId));
+      if (data?.memory_type === 'drop') setDrop(await getDrop(memoryId));
     });
     getCollections().then(setCollections);
     supabase
       .from('collection_items')
       .select('collection_id')
-      .eq(memoryType === 'capsule' ? 'capsule_id' : 'moment_id', memoryId)
+      .eq(collectionColumn, memoryId)
       .then(({ data }) => setMemoryCollectionIds(new Set((data ?? []).map(row => row.collection_id as string))));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [memoryType, memoryId]);
@@ -159,6 +172,8 @@ export const MemoryViewer: React.FC<MemoryViewerProps> = ({ memoryType, memoryId
     <div className="flex flex-col gap-4">
       {memory.memory_type === 'capsule' && capsule ? (
         <CapsuleCard capsule={capsule} onDeleted={() => navigate('/memories')} />
+      ) : memory.memory_type === 'drop' && drop ? (
+        <DropCard drop={drop} onDeleted={() => navigate('/memories')} />
       ) : memory.memory_type === 'moment' ? (
         <MomentMemoryBody memory={memory} />
       ) : null}
@@ -188,7 +203,7 @@ export const MemoryViewer: React.FC<MemoryViewerProps> = ({ memoryType, memoryId
           </div>
         </dl>
 
-        {isOwn && (
+        {isOwn && supportsTagsAndLocation && (
           <div className="flex flex-col gap-1.5">
             <p className="text-xs text-gray-400 flex items-center gap-1"><MapPin size={12} aria-hidden="true" /> Location</p>
             {editingLocation ? (
@@ -211,7 +226,7 @@ export const MemoryViewer: React.FC<MemoryViewerProps> = ({ memoryType, memoryId
           </div>
         )}
 
-        {isOwn && (
+        {isOwn && supportsTagsAndLocation && (
           <div className="flex flex-col gap-1.5">
             <p className="text-xs text-gray-400 flex items-center gap-1"><Tag size={12} aria-hidden="true" /> Tags</p>
             <div className="flex flex-wrap gap-1.5">
@@ -261,7 +276,7 @@ export const MemoryViewer: React.FC<MemoryViewerProps> = ({ memoryType, memoryId
 
         {isOwn && (
           <div className="flex items-center gap-4 pt-2 border-t border-gray-50">
-            {memory.is_hidden ? (
+            {!supportsArchive ? null : memory.is_hidden ? (
               <button type="button" onClick={handleRestore} className="flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-purple-600">
                 <ArchiveRestore size={13} aria-hidden="true" /> Restore
               </button>

@@ -1,21 +1,24 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { UserX, Clock } from 'lucide-react';
+import { UserX, Clock, Globe2, Users, UserPlus } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { useSocial } from '../hooks/useSocial';
 import { useMoments } from '../hooks/useMoments';
+import { useMemories } from '../hooks/useMemories';
 import { PublicPageHeader } from '../components/layout/PublicPageHeader';
 import { ProfileHeader } from '../components/profile/ProfileHeader';
 import { ProfileHeaderSkeleton } from '../components/profile/ProfileHeaderSkeleton';
 import { BadgesAndAchievements, BadgesAndAchievementsSkeleton } from '../components/profile/BadgesAndAchievements';
 import { MomentViewer } from '../components/moments/MomentViewer';
 import { CapsuleArchive } from '../components/capsules/CapsuleArchive';
+import { GridView } from '../components/memories/GridView';
 import { FollowButton } from '../components/social/FollowButton';
 import { RelationshipMenu } from '../components/social/RelationshipMenu';
 import { MutualFriends } from '../components/social/MutualFriends';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
+import { EMPTY_MEMORY_FILTERS, type Memory, type PublicStats } from '../types/memory';
 import type { Relationship } from '../types/social';
 
 interface PublicProfile {
@@ -41,11 +44,14 @@ export const PublicProfilePage: React.FC = () => {
   const { user } = useAuth();
   const { getRelationship } = useSocial();
   const { getUserMoments } = useMoments();
+  const { getPublicStats, getMemories } = useMemories();
   const [data, setData] = useState<PublicProfile | null>(null);
   const [relationship, setRelationship] = useState<Relationship | null>(null);
   const [state, setState] = useState<FetchState>('loading');
   const [hasActiveMoments, setHasActiveMoments] = useState(false);
   const [viewerOpen, setViewerOpen] = useState(false);
+  const [publicStats, setPublicStats] = useState<PublicStats | null>(null);
+  const [publicMemories, setPublicMemories] = useState<Memory[]>([]);
 
   const load = useCallback(async () => {
     if (!username) return;
@@ -70,9 +76,11 @@ export const PublicProfilePage: React.FC = () => {
     if (user) {
       const moments = await getUserMoments(profile.id);
       setHasActiveMoments(moments.length > 0);
+      getPublicStats(profile.id).then(setPublicStats);
+      getMemories({ ...EMPTY_MEMORY_FILTERS, lockStatus: 'unlocked', visibility: 'public' }, 'newest', 9, 0, profile.id).then(setPublicMemories);
     }
     setState('ready');
-  }, [username, user, getRelationship, getUserMoments]);
+  }, [username, user, getRelationship, getUserMoments, getPublicStats, getMemories]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -140,6 +148,36 @@ export const PublicProfilePage: React.FC = () => {
             )}
 
             <BadgesAndAchievements />
+
+            {user && publicStats && (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-6">
+                <div className="flex flex-col items-center gap-0.5">
+                  <Globe2 size={14} className="text-purple-500" aria-hidden="true" />
+                  <span className="text-base font-bold text-gray-900">{publicStats.public_memories_count}</span>
+                  <span className="text-[10px] text-gray-400">Public memories</span>
+                </div>
+                <div className="flex flex-col items-center gap-0.5">
+                  <Users size={14} className="text-purple-500" aria-hidden="true" />
+                  <span className="text-base font-bold text-gray-900">{publicStats.followers_count}</span>
+                  <span className="text-[10px] text-gray-400">Followers</span>
+                </div>
+                <div className="flex flex-col items-center gap-0.5">
+                  <UserPlus size={14} className="text-purple-500" aria-hidden="true" />
+                  <span className="text-base font-bold text-gray-900">{publicStats.following_count}</span>
+                  <span className="text-[10px] text-gray-400">Following</span>
+                </div>
+              </div>
+            )}
+
+            {user && publicMemories.length > 0 && (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
+                <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+                  <Globe2 size={15} className="text-purple-500" aria-hidden="true" />
+                  Public Memories
+                </h2>
+                <GridView memories={publicMemories} />
+              </div>
+            )}
 
             {user && (
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">

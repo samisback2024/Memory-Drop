@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
-  GitCommitVertical, CalendarDays, CalendarRange, FolderHeart, Heart, Sparkles, Flame, Archive,
+  GitCommitVertical, CalendarDays, CalendarRange, FolderHeart, Heart, Sparkles, Flame, Archive, Unlock, Lock,
 } from 'lucide-react';
 import { useMemories } from '../hooks/useMemories';
 import { MemoryTimeline } from '../components/memories/MemoryTimeline';
@@ -10,6 +10,7 @@ import { CollectionGrid } from '../components/memories/CollectionGrid';
 import { FlashbackCard } from '../components/memories/FlashbackCard';
 import { HighlightCard } from '../components/memories/HighlightCard';
 import { TimelineView } from '../components/memories/TimelineView';
+import { ListView } from '../components/memories/ListView';
 import { EmptyState } from '../components/ui/EmptyState';
 import { EMPTY_MEMORY_FILTERS, type Flashback, type HighlightType, type Memory, type MemoryCollection } from '../types/memory';
 
@@ -43,8 +44,27 @@ export const MemoriesPage: React.FC = () => {
   const [flashbacksLoading, setFlashbacksLoading] = useState(true);
   const [archived, setArchived] = useState<Memory[]>([]);
   const [archivedLoading, setArchivedLoading] = useState(true);
+  const [recentlyUnlocked, setRecentlyUnlocked] = useState<Memory[]>([]);
+  const [lockedUntilLater, setLockedUntilLater] = useState<Memory[]>([]);
+  const [overviewLoading, setOverviewLoading] = useState(true);
 
   useEffect(() => { getCollections().then(setCollections); }, [getCollections, collectionsKey]);
+
+  useEffect(() => {
+    if (tab !== 'timeline') return;
+    setOverviewLoading(true);
+    Promise.all([
+      getMemories({ ...EMPTY_MEMORY_FILTERS, lockStatus: 'unlocked' }, 'newest', 5, 0),
+      // Fetched wider than needed and re-sorted client-side by matured_at
+      // (soonest unlock first) — get_memories only sorts by created_at,
+      // which isn't the same ordering "what's coming up next" needs.
+      getMemories({ ...EMPTY_MEMORY_FILTERS, lockStatus: 'locked' }, 'newest', 20, 0),
+    ]).then(([unlocked, locked]) => {
+      setRecentlyUnlocked(unlocked);
+      setLockedUntilLater([...locked].sort((a, b) => new Date(a.matured_at).getTime() - new Date(b.matured_at).getTime()).slice(0, 5));
+      setOverviewLoading(false);
+    });
+  }, [tab, getMemories]);
 
   useEffect(() => {
     if (tab !== 'favorites') return;
@@ -93,7 +113,31 @@ export const MemoriesPage: React.FC = () => {
         ))}
       </div>
 
-      {tab === 'timeline' && <MemoryTimeline collections={collections} />}
+      {tab === 'timeline' && (
+        <div className="flex flex-col gap-4">
+          {!overviewLoading && recentlyUnlocked.length > 0 && (
+            <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm p-4 flex flex-col gap-3">
+              <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+                <Unlock size={15} className="text-purple-500" aria-hidden="true" />
+                Recently Unlocked
+              </h2>
+              <ListView memories={recentlyUnlocked} />
+            </div>
+          )}
+
+          {!overviewLoading && lockedUntilLater.length > 0 && (
+            <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm p-4 flex flex-col gap-3">
+              <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+                <Lock size={15} className="text-purple-500" aria-hidden="true" />
+                Locked Until Later
+              </h2>
+              <ListView memories={lockedUntilLater} />
+            </div>
+          )}
+
+          <MemoryTimeline collections={collections} />
+        </div>
+      )}
 
       {tab === 'calendar' && <MemoryCalendar />}
 

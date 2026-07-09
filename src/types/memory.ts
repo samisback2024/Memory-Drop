@@ -1,15 +1,19 @@
 import type { Mood } from './feed';
 import type { CapsuleMediaItem, CapsuleMemoryType, CapsuleVisibility } from './capsule';
 
-export type MemorySourceType = 'capsule' | 'moment';
+export type MemorySourceType = 'drop' | 'capsule' | 'moment';
 export type MemoryLayout = 'timeline' | 'journal' | 'grid' | 'list';
 export type MemorySort = 'newest' | 'oldest';
 
-// The unified shape get_memories()/get_memory() return — a Capsule and
-// an expired Moment normalized into one row. visibility is collapsed to
-// the same 3-value space Capsules already use (a Moment's `close_friends`
-// maps to `followers` here as the closest analog — an approximation,
-// noted in the README).
+// The unified shape get_memories()/get_memory() return — an unlocked
+// Drop, a Capsule, and an expired Moment all normalized into one row
+// (Phase 9 widened this from Capsule+Moment only). visibility is
+// collapsed to the same 3-value space Capsules already use (a Moment's
+// `close_friends` maps to `followers`, a Drop's `private` maps to
+// `only_me` — both approximations, noted in the README). A Drop's
+// `title` is always null (Drops never had a title field); `tags`/
+// `location_text` are always empty/null for Drops — those two only
+// exist on Capsules/Moments.
 export interface Memory {
   id: string;
   memory_type: MemorySourceType;
@@ -89,6 +93,34 @@ export interface HighlightCandidate {
 export interface MemoryStreak {
   current_streak: number;
   longest_streak: number;
+}
+
+// get_memory_stats() — the caller's own accurate counts, live-aggregated
+// (never a separately-tracked counter that could drift). locked_items/
+// unlocked_items are combined across Drops+Capsules+Moments; total_drops
+// is Drops specifically, kept distinct on purpose.
+export interface MemoryStats {
+  total_drops: number;
+  locked_items: number;
+  unlocked_items: number;
+  expired_moments: number;
+  saved_to_unlock: number;
+  public_drops: number;
+  followers_count: number;
+  following_count: number;
+  total_views: number;
+  total_unlocks: number;
+  total_reactions: number;
+  total_comments: number;
+}
+
+// get_public_stats(user_id) — what anyone is allowed to know about
+// someone else. Never leaks locked content, private/only-me/followers
+// visibility, saved-to-unlock, views, reactions, or comments.
+export interface PublicStats {
+  public_memories_count: number;
+  followers_count: number;
+  following_count: number;
 }
 
 export const HIGHLIGHT_META: Record<HighlightType, { label: string; description: string }> = {

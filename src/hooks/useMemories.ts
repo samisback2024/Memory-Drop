@@ -3,21 +3,27 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
 import { useCapsules } from './useCapsules';
 import { useMoments } from './useMoments';
+import { useDrops } from './useDrops';
 import type { AuthResult } from '../types/auth';
 import type {
-  Memory, MemoryFilters, MemoryCollection, Flashback, HighlightCandidate, HighlightType, MemoryStreak, MemorySort, MemorySourceType,
+  Memory, MemoryFilters, MemoryCollection, Flashback, HighlightCandidate, HighlightType, MemoryStreak,
+  MemoryStats, PublicStats, MemorySort, MemorySourceType,
 } from '../types/memory';
 
 // Reads all go through get_memories()/get_memory() and friends — the one
-// UNION-at-read-time layer over capsules + expired moments described in
-// phase7_memories.sql. Writes that touch capsules/moments directly
-// (hide/restore/delete/tags) delegate to useCapsules/useMoments so
-// storage cleanup on delete stays in one place rather than being
-// duplicated here.
+// UNION-at-read-time layer over Drops + Capsules + expired Moments
+// described in phase7_memories.sql/phase9_unified_memory_wiring.sql.
+// Writes that touch drops/capsules/moments directly (hide/restore/
+// delete/tags) delegate to useDrops/useCapsules/useMoments so storage
+// cleanup on delete stays in one place rather than being reimplemented
+// here. Drops don't have `hidden_at`/`tags` columns (Phase 7 only added
+// those to capsules/moments) — hide/restore/updateTags on a Drop return
+// an explicit error rather than silently no-op-ing.
 export const useMemories = () => {
   const { user } = useAuth();
   const { deleteCapsule, getCapsule } = useCapsules();
   const { deleteMoment, getUserMoments } = useMoments();
+  const { deleteDrop, getDrop } = useDrops();
 
   const getMemories = useCallback(async (
     filters: Partial<MemoryFilters> = {},
@@ -134,7 +140,9 @@ export const useMemories = () => {
   const addToCollection = useCallback(async (collectionId: string, memoryType: MemorySourceType, memoryId: string): Promise<AuthResult> => {
     const payload: Record<string, string> = memoryType === 'capsule'
       ? { collection_id: collectionId, capsule_id: memoryId }
-      : { collection_id: collectionId, moment_id: memoryId };
+      : memoryType === 'moment'
+      ? { collection_id: collectionId, moment_id: memoryId }
+      : { collection_id: collectionId, drop_id: memoryId };
     const { error } = await supabase.from('collection_items').insert(payload);
     if (error && !/unique/i.test(error.message)) return { error: error.message };
     return { error: null };
@@ -142,7 +150,7 @@ export const useMemories = () => {
 
   const removeFromCollection = useCallback(async (collectionId: string, memoryType: MemorySourceType, memoryId: string): Promise<AuthResult> => {
     let query = supabase.from('collection_items').delete().eq('collection_id', collectionId);
-    query = memoryType === 'capsule' ? query.eq('capsule_id', memoryId) : query.eq('moment_id', memoryId);
+    query = memoryType === 'capsule' ? query.eq('capsule_id', memoryId) : memoryType === 'moment' ? query.eq('moment_id', memoryId) : query.eq('drop_id', memoryId);
     const { error } = await query;
     return { error: error?.message ?? null };
   }, []);
@@ -151,7 +159,9 @@ export const useMemories = () => {
     if (!user) return { error: 'Not authenticated' };
     const payload: Record<string, string> = memoryType === 'capsule'
       ? { user_id: user.id, capsule_id: memoryId }
-      : { user_id: user.id, moment_id: memoryId };
+      : memoryType === 'moment'
+      ? { user_id: user.id, moment_id: memoryId }
+      : { user_id: user.id, drop_id: memoryId };
     const { error } = await supabase.from('favorites').insert(payload);
     if (error && !/unique/i.test(error.message)) return { error: error.message };
     return { error: null };
@@ -160,40 +170,48 @@ export const useMemories = () => {
   const unfavoriteMemory = useCallback(async (memoryType: MemorySourceType, memoryId: string): Promise<AuthResult> => {
     if (!user) return { error: 'Not authenticated' };
     let query = supabase.from('favorites').delete().eq('user_id', user.id);
-    query = memoryType === 'capsule' ? query.eq('capsule_id', memoryId) : query.eq('moment_id', memoryId);
+    query = memoryType === 'capsule' ? query.eq('capsule_id', memoryId) : memoryType === 'moment' ? query.eq('moment_id', memoryId) : query.eq('drop_id', memoryId);
     const { error } = await query;
     return { error: error?.message ?? null };
   }, [user]);
 
   const hideMemory = useCallback(async (memoryType: MemorySourceType, memoryId: string): Promise<AuthResult> => {
+    if (memoryType === 'drop') return { error: 'Drops can’t be hidden yet — only Capsules and Moments support archiving.' };
     const table = memoryType === 'capsule' ? 'capsules' : 'moments';
     const { error } = await supabase.from(table).update({ hidden_at: new Date().toISOString() }).eq('id', memoryId);
     return { error: error?.message ?? null };
   }, []);
 
   const restoreMemory = useCallback(async (memoryType: MemorySourceType, memoryId: string): Promise<AuthResult> => {
+    if (memoryType === 'drop') return { error: 'Drops can’t be hidden yet — only Capsules and Moments support archiving.' };
     const table = memoryType === 'capsule' ? 'capsules' : 'moments';
     const { error } = await supabase.from(table).update({ hidden_at: null }).eq('id', memoryId);
     return { error: error?.message ?? null };
   }, []);
 
-  // Delegates to useCapsules/useMoments so storage cleanup on delete
-  // (removing the media files, not just the row) stays defined in one
-  // place rather than being reimplemented here.
+  // Delegates to useDrops/useCapsules/useMoments so storage cleanup on
+  // delete (removing the media files, not just the row) stays defined in
+  // one place rather than being reimplemented here.
   const deletePermanently = useCallback(async (memory: Memory): Promise<AuthResult> => {
     if (memory.memory_type === 'capsule') {
       const full = await getCapsule(memory.id);
       if (!full) return { error: 'Could not find this memory.' };
       return deleteCapsule(full);
     }
+    if (memory.memory_type === 'drop') {
+      const full = await getDrop(memory.id);
+      if (!full) return { error: 'Could not find this memory.' };
+      return deleteDrop(full);
+    }
     if (!user) return { error: 'Not authenticated' };
     const stack = await getUserMoments(user.id, true);
     const full = stack.find(m => m.id === memory.id);
     if (!full) return { error: 'Could not find this memory.' };
     return deleteMoment(full);
-  }, [getCapsule, deleteCapsule, getUserMoments, deleteMoment, user]);
+  }, [getCapsule, deleteCapsule, getDrop, deleteDrop, getUserMoments, deleteMoment, user]);
 
   const updateTags = useCallback(async (memoryType: MemorySourceType, memoryId: string, tags: string[]): Promise<AuthResult> => {
+    if (memoryType === 'drop') return { error: 'Tags aren’t available on Drops yet.' };
     const table = memoryType === 'capsule' ? 'capsules' : 'moments';
     const { error } = await supabase.from(table).update({ tags }).eq('id', memoryId);
     return { error: error?.message ?? null };
@@ -203,6 +221,23 @@ export const useMemories = () => {
     if (memoryType !== 'capsule') return { error: 'Location can only be edited on capsules right now.' };
     const { error } = await supabase.from('capsules').update({ location_text: location.trim() || null }).eq('id', memoryId);
     return { error: error?.message ?? null };
+  }, []);
+
+  // The caller's own accurate counts (Profile's stats card) — a single
+  // live-aggregated RPC rather than several separate queries the
+  // frontend would have to keep in sync itself.
+  const getMemoryStats = useCallback(async (): Promise<MemoryStats | null> => {
+    const { data, error } = await supabase.rpc('get_memory_stats');
+    if (error || !data || data.length === 0) return null;
+    return data[0] as MemoryStats;
+  }, []);
+
+  // What's safe to show on someone else's profile — public memory count
+  // plus social counts, nothing that could leak locked or private data.
+  const getPublicStats = useCallback(async (targetUserId: string): Promise<PublicStats | null> => {
+    const { data, error } = await supabase.rpc('get_public_stats', { p_user_id: targetUserId });
+    if (error || !data || data.length === 0) return null;
+    return data[0] as PublicStats;
   }, []);
 
   return {
@@ -228,5 +263,7 @@ export const useMemories = () => {
     deletePermanently,
     updateTags,
     updateLocation,
+    getMemoryStats,
+    getPublicStats,
   };
 };

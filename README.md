@@ -132,6 +132,18 @@ Numbering note: the brief for this phase called itself "Phase 7," but Phase 7 ha
 - **Help & Support** — a static FAQ accordion, plus one `FeedbackForm` component reused three times (Contact support / Report a bug / Send feedback), all landing in the same one-way `feedback_reports` mailbox — write-only from the client, same discipline as Phase 4's `reports` table.
 - **About** — version, and links to the Privacy Policy/Terms of Service routes Phase 1 already built.
 
+### Unified Memory Wiring (Phase 9 — complete)
+Not a new feature — a wiring/consistency pass across everything Phases 4–7 already built. Before this phase, `get_memories()` only unioned Capsules and expired Moments (Phase 7's own README explicitly flagged Drops as an open question); Profile had no stats at all; Capsules showed one flat filterable list instead of a lifecycle view.
+
+- **What an audit found**: the six Feed tabs and every unlock-tracking table (`drop_unlock_views`, `capsule_unlocks`, `capsule_views`, `moment_views`) were already correctly and consistently wired — no bugs there. The real gaps were Drops missing from Memories, and Profile having no stats. This phase fixes exactly those, rather than rewriting things that already worked.
+- **Drops now join Memories.** `get_memories()`/`get_memory()` UNION three sources instead of two — an unlocked Drop, a Capsule (locked or unlocked, your own), and an expired Moment, all through the same "no peeking early" content-nulling rule already used everywhere. A Drop's `title` is always null (Drops never had one); `tags`/`location_text` stay empty (those two fields only ever existed on Capsules/Moments).
+- **`memory_items_view`** — a normalized, lightweight read model over `posts`/`capsules`/`moments`, used by the new stats RPCs so the "what counts as locked/unlocked/expired/archived" logic is written once. Deliberately **not** granted to `authenticated`/`anon` — a Postgres view runs against its underlying tables with the *view owner's* privileges for RLS purposes, so exposing it directly would let any signed-in user read every row in the system, bypassing every visibility rule this app enforces elsewhere. It only exists to be queried from inside `SECURITY DEFINER` functions that apply their own visibility predicate, same discipline as everything else.
+- **Real Profile stats** (`get_memory_stats()`) — total Drops, locked/unlocked items (combined across all three content types), expired Moments, saved-to-unlock count, public Drops, followers/following, and live-aggregated views/unlocks/reactions/comments *received* across everything you own. Every number is computed fresh from the same tables Feed/Capsules/Memories already read — never a separately-tracked counter that could drift.
+- **Public stats** (`get_public_stats()`) — a deliberately narrow sibling: public memory count plus follower/following counts, nothing else. Never touches locked content or any non-public visibility tier, for anyone but the profile's own owner.
+- **Capsules page now has a real lifecycle view** — Locked, Unlocking Soon (within 7 days), Unlocked, and Archived as labeled sections by default, with a "Browse & Search" toggle back to the full filterable timeline for finding something specific.
+- **Memories' Timeline tab gained two preview strips** — Recently Unlocked and Locked Until Later — above the full filterable list, so the lifecycle is visible at a glance without digging into filters.
+- **Favorites and Collections now support Drops too** (`favorites.drop_id`, `collection_items.drop_id`), the same three-way-XOR-FK pattern already used for Capsules/Moments.
+
 ---
 
 ## Getting started
@@ -167,6 +179,7 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
    - `supabase/phase6_capsules.sql` — Time Capsules: `capsules`/`capsule_media`/`capsule_unlocks`/`capsule_views`/`capsule_reflections`/`capsule_likes`/`capsule_comments`/`capsule_saves` tables, RLS (including a stricter-than-Drops table-level lock on non-owner access to a still-sealed capsule), the `can_view_capsule()`/`validate_capsule_unlock_date()`/`unlock_capsule()` helpers, the `capsules` storage bucket, and RPCs `get_capsule`/`get_user_capsules`/`get_capsule_comments`/`get_capsule_reflections`
    - `supabase/phase7_memories.sql` — Memories: adds `tags`/`hidden_at` to `capsules` and `moments`, `location_text` to `capsules`; new tables `favorites`/`memory_collections`/`collection_items`/`flashbacks_cache`/`memory_highlights`; RPCs `get_memories`/`get_memory`/`get_memory_calendar`/`get_memory_year_counts`/`get_flashbacks`/`dismiss_flashback`/`get_highlight_candidates`/`get_memory_streak`/`get_collections`/`seed_default_collections` — no new `memories` table, everything is computed by UNIONing `capsules` and expired `moments` at read time
    - `supabase/phase8_settings.sql` — Settings & Privacy: new tables `user_settings`/`notification_preferences`/`user_sessions`/`feedback_reports`, a trigger that auto-creates the first two rows the moment a profile exists (plus a one-time backfill for existing accounts), RPCs `get_blocked_users`/`get_muted_users`/`get_restricted_users`/`get_close_friends`/`delete_my_account`
+   - `supabase/phase9_unified_memory_wiring.sql` — Unified Memory Wiring: adds the `memory_items_view` (internal-only, never granted to `authenticated`/`anon`), widens `get_memories()`/`get_memory()` to include Drops as a third source, adds `drop_id` to `favorites`/`collection_items`, and adds RPCs `get_memory_stats()`/`get_public_stats()`
 
 5. Restart the dev server.
 
@@ -232,7 +245,8 @@ src/
 │   ├── layout/       # AppShell, Navbar, PublicPageHeader
 │   ├── profile/      # ProfileHeader (+ skeleton), AvatarUpload,
 │   │                 #   CoverPhotoUpload, ImageCropModal, StatsRow,
-│   │                 #   BadgesAndAchievements (+ skeleton), ProfileCompletionBar
+│   │                 #   BadgesAndAchievements (+ skeleton), ProfileCompletionBar,
+│   │                 #   ProfileStatsCard
 │   ├── social/       # UserCard, UserList (+ skeleton), FollowButton,
 │   │                 #   RelationshipMenu, FriendRequestCard, MutualFriends,
 │   │                 #   SocialStats, EmptySocialState, UserSearchBar,
@@ -269,8 +283,9 @@ src/
 │   ├── useDrops.ts                # drops, comments, reflections, likes, interests, saves, hide, report
 │   ├── useMoments.ts              # moments, views, reactions, replies, archive
 │   ├── useCapsules.ts             # capsules, media, unlocks, likes, comments, reflections
-│   ├── useMemories.ts             # get_memories/get_memory, calendar, years, flashbacks,
-│   │                              #   highlights, collections, favorites, hide/restore/delete
+│   ├── useMemories.ts             # get_memories/get_memory (Drops+Capsules+Moments), calendar,
+│   │                              #   years, flashbacks, highlights, collections, favorites,
+│   │                              #   hide/restore/delete, get_memory_stats/get_public_stats
 │   ├── useSettings.ts             # settings, notification prefs, blocked/muted/restricted/close
 │   │                              #   friends lists, sessions, account/password/email, storage usage
 │   ├── useTheme.tsx               # ThemeProvider — dark mode, font size, accessibility toggles
@@ -290,7 +305,8 @@ src/
 │   ├── feed.ts          # Drop, DropComment, Reflection, DropTab, MemoryType, Mood, Visibility, InterestType, ReportReason
 │   ├── moment.ts        # Moment, MomentTrayItem, MomentSeenEntry, MomentPrivacy, MomentDurationHours
 │   ├── capsule.ts       # Capsule, CapsuleMediaItem, CapsuleVisibility, CapsuleMemoryType, CapsuleArchiveFilters
-│   ├── memory.ts        # Memory (unified capsule+moment shape), MemoryFilters, MemoryCollection, Flashback, HighlightCandidate
+│   ├── memory.ts        # Memory (unified drop+capsule+moment shape), MemoryFilters, MemoryCollection,
+│   │                    #   Flashback, HighlightCandidate, MemoryStats, PublicStats
 │   └── settings.ts      # UserSettings, NotificationPreferences, UserSession, ManagedUser, Theme, FontSize
 └── utils/
     ├── date.ts
@@ -308,7 +324,8 @@ supabase/
 ├── phase5_moments.sql         # moments + 5 related tables, can_view_moment(), moments bucket, moment RPCs
 ├── phase6_capsules.sql        # capsules + 7 related tables, can_view_capsule(), capsules bucket, capsule RPCs
 ├── phase7_memories.sql        # tags/location/hidden_at on capsules+moments, 5 new tables, get_memories() union RPC
-└── phase8_settings.sql        # user_settings, notification_preferences, user_sessions, feedback_reports, delete_my_account()
+├── phase8_settings.sql        # user_settings, notification_preferences, user_sessions, feedback_reports, delete_my_account()
+└── phase9_unified_memory_wiring.sql  # memory_items_view, get_memories()/get_memory() widened to Drops, get_memory_stats(), get_public_stats()
 ```
 
 > Note: `phase4b_time_capsule_redesign.sql` predates this phase and refers to the Drops feed's unlock-date redesign — it has nothing to do with the dedicated `capsules` tables in `phase6_capsules.sql`. Unfortunate naming collision, kept as-is rather than renaming an already-applied migration file.
@@ -407,6 +424,19 @@ No new content table — `capsules` and `moments` gained columns instead, and ev
 
 **No new visibility model** — every table here is strictly personal (owner-only RLS), so there's no cross-user visibility question to reconcile the way Drops/Moments/Capsules each needed their own `can_view_*()` function. The two exceptions, `get_blocked_users()`/`get_muted_users()`/`get_restricted_users()`/`get_close_friends()` and `delete_my_account()`, are `SECURITY DEFINER` for narrower reasons: the first four join `profiles` for someone else's info (same reason as every other cross-user RPC in this app), and the last needs privilege an ordinary authenticated role doesn't have — DELETE on `auth.users`.
 
+## Database tables (Phase 9 — Unified Memory Wiring)
+
+No new content table — this phase is schema-light on purpose, since it's a wiring fix, not a feature.
+
+| Object | Purpose | Key rules |
+|---|---|---|
+| `memory_items_view` | A normalized, lightweight UNION of `posts`/`capsules`/`moments` — `id`, `owner_id`, `source_type`, `title`, `caption`, a single `media_type`/`media_url`, `mood`, `visibility`, `unlock_at`, `expires_at`, `status`, `created_at`, `updated_at` | **Never granted to `authenticated`/`anon`.** A Postgres view runs against its underlying tables with the *view owner's* privileges for RLS purposes (table owners bypass their own RLS), so exposing this view directly would let any signed-in user read every row in the system regardless of visibility. Only `SECURITY DEFINER` functions that apply their own predicate may query it — see `get_memory_stats()` |
+| `favorites` / `collection_items` — new `drop_id` column | Drops can now be favorited and added to collections, same as Capsules/Moments already could | Same three-way-XOR-FK pattern (`capsule_id`/`moment_id`/`drop_id`, exactly one set) as the original Phase 7 design, just widened by one column |
+
+**`status`, plain language** — `locked` (unlock date/expiry still ahead), `unlocked` (a Drop or Capsule whose time has come), `expired` (a Moment past expiry — Moments never become "unlocked," they mature into "expired" and move to the owner's archive instead), `archived` (`hidden_at` is set — Capsules/Moments only; Drops have no archive concept yet).
+
+**`get_memories()`/`get_memory()` do *not* literally `SELECT FROM memory_items_view`** — they keep their own richer, independently-maintained UNION (full multi-image `media` jsonb arrays, like/comment counts, favorite/hidden flags) rather than joining back from a flattened view to the source tables for that richer data. The view and the RPCs are kept *logically* consistent by sharing the same status/visibility rules, not by sharing SQL text — a deliberate tradeoff to avoid a riskier rewrite of two already-correct, already-tested functions.
+
 ## Security notes
 
 - **Row Level Security** on `profiles`: everyone can read/write only their own row directly. Reading *someone else's* profile goes through `get_profile_by_username`, a `SECURITY DEFINER` function that's the one place allowed to decide what a private account exposes — bio, location, and website are nulled out unless the viewer is the owner *or an accepted follower* (Phase 3 extended this from "owner only"); birthday is never returned by it at all, to anyone, ever. The function also hides the profile entirely between two users with a block relationship in either direction.
@@ -444,6 +474,9 @@ No new content table — `capsules` and `moments` gained columns instead, and ev
 - **The four "manage my list" RPCs are unparameterized on purpose** — `get_blocked_users()` etc. take no arguments and always mean "my own list," so there's no `p_user_id` to ever pass someone else's id into by mistake.
 - **`feedback_reports` has no SELECT policy at all** — the same one-way-mailbox discipline as Phase 4's `reports`; nobody, including the person who submitted it, can read a feedback row back through the app.
 - **Appearance/Accessibility settings are pure client-side + `user_settings` state** — there's no RLS subtlety here since nothing but your own row is ever touched, but worth noting explicitly: the `dark`/`md-reduced-motion`/`md-high-contrast`/`md-large-touch` classes and the `--md-font-scale` CSS variable are applied by trusting `user_settings` values fetched from a table only you can write to, so there's no path for these to be tampered with by anyone but you.
+- **`memory_items_view` is the one object in this entire schema deliberately kept unreachable by any client role.** No `GRANT SELECT` exists for it at all, on purpose (see Database tables above) — the risk of a future change accidentally exposing it is real enough that it's worth calling out twice: a view inherits its owner's ability to bypass RLS on the tables it reads, so granting it to `authenticated` would silently undo every visibility rule `can_view_drop`/`can_view_capsule`/`can_view_moment` enforce elsewhere.
+- **`get_memory_stats()` and `get_public_stats()` read from completely different, non-overlapping sets of columns**, not the same query with a permission check bolted on. The public version was written from scratch to only ever touch `visibility = 'public'`/`privacy = 'everyone'` rows that are already unlocked/expired and not hidden — there's no code path that could accidentally leak a locked, private, or archived count to a non-owner, because that data is never selected in the first place, not merely filtered out after the fact.
+- **Widening `get_memories()`/`get_memory()` to Drops reused the exact same predicate Drops' own Feed RPCs already use** (`can_view_drop`, `is_blocked_either_way`, `unlock_date <= now()`) — no new visibility logic was invented for this phase, only extended to a query that didn't previously run it.
 
 ---
 
@@ -560,6 +593,23 @@ No new content table — `capsules` and `moments` gained columns instead, and ev
 - **TypeScript build** — `npx tsc -b` clean.
 - **Production build** — `npm run build` clean.
 
+## Testing Phase 9 (Unified Memory Wiring)
+
+Validate with two accounts, User A (owner) and User B (follower/public viewer), per the phase's own multi-user scenario:
+
+- **User A creates**: a locked Capsule, a Moment that will expire, a Public Drop, a Followers-only Drop, and an Only-Me Drop.
+- **User B**: follows User A, saves the locked public Drop (Save to Unlock), waits for/forces the unlock (or edits `unlock_date` directly in Supabase for testing), views it after unlock, comments after unlock.
+- **Owner view (User A)**: confirm every item they created appears in the right place immediately after creation — the locked Capsule shows sealed in `/capsules` (Locked or Unlocking Soon section depending on how far out); all five items appear somewhere in `/memories` once unlocked/expired (Drops included now); Profile's stats card reflects accurate counts without a page-by-page cross-check needed.
+- **Follower view (User B)**: confirm the Followers-only Drop is visible once unlocked, the Only-Me Drop is not visible at all (not even a locked placeholder), and the Public Drop is visible regardless of the follow relationship.
+- **Public/logged-out-equivalent view**: confirm only the Public Drop is ever visible, never the Followers-only or Only-Me ones, and never anything still locked.
+- **Memories page updates correctly** — after User A's Capsule unlocks, confirm it appears in `/memories` (Recently Unlocked strip and the full Timeline) without a manual refresh being the only way to see it (reload is fine, silently missing is not); confirm the expired Moment lands in the Expired archive, not the live tray.
+- **Profile stats update correctly** — after each creation/unlock/view/comment/reaction, confirm the relevant `get_memory_stats()` number changes for User A, and that `get_public_stats()` on User A's public profile (as viewed by User B or a third, unrelated account) only ever shows the Public Drop in its count — never the Followers-only or Only-Me ones, even after User B is confirmed to be following.
+- **Capsules page updates correctly** — confirm a capsule moves from "Locked" (or "Unlocking Soon," once within 7 days) to "Unlocked" the moment its `unlock_date` passes, and to "Archived" only after an explicit Hide action, never automatically.
+- **Feed tabs remain consistent** — spot-check that My Drops/Following/Public Drops/Unlocking Soon/Today's Unlocks/Saved to Unlock still each show exactly what they showed before this phase (this phase's audit found no bugs here — confirm that's still true after the `get_memories()` widening, which is a separate code path from `get_drops_feed()` and shouldn't have touched Feed's behavior at all).
+- **Security** — as User B, attempt to directly query `/rest/v1/memory_items_view` via the Supabase REST API — should be rejected outright (no grant exists, not even a partial/filtered result); confirm `get_public_stats()` for User A never includes the Followers-only or Only-Me Drop in its count regardless of who's asking; confirm a blocked user sees nothing of the blocker's content anywhere (Memories, Profile stats, Capsules).
+- **TypeScript build** — `npx tsc -b` clean.
+- **Production build** — `npm run build` clean.
+
 ## Known limitations
 
 - Mute and Restrict have no visible effect anywhere yet — the feed doesn't filter on them. The relationships are stored and toggle correctly; wiring `get_drops_feed` to exclude muted/restricted authors is a natural next step, deliberately not done here since it wasn't part of this phase's explicit scope.
@@ -587,7 +637,7 @@ No new content table — `capsules` and `moments` gained columns instead, and ev
 - **`get_user_capsules` is called once per profile page load with no caching**, same posture as the equivalent Moments calls — fine at this scale, not optimized further here.
 - **Capsules' RLS is intentionally stricter than Drops'/Moments' on the same lock-state question** (see Security notes) — this is a deliberate improvement made *for this phase*, not backported to the older tables, so the three content types aren't perfectly consistent with each other on this one point. Worth a dedicated hardening pass across all three in a later phase.
 - No real-time updates for capsule engagement either — a new like, comment, or reflection from someone else won't appear on an already-open card until it's reloaded.
-- **Drops are not part of Memories.** The phase brief named Capsules and Moments specifically; an unlocked Drop still only lives in the Feed (My Drops tab) and `/saved`, not in `/memories`. See the interpretation note under "Database tables (Phase 7)" — worth explicitly confirming before Phase 8 if that was meant to include Drops too, since adding them later means widening `get_memories()`'s UNION, not a redesign.
+- ~~Drops are not part of Memories.~~ **Resolved in Phase 9** — Drops now join Capsules and Moments in `get_memories()`/`get_memory()`; this bullet is kept for history since it was the open question Phase 9 was written to close.
 - **"People" search (mentioned in the phase brief) isn't implemented.** Moments have a single `mentioned_user_id`; Capsules have no mention field at all. Rather than bolting a mention picker onto Phase 6's closed wizard, or search that only half-works across the two types, it was left out entirely this phase — a real "search by person" feature would want mentions on both types first.
 - **Collections and Favorites only ever apply to memories you can see when you act on them.** If a Followers-visibility capsule you favorited later gets its visibility changed to Only Me by its owner, the favorite row still exists (harmless — the RLS on `favorites`' SELECT is your-own-rows-only), but `get_memories` would stop returning it to you going forward, since the visibility check re-runs on every read, not just at favorite time.
 - **No content-based auto-classification into collections** — deliberately, since this phase has no AI. The 12 starter collections are empty shells with sensible names, not smart folders; every memory in every collection got there by an explicit "add to collection" action.
@@ -603,6 +653,12 @@ No new content table — `capsules` and `moments` gained columns instead, and ev
 - **Notification preferences have nothing to actually gate yet** — there's no notification-sending system in this app at all (by design, out of scope for this phase). The toggles are real and persisted so that whenever Phase 9 or later adds delivery, it has user intent to read from day one rather than defaulting everyone to "on."
 - **`deleteAllContent()` loops through each item's own delete function** (reusing Phases 4/5/6's storage-aware deletes) rather than a single bulk SQL statement — correct and consistent, but means deleting a very large amount of content runs as many sequential round trips. Fine at personal-library scale; would want batching for a power user with thousands of items.
 - **Password re-authentication uses `signInWithPassword`**, which — depending on Supabase project settings — could theoretically trigger the same rate limiting real sign-in attempts do if someone repeatedly enters a wrong current password. Not expected to matter in normal use, worth knowing if testing this flow many times in a row.
+- **Phase 9's "service layer" is the existing hooks, widened, not five newly-named files.** The brief asked for `memoryService`/`capsuleService`/`dropService`/`momentService`/`statsService`; rather than creating parallel files that would duplicate or shadow the already-correct, already-tested `useMemories`/`useCapsules`/`useDrops`/`useMoments` hooks, those hooks were widened in place and `getMemoryStats`/`getPublicStats` were added to `useMemories` as the stats-service equivalent. Flagging this explicitly in case literally-named service files were the intent — reorganizing later is a rename/re-export, not a rewrite.
+- **Drops still don't support tags, location, or archiving (hide/restore).** Widening `get_memories()` to include Drops surfaces them everywhere Capsules/Moments appear, but `posts` has no `hidden_at`, `tags`, or `location_text` columns — `MemoryViewer` hides those controls for Drops rather than erroring, and `updateTags`/`hideMemory`/`restoreMemory` return an explicit "not available for Drops yet" error if called on one. Adding real support would mean adding those columns to `posts`, which felt like scope creep beyond "wiring."
+- **"Locked Until Later" on the Memories page sorts client-side, not via a new SQL sort mode.** `get_memories()`'s `p_sort` only orders by `created_at` (newest/oldest); soonest-to-unlock ordering needed a different column (`matured_at`/`unlock_at`) entirely. Rather than adding a new sort parameter (a signature change to an already-widened, already-tested function), the page fetches a wider locked set and re-sorts the 20 rows client-side, keeping the top 5. Fine at personal-library scale; would want a real `sort: 'unlocking_soon'` mode server-side if the locked set grows large.
+- **Flashbacks and Highlights were not widened to include Drops.** Phase 9's explicit scope was the Memories/Profile/Capsules/Feed wiring described in the brief — `get_flashbacks()` and the three Highlight RPCs (`best_month`/`most_viewed`/`most_reacted`) still only look at Capsules and Moments, same as Phase 7 shipped them. A reasonable next step, deliberately not bundled into this integration-focused phase.
+- **`total_views` and `total_unlocks` intentionally overlap for Drops and Moments.** `get_memory_stats()` computes both from the same `drop_unlock_views`/`moment_views` rows for those two content types, since "someone saw this" and "someone unlocked/opened this" are the same event for a Drop or a Moment. Only Capsules genuinely distinguish the two (separate `capsule_views` and `capsule_unlocks` tables) — the two stat numbers will read closer together than their names might suggest for accounts that are mostly Drops/Moments.
+- **`memory_items_view` is a normalized model for stats, not the thing `get_memories()`/`get_memory()` actually query.** Those two functions keep their own independently-maintained 3-way UNION (richer: full multi-image `media` jsonb, like/comment counts, favorite flags) rather than joining back from the flattened view — kept *logically* consistent with the view's status/visibility rules, not textually shared, to avoid rewriting two already-correct, already-tested functions into a riskier join-back pattern. Worth consolidating later if the two ever drift.
 
 ---
 
@@ -631,5 +687,6 @@ Environment variables required in Vercel (Project Settings → Environment Varia
 | 6 | Time Capsules (9-step guided creator, combinable memory types incl. in-browser voice recording, 3-tier visibility, ritual unlock + animation, Like/Comment/Reflect/Save/Share, searchable/filterable archive) | ✅ Complete |
 | 7 | Memories (unified library over unlocked Capsules + expired Moments — Timeline/Calendar/Years/Collections/Favorites/Flashbacks/Highlights/Archive, 4 layouts) | ✅ Complete |
 | 8 | Settings & Privacy (10 sections, real dark mode infrastructure, global accessibility overrides, self-service account deletion, blocked/muted/restricted/Close-Friends management) | ✅ Complete |
-| 9 | Messages (DMs, conversation list) | Planned |
-| 10 | Notifications | Planned |
+| 9 | Unified Memory Wiring (Drops joined into Memories, `memory_items_view`, real Profile/public stats, Capsules lifecycle sections, Memories preview strips, Favorites/Collections widened to Drops) | ✅ Complete |
+| 10 | Messages (DMs, conversation list) | Planned |
+| 11 | Notifications | Planned |

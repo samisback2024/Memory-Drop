@@ -7,7 +7,7 @@ import type { MemorySourceType } from '../types/memory';
 export const MemoryDetailPage: React.FC = () => {
   const { memoryType, memoryId } = useParams<{ memoryType: string; memoryId: string }>();
 
-  if (!memoryId || (memoryType !== 'capsule' && memoryType !== 'moment')) return null;
+  if (!memoryId || (memoryType !== 'capsule' && memoryType !== 'moment' && memoryType !== 'drop')) return null;
 
   return (
     <div className="max-w-lg mx-auto">

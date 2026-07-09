@@ -100,7 +100,7 @@ export const MemoryCard: React.FC<MemoryCardProps> = ({ memory, variant = 'timel
         <div className="flex items-center gap-2 text-xs text-gray-400">
           <span className="flex items-center gap-1">
             {!memory.is_unlocked ? <Lock size={11} aria-hidden="true" /> : <TypeIcon size={11} aria-hidden="true" />}
-            {memory.memory_type === 'capsule' ? 'Capsule' : 'Moment'}
+            {memory.memory_type === 'capsule' ? 'Capsule' : memory.memory_type === 'drop' ? 'Drop' : 'Moment'}
           </span>
           <span>·</span>
           <span>{formatDate(memory.created_at)}</span>
