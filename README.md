@@ -109,6 +109,16 @@ The signature feature, and deliberately not shaped like a post with a date on it
 - **Post-unlock engagement**: Like, Comment, Reflect, Save, Share — the only point any of those five appear. Reflect is available at any lock state (a private note-to-self, same convention as Drops/Moments); the other four are unlock-gated by RLS.
 - **My Archive** at `/capsules` — every capsule you've ever sealed, searchable (title/memory text, your own capsules only) and filterable by lock status, unlock year, mood, media type, and visibility. Rendered as a chronological timeline with year markers, not a feed. The same archive, read-only and without search, appears on your own and anyone else's profile for whatever capsules are visible to you.
 
+### Memories (Phase 7 — complete)
+The emotional heart of the app once you've accumulated months and years of content — a journal/scrapbook, not a profile grid. A "memory" is exactly two things, **unioned at read time, not duplicated into a new table**: every Capsule you own (locked or unlocked — a still-sealed one belongs in your own timeline as something in progress) and every Moment you own that's already expired (an active Moment still belongs to the live tray, not here). No new `memories` table exists; `get_memories()`/`get_memory()` UNION `capsules` and `moments` into one normalized shape on every read, the same "compute, don't duplicate" instinct behind every RPC in this app.
+
+- **Eight ways to look back**, all at `/memories`: **Timeline** (search + filters + four interchangeable layouts), **Calendar** (a month grid with a dot on any day that has memories, tap a day to see them), **Years** (an expandable shelf — "2026 · 14 memories" — newest first), **Collections** (a fixed starter set — Travel, Family, Birthday, and nine more — auto-created empty for every user, plus fully custom ones; always manually curated, never content-classified — there's no AI in this phase), **Favorites** (a heart on any memory you can see), **Flashbacks** ("on this day" N years ago, dismissible for the day), **Highlights** (best this month / most viewed / most reacted, computed live, savable as a pinned reel), and **Archive** (Hide/Restore/Delete permanently — hiding is reversible and never touches the underlying row; deleting is not).
+- **Four layouts, one dataset** — List (dense rows), Grid (thumbnail tiles), Journal (large, spacious, one entry at a time), Timeline (the connecting-rail visual already used elsewhere in the app, now spanning both content types with year markers). Switching layouts never re-fetches.
+- **Grouping and flashbacks use `created_at`** — when a memory actually happened/was captured — not `unlock_date`/`expires_at` (when it became visible). A capsule sealed today that opens in 2030 is still "from today" in your timeline, even though nobody can read it until 2030.
+- **Search and two new fields.** `tags` (a text array) was added to both `capsules` and `moments` this phase — genuinely new metadata, not present before — editable from the new Memory Details page. `location_text` was added to `capsules` the same way (Moments already had it). Neither Phase 5's nor Phase 6's original creation flows collect these; they're deliberately edited only after the fact, from Memories, not retrofitted into the older wizards.
+- **Memory Details** at `/memories/:memoryType/:memoryId` — for a capsule, this is a full `CapsuleCard` (complete reuse: the unlock ritual, Like/Comment/Reflect/Save/Share, everything Phase 6 already built). For an expired moment, a simpler read-oriented display (media/text, mood, historical reaction counts if you're the owner) — new reactions and replies aren't possible on an expired moment by design (see Phase 5's RLS), so this view doesn't pretend otherwise. Both get the same metadata footer this phase adds: tags, location, collection membership, favorite, and archive controls.
+- **Hide is reversible, delete is not.** Hiding sets `hidden_at` and removes a memory from every default view (Timeline, Calendar, Years, Collections, Favorites, Flashbacks, Highlights) without touching the row — "nothing disappears." Deleting permanently calls the same `deleteCapsule`/`deleteMoment` functions Phases 5/6 already built (including their storage cleanup), so that logic lives in exactly one place.
+
 ---
 
 ## Getting started
@@ -142,6 +152,7 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
    - `supabase/phase4d_engagement.sql` — pre-unlock anticipation reactions and post-unlock engagement: `drop_interests` and `drop_unlock_views` tables, interest-count columns on `posts`, re-enables `likes` for post-unlock only, and two new feed tabs (Following, Saved to Unlock) via an updated `get_drops_feed`/`get_drop`/`get_saved_drops`
    - `supabase/phase5_moments.sql` — Memory Moments: `moments`/`moment_media`/`moment_views`/`moment_reactions`/`moment_replies`/`close_friends` tables, RLS, the `can_view_moment()`/`set_moment_expiry()` helpers, the `moments` storage bucket, and RPCs `get_moments_tray`/`get_user_moments`/`get_moment`/`get_moment_seen_list`/`get_moment_reactions`
    - `supabase/phase6_capsules.sql` — Time Capsules: `capsules`/`capsule_media`/`capsule_unlocks`/`capsule_views`/`capsule_reflections`/`capsule_likes`/`capsule_comments`/`capsule_saves` tables, RLS (including a stricter-than-Drops table-level lock on non-owner access to a still-sealed capsule), the `can_view_capsule()`/`validate_capsule_unlock_date()`/`unlock_capsule()` helpers, the `capsules` storage bucket, and RPCs `get_capsule`/`get_user_capsules`/`get_capsule_comments`/`get_capsule_reflections`
+   - `supabase/phase7_memories.sql` — Memories: adds `tags`/`hidden_at` to `capsules` and `moments`, `location_text` to `capsules`; new tables `favorites`/`memory_collections`/`collection_items`/`flashbacks_cache`/`memory_highlights`; RPCs `get_memories`/`get_memory`/`get_memory_calendar`/`get_memory_year_counts`/`get_flashbacks`/`dismiss_flashback`/`get_highlight_candidates`/`get_memory_streak`/`get_collections`/`seed_default_collections` — no new `memories` table, everything is computed by UNIONing `capsules` and expired `moments` at read time
 
 5. Restart the dev server.
 
@@ -197,6 +208,9 @@ src/
 │   ├── CapsulesPage.tsx         # "My Archive" — search + filters, at /capsules
 │   ├── CapsuleCreatePage.tsx    # linkable wizard, at /capsules/create
 │   ├── CapsuleViewerPage.tsx    # single-capsule permalink, at /capsules/:capsuleId
+│   ├── MemoriesPage.tsx         # 8-tab library (Timeline/Calendar/Years/Collections/
+│   │                            #   Favorites/Flashbacks/Highlights/Archive), at /memories
+│   ├── MemoryDetailPage.tsx     # single-memory permalink, at /memories/:memoryType/:memoryId
 │   └── TermsPage.tsx, PrivacyPage.tsx
 ├── components/
 │   ├── auth/         # AuthLayout, GoogleButton, RouteGuards
@@ -222,6 +236,10 @@ src/
 │   ├── capsules/     # CapsuleWizard, CapsuleCountdown, CapsuleCard,
 │   │                 #   CapsuleLockedCard, CapsuleUnlockedCard, UnlockAnimation,
 │   │                 #   CapsuleTimeline, CapsuleArchive, CapsuleFilters, CapsuleViewer
+│   ├── memories/     # MemoryCard, MemoryTimeline, ListView, GridView, JournalView,
+│   │                 #   TimelineView, MemoryCalendar, YearView, CollectionGrid,
+│   │                 #   FavoriteButton, FlashbackCard, HighlightCard, MemorySearch,
+│   │                 #   MemoryFilters, MemoryViewer
 │   ├── legal/        # LegalLayout
 │   └── ui/           # Button, Input, Avatar, Card, Modal, Checkbox,
 │                      #   Toggle, Badge, EmptyState, ErrorState, Skeleton
@@ -231,6 +249,8 @@ src/
 │   ├── useDrops.ts                # drops, comments, reflections, likes, interests, saves, hide, report
 │   ├── useMoments.ts              # moments, views, reactions, replies, archive
 │   ├── useCapsules.ts             # capsules, media, unlocks, likes, comments, reflections
+│   ├── useMemories.ts             # get_memories/get_memory, calendar, years, flashbacks,
+│   │                              #   highlights, collections, favorites, hide/restore/delete
 │   ├── useUsernameAvailability.ts
 │   ├── useImageUpload.ts         # shared drag-drop/crop/upload pipeline
 │   ├── useInView.ts              # IntersectionObserver (video lazy-load, infinite scroll)
@@ -246,7 +266,8 @@ src/
 │   ├── social.ts       # Relationship, SocialUser, SocialCounts, ...
 │   ├── feed.ts          # Drop, DropComment, Reflection, DropTab, MemoryType, Mood, Visibility, InterestType, ReportReason
 │   ├── moment.ts        # Moment, MomentTrayItem, MomentSeenEntry, MomentPrivacy, MomentDurationHours
-│   └── capsule.ts       # Capsule, CapsuleMediaItem, CapsuleVisibility, CapsuleMemoryType, CapsuleArchiveFilters
+│   ├── capsule.ts       # Capsule, CapsuleMediaItem, CapsuleVisibility, CapsuleMemoryType, CapsuleArchiveFilters
+│   └── memory.ts        # Memory (unified capsule+moment shape), MemoryFilters, MemoryCollection, Flashback, HighlightCandidate
 └── utils/
     ├── date.ts
     └── storage.ts      # upload/delete + storage-path parsing (for cleanup on replace)
@@ -261,7 +282,8 @@ supabase/
 ├── phase4c_drop_visibility.sql        # three-tier drop visibility, can_view_drop()
 ├── phase4d_engagement.sql             # drop_interests/drop_unlock_views, likes re-enabled, 2 new tabs
 ├── phase5_moments.sql         # moments + 5 related tables, can_view_moment(), moments bucket, moment RPCs
-└── phase6_capsules.sql        # capsules + 7 related tables, can_view_capsule(), capsules bucket, capsule RPCs
+├── phase6_capsules.sql        # capsules + 7 related tables, can_view_capsule(), capsules bucket, capsule RPCs
+└── phase7_memories.sql        # tags/location/hidden_at on capsules+moments, 5 new tables, get_memories() union RPC
 ```
 
 > Note: `phase4b_time_capsule_redesign.sql` predates this phase and refers to the Drops feed's unlock-date redesign — it has nothing to do with the dedicated `capsules` tables in `phase6_capsules.sql`. Unfortunate naming collision, kept as-is rather than renaming an already-applied migration file.
@@ -333,6 +355,22 @@ All five are created and policed by their respective migration files — nothing
 
 **Visibility tiers**, plain language — `only_me` (nobody but the owner, ever), `followers` (only accepted followers, regardless of account privacy), `public` (gated by the author's own account privacy, same as Drops' `public` tier). Decided by `can_view_capsule(owner, visibility)`, the same pattern as `can_view_drop`/`can_view_moment` — see Security notes for how capsules go one step further than Drops on enforcement.
 
+## Database tables (Phase 7 — Memories)
+
+No new content table — `capsules` and `moments` gained columns instead, and everything else here is either a personal-organization table or a computed-on-read RPC.
+
+| Table | Purpose | Key rules |
+|---|---|---|
+| `capsules` / `moments` — new columns | `tags text[]` on both (genuinely new metadata, editable only from the new Memory Details page); `location_text` on `capsules` (Moments already had it); `hidden_at timestamptz` on both (Archive's Hide/Restore) | Nothing retrofitted into the Phase 5/6 creation flows — these are Phase 7 additions, edited only after the fact |
+| `favorites` | A personal star on any memory you can see — `capsule_id`/`moment_id`, exactly one set | Two nullable FK columns rather than one polymorphic id, so cascading deletes still work with real foreign keys; a partial unique index per column prevents double-favoriting either type |
+| `memory_collections` / `collection_items` | Personal folders. A 12-item starter set (Travel, Family, Friends, School, Work, Birthday, Graduation, Vacation, Pets, Love, Music, Sports) is auto-created empty via `seed_default_collections()`, `is_default = true` | Collections only ever hold your own memories — both the collection and the memory being added must belong to the caller; same XOR-FK pattern as `favorites` |
+| `flashbacks_cache` | Not a performance cache — the "on this day" query is cheap at this scale — a **dismissal tracker**: once you've dismissed today's flashback for a memory, it stays dismissed for the rest of that day | Unique per (user, memory, day); insert-only, no update/delete needed |
+| `memory_highlights` | A **saved/pinned** highlight reel, not an automatic cache — candidate reels (best month / most viewed / most reacted) are computed live by `get_highlight_candidates()`, cheap enough to never need materializing; this table only holds what a user explicitly chose to keep | `capsule_ids uuid[]` / `moment_ids uuid[]` snapshot the reel's members at save time |
+
+**`get_memories()`/`get_memory()` are the whole feature's spine.** They UNION `capsules` (any lock state, your own; unlocked-and-visible, anyone else's) with `moments` (expired only, ever — an active moment belongs to the live tray, not Memories) into one normalized row shape, with the exact same content-nulling discipline as everywhere else in this app. `created_at` — when a memory actually happened — drives all grouping, sorting, and flashback matching; `unlock_date`/`expires_at` only ever controls whether content is currently readable.
+
+**Interpretation note on scope**: the phase brief said "every unlocked Time Capsule and expired Memory Moment" — Drops were deliberately not included in this union. A Drop already has a permanent home (the Feed's My Drops tab + `/saved`) and never disappears from its primary surface the way an expired Moment does or a sealed Capsule's content does; Capsules and Moments both needed somewhere to "graduate" to, Drops didn't. Worth revisiting explicitly before Phase 8 if the intent was actually all three content types.
+
 ## Security notes
 
 - **Row Level Security** on `profiles`: everyone can read/write only their own row directly. Reading *someone else's* profile goes through `get_profile_by_username`, a `SECURITY DEFINER` function that's the one place allowed to decide what a private account exposes — bio, location, and website are nulled out unless the viewer is the owner *or an accepted follower* (Phase 3 extended this from "owner only"); birthday is never returned by it at all, to anyone, ever. The function also hides the profile entirely between two users with a block relationship in either direction.
@@ -361,6 +399,10 @@ All five are created and policed by their respective migration files — nothing
 - **`unlock_capsule()` is a single atomic RPC**, not two separate client-side inserts — it writes `capsule_unlocks` (always) and `capsule_views` (only for non-owners) together, and is safe to call repeatedly (`ON CONFLICT DO NOTHING`) so revisiting an already-opened capsule is a harmless no-op rather than a duplicate-key error the client has to swallow.
 - **`capsule_reflections` are private by construction**, same as Drops' `is_reflection` comments — the SELECT policy only ever returns rows to their own author, on any capsule, including your own.
 - **Like/Comment/Save on a capsule all require `unlock_date <= now()`** at the RLS `WITH CHECK` layer — a direct API call attempting to like or comment on a still-sealed capsule is rejected the same way an out-of-order Drops interaction would be.
+- **`get_memories()`/`get_memory()` are `SECURITY DEFINER` and re-run the exact same predicates** their single-content-type counterparts already enforce — `can_view_capsule`/`can_view_moment`, `is_blocked_either_way`, the unlock/expiry checks — rather than introducing any new, looser notion of "visible." Viewing your own library always includes your own locked capsules (never anyone else's); viewing someone else's never does, and never includes an active (unexpired) moment regardless of whose it is.
+- **Favorites and collections can only ever reference a memory you can actually see** — `favorites`' and `collection_items`' INSERT policies re-check `can_view_capsule`/`can_view_moment` (favorites) or plain ownership (collection items — a personal library only ever organizes your own memories, not things shared with you) before the row is allowed to exist.
+- **Hiding is a soft, fully reversible flag** (`hidden_at`), not a delete — every default read path excludes hidden memories, but the row, its media, and its engagement history are all untouched. Only `deletePermanently` — which delegates to the same `deleteCapsule`/`deleteMoment` functions Phases 5/6 already built — actually removes anything, storage included.
+- **Tags are free-text, not a controlled vocabulary** — no server-side validation beyond length via the existing owner-only UPDATE policies on `capsules`/`moments` (the same blanket "owner can update their own row" policies those tables already had; nothing new was granted for this phase). A malicious client could still only ever edit their *own* memory's tags, same as any other column on those tables.
 
 ---
 
@@ -440,6 +482,25 @@ All five are created and policed by their respective migration files — nothing
 - **Production build** — `npm run build` clean.
 - **RLS** — as User B, attempt to directly query `/rest/v1/capsules?id=eq.<User A's locked capsule id>` — should return zero rows unless B is the owner; attempt to insert a `capsule_likes`/`capsule_comments`/`capsule_saves` row against a still-locked capsule — should be rejected.
 
+## Testing Phase 7 (Memories)
+
+- **Timeline** — confirm a capsule appears the moment it's created (locked, sealed state) and a moment appears only once it expires (never while still active in the live tray); switch between all four layouts (List/Grid/Journal/Timeline) and confirm the same data renders correctly in each without a re-fetch; confirm Newest/Oldest sort actually reorders.
+- **Calendar** — confirm a day with memories shows a dot and a day without doesn't; tap a day, confirm it shows exactly that day's memories; navigate month-to-month and year-to-year.
+- **Year grouping** — confirm `get_memory_year_counts` matches what you'd count by hand; expand a year, confirm its memories load and match the count shown.
+- **Collections** — visit Collections for the first time on a fresh account, confirm all 12 default collections appear automatically and empty; create a custom collection; add a memory to a collection from its Memory Details page, confirm it appears in that collection's expanded view and in Timeline's collection filter; remove it, confirm it disappears from both; delete a custom collection, confirm its memories are untouched.
+- **Favorites** — favorite a memory from a card (grid/list/journal/timeline all have the button) and from its Details page; confirm it shows up on the Favorites tab and via the Timeline's Favorites filter; unfavorite, confirm it disappears from both.
+- **Flashbacks** — manually backdate a test capsule/moment's `created_at` in Supabase to exactly one year before today (same month/day); confirm it appears under Flashbacks with "1 year ago"; dismiss it, confirm it's gone for the rest of the day but would reappear tomorrow (check the `flashbacks_cache` row).
+- **Highlights** — confirm "Best memories this month" only considers the last 30 days, "Most viewed"/"Most reacted" consider everything; tap "Save this reel," confirm a row lands in `memory_highlights` with the right `capsule_ids`/`moment_ids`.
+- **Search** — search your own Timeline by a word that's only in one memory's title, then only in its caption; confirm it matches both; confirm it never matches anyone else's memories even if they're visible to you.
+- **Filters** — Year, Month, Mood, Visibility, Media type, Favorite, Collection, Locked/Unlocked — test independently and combined; confirm "Clear" resets everything at once.
+- **Archive** — hide a memory from its Details page, confirm it disappears from Timeline/Calendar/Years/Collections/Favorites/Flashbacks/Highlights immediately but appears under the Archive tab; restore it, confirm it's back everywhere; delete one permanently, confirm the row *and* its storage files are gone (check the `capsules`/`moments` bucket), and that it no longer appears in Archive either.
+- **Tags and location** — add a few tags to a memory, remove one, confirm both persist after a page reload; add a location to a capsule (moments already had this field from Phase 5).
+- **Memory Details for each type** — a capsule opens as a full interactive `CapsuleCard` (unlock ritual if still locked, full Like/Comment/Reflect/Save/Share once unlocked); a moment shows its content plus (owner-only) historical reaction counts, with no way to add new reactions or comments (matches Phase 5's unlock-independent RLS).
+- **Responsive layout** — the 8-tab bar's horizontal scroll, the calendar grid, and all four Timeline layouts on a narrow viewport or real device.
+- **TypeScript build** — `npx tsc -b` clean.
+- **Production build** — `npm run build` clean.
+- **RLS** — as User B, confirm `get_memories`/`get_memory` never return User A's locked capsules or active moments, even by guessing UUIDs; confirm inserting a `favorites`/`collection_items` row against a memory you can't see (or, for collections, don't own) is rejected; confirm updating another user's `tags`/`hidden_at` via a direct table call is rejected.
+
 ## Known limitations
 
 - Mute and Restrict have no visible effect anywhere yet — the feed doesn't filter on them. The relationships are stored and toggle correctly; wiring `get_drops_feed` to exclude muted/restricted authors is a natural next step, deliberately not done here since it wasn't part of this phase's explicit scope.
@@ -467,6 +528,14 @@ All five are created and policed by their respective migration files — nothing
 - **`get_user_capsules` is called once per profile page load with no caching**, same posture as the equivalent Moments calls — fine at this scale, not optimized further here.
 - **Capsules' RLS is intentionally stricter than Drops'/Moments' on the same lock-state question** (see Security notes) — this is a deliberate improvement made *for this phase*, not backported to the older tables, so the three content types aren't perfectly consistent with each other on this one point. Worth a dedicated hardening pass across all three in a later phase.
 - No real-time updates for capsule engagement either — a new like, comment, or reflection from someone else won't appear on an already-open card until it's reloaded.
+- **Drops are not part of Memories.** The phase brief named Capsules and Moments specifically; an unlocked Drop still only lives in the Feed (My Drops tab) and `/saved`, not in `/memories`. See the interpretation note under "Database tables (Phase 7)" — worth explicitly confirming before Phase 8 if that was meant to include Drops too, since adding them later means widening `get_memories()`'s UNION, not a redesign.
+- **"People" search (mentioned in the phase brief) isn't implemented.** Moments have a single `mentioned_user_id`; Capsules have no mention field at all. Rather than bolting a mention picker onto Phase 6's closed wizard, or search that only half-works across the two types, it was left out entirely this phase — a real "search by person" feature would want mentions on both types first.
+- **Collections and Favorites only ever apply to memories you can see when you act on them.** If a Followers-visibility capsule you favorited later gets its visibility changed to Only Me by its owner, the favorite row still exists (harmless — the RLS on `favorites`' SELECT is your-own-rows-only), but `get_memories` would stop returning it to you going forward, since the visibility check re-runs on every read, not just at favorite time.
+- **No content-based auto-classification into collections** — deliberately, since this phase has no AI. The 12 starter collections are empty shells with sensible names, not smart folders; every memory in every collection got there by an explicit "add to collection" action.
+- **"Longest streak" is a plain number** (`get_memory_streak()`), not a reel like the other highlights — a genuinely different kind of computation (consecutive-day counting via a window over distinct dates), so it wasn't forced into the same `HighlightCard` shape. No dedicated UI surfaces it yet beyond what's described here; a small stat tile on the Highlights tab would be a natural, low-effort follow-up.
+- **Calendar and Year view fetch a full month/year of rows to compute their client-side day/grouping logic** rather than everything being pre-aggregated server-side beyond the day-count and year-count RPCs. Fine at personal-library scale; would want a leaner approach if someone accumulates thousands of memories.
+- **The moment-half of Memory Details has no reply thread** — same underlying limitation Phase 5 already documented (no reply inbox UI exists anywhere yet), just visible again here since Memories is the first place you'd naturally go looking for it.
+- No real-time updates in Memories either — a newly favorited-by-someone-else count, a new tag, or a newly hidden memory in another open tab won't reflect until the view is reloaded.
 
 ---
 
@@ -493,5 +562,6 @@ Environment variables required in Vercel (Project Settings → Environment Varia
 | 4 | Feed — Memory Drops (time-capsule redesign: unlock dates, mood, 3-tier visibility, reflections, pre/post-unlock reactions, 6 tabs) | ✅ Complete |
 | 5 | Moments (12h/24h/48h ephemeral photo/video/text, 4-tier privacy, reactions, replies, seen list, owner archive) | ✅ Complete |
 | 6 | Time Capsules (9-step guided creator, combinable memory types incl. in-browser voice recording, 3-tier visibility, ritual unlock + animation, Like/Comment/Reflect/Save/Share, searchable/filterable archive) | ✅ Complete |
-| 7 | Messages (DMs, conversation list) | Planned |
-| 8 | Notifications | Planned |
+| 7 | Memories (unified library over unlocked Capsules + expired Moments — Timeline/Calendar/Years/Collections/Favorites/Flashbacks/Highlights/Archive, 4 layouts) | ✅ Complete |
+| 8 | Messages (DMs, conversation list) | Planned |
+| 9 | Notifications | Planned |

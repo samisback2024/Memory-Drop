@@ -26,6 +26,8 @@ import { MomentViewerPage } from './pages/MomentViewerPage';
 import { CapsulesPage } from './pages/CapsulesPage';
 import { CapsuleCreatePage } from './pages/CapsuleCreatePage';
 import { CapsuleViewerPage } from './pages/CapsuleViewerPage';
+import { MemoriesPage } from './pages/MemoriesPage';
+import { MemoryDetailPage } from './pages/MemoryDetailPage';
 import { TermsPage } from './pages/TermsPage';
 import { PrivacyPage } from './pages/PrivacyPage';
 
@@ -70,6 +72,8 @@ function App() {
             <Route path="/capsules" element={<CapsulesPage />} />
             <Route path="/capsules/create" element={<CapsuleCreatePage />} />
             <Route path="/capsules/:capsuleId" element={<CapsuleViewerPage />} />
+            <Route path="/memories" element={<MemoriesPage />} />
+            <Route path="/memories/:memoryType/:memoryId" element={<MemoryDetailPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/profile/edit" element={<EditProfilePage />} />
