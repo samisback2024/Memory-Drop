@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { LegalLayout, LegalSection } from '../components/legal/LegalLayout';
 
 // Placeholder legal copy — replace with real, counsel-reviewed Privacy
@@ -30,14 +31,25 @@ export const PrivacyPage: React.FC = () => (
         row-level security so that only you can modify your own profile.
       </p>
     </LegalSection>
-    <LegalSection heading="5. Your choices">
+    <LegalSection heading="5. Analytics">
+      <p>
+        We collect basic product-usage events (such as account creation, Drops/Capsules/Moments created,
+        unlocks, follows, searches, and shares) to understand how Memory Drop is used and improve it. This data
+        is stored only in our own database — never shared with or sold to a third-party analytics company — and
+        you can turn it off entirely at any time in Settings → Privacy → Analytics.
+      </p>
+    </LegalSection>
+    <LegalSection heading="6. Your choices">
       <p>
         You can update your profile at any time. To request deletion of your account and associated data, contact
         us at the address below.
       </p>
     </LegalSection>
-    <LegalSection heading="6. Contact">
-      <p>Questions about this policy? Reach out at privacy@memorydrop.app.</p>
+    <LegalSection heading="7. Contact">
+      <p>
+        Questions about this policy? Reach out at privacy@memorydrop.app, or visit our{' '}
+        <Link to="/support" className="text-purple-600 dark:text-purple-400 font-medium">Support page</Link>.
+      </p>
     </LegalSection>
   </LegalLayout>
 );

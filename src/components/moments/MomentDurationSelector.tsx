@@ -22,7 +22,7 @@ export const MomentDurationSelector: React.FC<MomentDurationSelectorProps> = ({ 
             'focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none',
             selected
               ? 'bg-gradient-to-r from-purple-600 to-blue-500 border-transparent text-white shadow-sm'
-              : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300',
+              : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600',
           ].join(' ')}
         >
           {hours}h

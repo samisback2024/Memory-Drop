@@ -57,12 +57,12 @@ export const InterestActions: React.FC<InterestActionsProps> = ({ dropId, counts
               'focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none',
               isActive
                 ? 'bg-gradient-to-r from-purple-500 to-blue-500 border-transparent text-white shadow-sm'
-                : 'bg-white border-gray-200 text-gray-600 hover:border-purple-200 hover:text-purple-600',
+                : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-purple-200 dark:hover:border-purple-800 hover:text-purple-600 dark:hover:text-purple-400',
             ].join(' ')}
           >
             <Icon size={13} aria-hidden="true" />
             {isActive ? meta.activeLabel : meta.label}
-            {count > 0 && <span className={isActive ? 'text-white/80' : 'text-gray-400'}>{count}</span>}
+            {count > 0 && <span className={isActive ? 'text-white/80' : 'text-gray-400 dark:text-gray-500'}>{count}</span>}
           </button>
         );
       })}

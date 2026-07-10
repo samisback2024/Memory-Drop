@@ -21,19 +21,19 @@ export const CapsuleUnlockedCard: React.FC<CapsuleUnlockedCardProps> = ({ capsul
     <div className="flex flex-col gap-4">
       {(capsule.title || moodMeta) && (
         <div className="flex items-center gap-2">
-          {capsule.title && <h3 className="text-base font-semibold text-gray-900">{capsule.title}</h3>}
+          {capsule.title && <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">{capsule.title}</h3>}
           {moodMeta && <span aria-label={moodMeta.label} className="text-sm">{moodMeta.emoji}</span>}
         </div>
       )}
 
       {capsule.memory_text && (
-        <p className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">{capsule.memory_text}</p>
+        <p className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed">{capsule.memory_text}</p>
       )}
 
       {photos.length > 0 && (
         <div className={`grid gap-1.5 ${photos.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
           {photos.map(p => (
-            <img key={p.url} src={p.url} alt="" loading="lazy" className="w-full rounded-xl object-cover max-h-96" />
+            <img key={p.url} src={p.url} alt={capsule.title || 'A photo from this time capsule'} loading="lazy" className="w-full rounded-xl object-cover max-h-96" />
           ))}
         </div>
       )}

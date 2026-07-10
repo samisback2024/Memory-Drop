@@ -12,7 +12,7 @@ const VARIANTS: Record<EmptyMomentsVariant, { icon: typeof Sparkles; title: stri
 export const EmptyMomentsState: React.FC<{ variant: EmptyMomentsVariant }> = ({ variant }) => {
   const { icon, title, description } = VARIANTS[variant];
   return (
-    <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm">
+    <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm">
       <EmptyState icon={icon} title={title} description={description} />
     </div>
   );

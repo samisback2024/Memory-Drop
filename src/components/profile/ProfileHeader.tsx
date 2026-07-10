@@ -30,7 +30,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = React.memo(({ profile
   const completion = isOwnProfile ? getProfileCompletion(profile) : null;
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
       <div className="relative h-32 sm:h-40 md:h-48 bg-gradient-to-r from-purple-600 to-blue-500">
         {profile.cover_photo_url && (
           <img
@@ -56,7 +56,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = React.memo(({ profile
                 src={profile.profile_photo_url}
                 name={displayName}
                 size="2xl"
-                className="border-4 border-white shadow-md"
+                className="border-4 border-white dark:border-gray-900 shadow-md"
               />
             </button>
           ) : (
@@ -66,7 +66,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = React.memo(({ profile
               size="2xl"
               ring
               ringColor="ring-white"
-              className="border-4 border-white shadow-md"
+              className="border-4 border-white dark:border-gray-900 shadow-md"
             />
           )}
           {isOwnProfile && (
@@ -79,10 +79,10 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = React.memo(({ profile
 
         <div className="mb-3">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <h1 className="text-xl font-bold text-gray-900">{displayName}</h1>
-            {profile.pronouns && <span className="text-sm text-gray-400">({profile.pronouns})</span>}
+            <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">{displayName}</h1>
+            {profile.pronouns && <span className="text-sm text-gray-400 dark:text-gray-500">({profile.pronouns})</span>}
           </div>
-          {profile.username && <p className="text-sm text-gray-500">@{profile.username}</p>}
+          {profile.username && <p className="text-sm text-gray-500 dark:text-gray-400">@{profile.username}</p>}
 
           <div className="flex flex-wrap items-center gap-1.5 mt-2">
             <Badge
@@ -101,7 +101,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = React.memo(({ profile
             )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-gray-400">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-gray-400 dark:text-gray-500">
             {profile.created_at && (
               <span className="flex items-center gap-1">
                 <CalendarDays size={12} aria-hidden="true" />
@@ -119,7 +119,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = React.memo(({ profile
                 href={profile.website}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 text-purple-600 hover:text-purple-700"
+                className="flex items-center gap-1 text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300"
               >
                 <Link2 size={12} aria-hidden="true" />
                 {displayWebsite(profile.website)}
@@ -129,14 +129,14 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = React.memo(({ profile
         </div>
 
         {bioHidden ? (
-          <div className="flex items-center gap-2 text-sm text-gray-400 mb-1">
+          <div className="flex items-center gap-2 text-sm text-gray-400 dark:text-gray-500 mb-1">
             <Lock size={13} aria-hidden="true" />
             This account is private.
           </div>
         ) : profile.bio ? (
-          <p className="text-sm text-gray-700 leading-relaxed mb-1 whitespace-pre-wrap">{profile.bio}</p>
+          <p className="text-sm text-gray-700 dark:text-gray-300 leading-relaxed mb-1 whitespace-pre-wrap">{profile.bio}</p>
         ) : isOwnProfile ? (
-          <p className="text-sm text-gray-400 italic mb-1">Add a bio to tell people about yourself.</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500 italic mb-1">Add a bio to tell people about yourself.</p>
         ) : null}
 
         {profile.username && <StatsRow profileId={profile.id} username={profile.username} createdAt={profile.created_at} />}

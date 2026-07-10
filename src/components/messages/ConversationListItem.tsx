@@ -10,7 +10,7 @@ interface ConversationListItemProps {
   conversation: Conversation;
 }
 
-export const ConversationListItem: React.FC<ConversationListItemProps> = ({ conversation: c }) => {
+const ConversationListItemImpl: React.FC<ConversationListItemProps> = ({ conversation: c }) => {
   const name = c.other_display_name || c.other_username || 'Unknown';
   const unread = c.unread_count > 0;
 
@@ -28,8 +28,8 @@ export const ConversationListItem: React.FC<ConversationListItemProps> = ({ conv
           <p className={`text-sm truncate ${unread ? 'font-bold text-gray-900 dark:text-gray-100' : 'font-medium text-gray-800 dark:text-gray-200'}`}>
             {name}
           </p>
-          {c.is_pinned && <Pin size={11} className="text-gray-400 flex-shrink-0" aria-label="Pinned" />}
-          {c.is_muted && <BellOff size={11} className="text-gray-400 flex-shrink-0" aria-label="Muted" />}
+          {c.is_pinned && <Pin size={11} className="text-gray-400 dark:text-gray-500 flex-shrink-0" aria-label="Pinned" />}
+          {c.is_muted && <BellOff size={11} className="text-gray-400 dark:text-gray-500 flex-shrink-0" aria-label="Muted" />}
         </div>
         <p className={`text-sm truncate ${unread ? 'text-gray-700 dark:text-gray-300 font-medium' : 'text-gray-500 dark:text-gray-400'}`}>
           {c.request_status === 'pending' ? 'Message request sent' : (c.last_message_preview || 'Say hello 👋')}
@@ -48,3 +48,9 @@ export const ConversationListItem: React.FC<ConversationListItemProps> = ({ conv
     </Link>
   );
 };
+
+// Memoized — same reasoning as DropCard/MemoryCard: MessagesPage renders
+// one of these per conversation and refetches the whole list on any
+// realtime change, so memoizing keeps an update to one conversation from
+// re-rendering every other row.
+export const ConversationListItem = React.memo(ConversationListItemImpl);

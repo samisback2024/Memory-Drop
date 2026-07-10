@@ -144,7 +144,7 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
           onPointerCancel={handlePointerUp}
           onKeyDown={handleKeyDown}
           className={[
-            'relative w-full overflow-hidden bg-gray-100 touch-none select-none cursor-grab active:cursor-grabbing',
+            'relative w-full overflow-hidden bg-gray-100 dark:bg-gray-800 touch-none select-none cursor-grab active:cursor-grabbing',
             'focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500',
             shape === 'circle' ? 'rounded-full' : 'rounded-2xl',
           ].join(' ')}
@@ -166,7 +166,7 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
         </div>
 
         <div className="flex items-center gap-3">
-          <ZoomIn size={16} className="text-gray-400 flex-shrink-0" />
+          <ZoomIn size={16} className="text-gray-400 dark:text-gray-500 flex-shrink-0" />
           <input
             type="range"
             min={MIN_ZOOM}
@@ -179,7 +179,7 @@ export const ImageCropModal: React.FC<ImageCropModalProps> = ({
           />
         </div>
 
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        {error && <p className="text-sm text-red-500 dark:text-red-400">{error}</p>}
 
         <div className="flex gap-3">
           <Button type="button" variant="primary" fullWidth loading={processing} onClick={handleConfirm} disabled={!image}>

@@ -25,7 +25,7 @@ export const SuggestedFriends: React.FC = () => {
       renderSubtitle={user => {
         const mutualCount = users.find(u => u.id === user.id)?.mutual_count ?? 0;
         return (
-          <p className="text-xs text-gray-500 truncate">
+          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
             @{user.username}{mutualCount > 0 ? ` · ${mutualCount} mutual friend${mutualCount === 1 ? '' : 's'}` : ''}
           </p>
         );

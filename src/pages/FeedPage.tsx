@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Loader2, Sparkles } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useDrops } from '../hooks/useDrops';
@@ -40,7 +41,20 @@ export const FeedPage: React.FC = () => {
     my_drops: emptyTabState(), following: emptyTabState(), public_drops: emptyTabState(),
     unlocking_soon: emptyTabState(), today_unlocks: emptyTabState(), saved_to_unlock: emptyTabState(),
   });
+  const [searchParams, setSearchParams] = useSearchParams();
   const [composerOpen, setComposerOpen] = useState(false);
+
+  // Backs the "New Drop" PWA manifest shortcut (public/site.webmanifest)
+  // — a shortcut that lands on a plain /feed with no visible effect
+  // would be a broken-feeling promise, so this actually opens the
+  // composer on arrival, once, then cleans the URL up.
+  useEffect(() => {
+    if (searchParams.get('compose') === 'drop') {
+      setComposerOpen(true);
+      setSearchParams(params => { params.delete('compose'); return params; }, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [momentComposerOpen, setMomentComposerOpen] = useState(false);
   const [viewingMomentsFor, setViewingMomentsFor] = useState<string | null>(null);
   const [momentTrayKey, setMomentTrayKey] = useState(0);

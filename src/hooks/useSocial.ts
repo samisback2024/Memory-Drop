@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
+import { track } from '../lib/analytics';
 import type { AuthResult } from '../types/auth';
 import type {
   Relationship, SocialCounts, SocialUser, SocialUserWithRelationship, SuggestedUser, PendingRequest,
@@ -45,6 +46,7 @@ export const useSocial = () => {
       if (/unique/i.test(error.message)) return { error: 'You already follow this user.', status: null };
       return { error: error.message, status: null };
     }
+    void track('follow', { status: data.status });
     return { error: null, status: data.status as 'accepted' | 'pending' };
   }, [user]);
 

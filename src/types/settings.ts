@@ -16,6 +16,7 @@ export interface UserSettings {
   larger_touch_targets: boolean;
   messaging_privacy: MessagingPrivacy;
   allow_message_requests: boolean;
+  analytics_enabled: boolean;
   password_changed_at: string | null;
   created_at: string;
   updated_at: string;

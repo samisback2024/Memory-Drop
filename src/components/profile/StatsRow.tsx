@@ -21,12 +21,12 @@ export const StatsRow: React.FC<StatsRowProps> = React.memo(({ profileId, userna
   ];
 
   return (
-    <div className="grid grid-cols-3 sm:grid-cols-6 gap-y-3 gap-x-2 py-3 border-t border-b border-gray-100">
+    <div className="grid grid-cols-3 sm:grid-cols-6 gap-y-3 gap-x-2 py-3 border-t border-b border-gray-100 dark:border-gray-800">
       <SocialStats profileId={profileId} username={username} />
       {placeholders.map(({ key, label, value }) => (
         <div key={key} className="text-center">
-          <p className="font-bold text-gray-900">{value}</p>
-          <p className="text-xs text-gray-500 mt-0.5">{label}</p>
+          <p className="font-bold text-gray-900 dark:text-gray-100">{value}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{label}</p>
         </div>
       ))}
     </div>

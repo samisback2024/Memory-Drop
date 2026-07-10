@@ -30,16 +30,16 @@ export const ProfileStatsCard: React.FC = () => {
   useEffect(() => { getMemoryStats().then(setStats); }, [getMemoryStats]);
 
   if (!stats) {
-    return <div className="grid grid-cols-3 gap-2">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-16 rounded-xl bg-gray-50 animate-pulse" />)}</div>;
+    return <div className="grid grid-cols-3 gap-2">{Array.from({ length: 6 }).map((_, i) => <div key={i} className="h-16 rounded-xl bg-gray-50 dark:bg-gray-800 animate-pulse" />)}</div>;
   }
 
   return (
     <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
       {TILES.map(({ key, label, icon: Icon }) => (
-        <div key={key} className="flex flex-col items-center gap-1 rounded-xl bg-gray-50 py-3 px-1 text-center">
+        <div key={key} className="flex flex-col items-center gap-1 rounded-xl bg-gray-50 dark:bg-gray-800 py-3 px-1 text-center">
           <Icon size={14} className="text-purple-500" aria-hidden="true" />
-          <span className="text-base font-bold text-gray-900">{stats[key]}</span>
-          <span className="text-[10px] text-gray-400 leading-tight">{label}</span>
+          <span className="text-base font-bold text-gray-900 dark:text-gray-100">{stats[key]}</span>
+          <span className="text-[10px] text-gray-400 dark:text-gray-500 leading-tight">{label}</span>
         </div>
       ))}
     </div>

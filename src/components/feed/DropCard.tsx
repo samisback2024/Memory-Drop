@@ -187,7 +187,9 @@ const DropCardImpl: React.FC<DropCardProps> = ({ drop, onDeleted, onHidden, onUn
         </div>
 
         <div className={justUnlocked ? 'animate-unlock-reveal' : ''}>
-          {content.is_unlocked && content.post_type === 'photo' && content.images.length > 0 && <ImageGrid images={content.images} />}
+          {content.is_unlocked && content.post_type === 'photo' && content.images.length > 0 && (
+            <ImageGrid images={content.images} altPrefix={`Photo shared by ${content.display_name || content.username}`} />
+          )}
           {content.is_unlocked && content.post_type === 'video' && content.video_url && <VideoPlayer src={content.video_url} />}
           {content.is_unlocked && content.post_type === 'audio' && content.audio_url && <AudioPlayer src={content.audio_url} />}
         </div>

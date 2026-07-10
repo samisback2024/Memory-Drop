@@ -81,42 +81,42 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               onKeyDown={e => { if (e.key === 'Enter') saveEdit(); if (e.key === 'Escape') setEditing(false); }}
               maxLength={1000}
               autoFocus
-              className="flex-1 text-sm border border-gray-200 rounded-lg px-2.5 py-1 focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="flex-1 text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 border border-gray-200 dark:border-gray-700 rounded-lg px-2.5 py-1 focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
-            <button type="button" onClick={saveEdit} className="text-xs font-medium text-purple-600">Save</button>
-            <button type="button" onClick={() => setEditing(false)} className="text-xs text-gray-400">Cancel</button>
+            <button type="button" onClick={saveEdit} className="text-xs font-medium text-purple-600 dark:text-purple-400">Save</button>
+            <button type="button" onClick={() => setEditing(false)} className="text-xs text-gray-400 dark:text-gray-500">Cancel</button>
           </div>
         ) : (
-          <p className="text-sm text-gray-900">
+          <p className="text-sm text-gray-900 dark:text-gray-100">
             <Link to={`/u/${comment.username}`} className="font-semibold hover:underline">{displayName}</Link>{' '}
             <span className="whitespace-pre-wrap break-words">{renderContent(comment.content)}</span>
           </p>
         )}
         <div className="relative flex items-center gap-2.5 mt-0.5 flex-wrap">
-          <span className="text-xs text-gray-400">
+          <span className="text-xs text-gray-400 dark:text-gray-500">
             {formatRelativeTime(comment.created_at)}
             {comment.edited_at && ' · edited'}
           </span>
 
-          <span className={`text-xs flex items-center gap-1 ${comment.my_reaction ? 'text-purple-600' : 'text-gray-400'}`}>
+          <span className={`text-xs flex items-center gap-1 ${comment.my_reaction ? 'text-purple-600 dark:text-purple-400' : 'text-gray-400 dark:text-gray-500'}`}>
             <EmojiPicker onSelect={handlePick} />
             {comment.my_reaction ?? ''}{comment.reaction_count > 0 ? ` ${comment.reaction_count}` : ''}
           </span>
 
           {!isReply && onReplyClick && (
-            <button type="button" onClick={onReplyClick} className="text-xs text-gray-400 hover:text-purple-600 flex items-center gap-1">
+            <button type="button" onClick={onReplyClick} className="text-xs text-gray-400 dark:text-gray-500 hover:text-purple-600 dark:hover:text-purple-400 flex items-center gap-1">
               <MessageCircle size={11} aria-hidden="true" /> Reply
             </button>
           )}
 
           {isOwn && !editing && (
-            <button type="button" onClick={() => setEditing(true)} className="text-xs text-gray-400 hover:text-purple-600 flex items-center gap-1">
+            <button type="button" onClick={() => setEditing(true)} className="text-xs text-gray-400 dark:text-gray-500 hover:text-purple-600 dark:hover:text-purple-400 flex items-center gap-1">
               <Pencil size={11} aria-hidden="true" /> Edit
             </button>
           )}
 
           {canModerate && (
-            <button type="button" onClick={onTogglePin} className="text-xs text-gray-400 hover:text-purple-600 flex items-center gap-1">
+            <button type="button" onClick={onTogglePin} className="text-xs text-gray-400 dark:text-gray-500 hover:text-purple-600 dark:hover:text-purple-400 flex items-center gap-1">
               {comment.is_pinned ? <PinOff size={11} aria-hidden="true" /> : <Pin size={11} aria-hidden="true" />}
               {comment.is_pinned ? 'Unpin' : 'Pin'}
             </button>
@@ -128,7 +128,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
               onClick={handleDelete}
               disabled={deleting}
               aria-label="Delete comment"
-              className="text-xs text-gray-400 hover:text-red-500 transition-colors flex items-center gap-1 disabled:opacity-50"
+              className="text-xs text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors flex items-center gap-1 disabled:opacity-50"
             >
               <Trash2 size={11} aria-hidden="true" />
               Delete

@@ -26,10 +26,10 @@ export const UserCard: React.FC<UserCardProps> = ({ user, actions, showMutuals =
         <Avatar src={user.profile_photo_url} name={displayName} size="md" />
         <div className="min-w-0">
           <div className="flex items-center gap-1">
-            <p className="text-sm font-semibold text-gray-900 truncate">{displayName}</p>
-            {user.is_private && <Lock size={11} className="text-gray-400 flex-shrink-0" aria-label="Private account" />}
+            <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{displayName}</p>
+            {user.is_private && <Lock size={11} className="text-gray-400 dark:text-gray-500 flex-shrink-0" aria-label="Private account" />}
           </div>
-          {subtitle ?? <p className="text-xs text-gray-500 truncate">@{user.username}</p>}
+          {subtitle ?? <p className="text-xs text-gray-500 dark:text-gray-400 truncate">@{user.username}</p>}
           {showMutuals && <MutualFriends targetId={user.id} />}
         </div>
       </Link>

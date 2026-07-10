@@ -1,11 +1,13 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './hooks/useAuth';
+import { AuthProvider, useAuth } from './hooks/useAuth';
 import { ThemeProvider } from './hooks/useTheme';
-import { ToastProvider } from './hooks/useToast';
+import { ToastProvider, useToast } from './hooks/useToast';
 import { usePresence } from './hooks/usePresence';
 import { AppShell } from './components/layout/AppShell';
+import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { AuthProtectedRoute, PublicOnlyRoute, RootRedirect } from './components/auth/RouteGuards';
+import { NotFoundPage } from './pages/NotFoundPage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
@@ -32,6 +34,7 @@ import { CapsuleViewerPage } from './pages/CapsuleViewerPage';
 import { MemoryDetailPage } from './pages/MemoryDetailPage';
 import { TermsPage } from './pages/TermsPage';
 import { PrivacyPage } from './pages/PrivacyPage';
+import { SupportPage } from './pages/SupportPage';
 
 // Route-level code splitting for the heavier, less-frequently-first-
 // loaded pages (chips away at the >500kB bundle warning) — Feed/
@@ -64,6 +67,25 @@ const RouteLoadingFallback = () => (
 // tracking the moment a chat screen opened.
 const PresenceMount = () => { usePresence(); return null; };
 
+// Mounted alongside PresenceMount, inside both AuthProvider and
+// ToastProvider (the only place both hooks are simultaneously
+// available — see useAuth.tsx's sessionExpired flag comment). Surfaces
+// an unintentional sign-out (expired/invalid refresh token) as a clear
+// toast instead of the confusing generic "not authenticated" errors
+// that would otherwise show up piecemeal across whichever page happened
+// to be open when the token died.
+const SessionExpiryToast = () => {
+  const { sessionExpired, clearSessionExpired } = useAuth();
+  const { showToast } = useToast();
+  useEffect(() => {
+    if (sessionExpired) {
+      showToast('Your session expired — please sign in again.', 'error');
+      clearSessionExpired();
+    }
+  }, [sessionExpired, clearSessionExpired, showToast]);
+  return null;
+};
+
 function App() {
   return (
     <BrowserRouter>
@@ -71,6 +93,14 @@ function App() {
         <ThemeProvider>
         <ToastProvider>
           <PresenceMount />
+          <SessionExpiryToast />
+          {/* A second boundary, above AppShell's own — AppShell's only
+              wraps its routed <Outlet>, so the three permalink routes
+              that render outside AppShell entirely (DropPage,
+              MomentViewerPage, ConversationPage) had zero crash coverage
+              before this. Smaller blast radius stays AppShell's job;
+              this is the last-resort net for everything else. */}
+          <ErrorBoundary>
           <Suspense fallback={<RouteLoadingFallback />}>
           <Routes>
             <Route index element={<RootRedirect />} />
@@ -83,6 +113,7 @@ function App() {
             <Route path="/complete-profile" element={<AuthProtectedRoute><CompleteProfilePage /></AuthProtectedRoute>} />
             <Route path="/terms" element={<TermsPage />} />
             <Route path="/privacy" element={<PrivacyPage />} />
+            <Route path="/support" element={<SupportPage />} />
 
             {/* Public — reachable logged out, own chrome (PublicPageHeader) */}
             <Route path="/u/:username" element={<PublicProfilePage />} />
@@ -130,9 +161,15 @@ function App() {
               <Route path="/friends/requests" element={<FriendRequestsPage />} />
             </Route>
 
-            <Route path="*" element={<RootRedirect />} />
+            {/* The real catch-all — any genuinely-unmatched URL gets an
+                honest 404 instead of a silent redirect into Feed/Login,
+                which made a typo'd or dead link indistinguishable from
+                a real navigation. "/" itself still goes through
+                RootRedirect above (index route), unaffected. */}
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
           </Suspense>
+          </ErrorBoundary>
         </ToastProvider>
         </ThemeProvider>
       </AuthProvider>

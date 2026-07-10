@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
 import type { Profile } from '../types';
@@ -12,6 +12,7 @@ import {
   MAX_COVER_BYTES,
 } from '../lib/validators';
 import { uploadFile, deleteFile, generateStoragePath, extractStoragePath } from '../utils/storage';
+import { track } from '../lib/analytics';
 
 interface SignUpResult extends AuthResult {
   needsEmailVerification: boolean;
@@ -48,6 +49,8 @@ interface AuthContextType {
   updatePassword: (newPassword: string) => Promise<AuthResult>;
   resendVerificationEmail: (email?: string) => Promise<AuthResult>;
   refreshUser: () => Promise<void>;
+  sessionExpired: boolean;
+  clearSessionExpired: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -56,6 +59,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [sessionExpired, setSessionExpired] = useState(false);
+  // Tells an unintentional SIGNED_OUT (refresh token expired/invalid)
+  // apart from the user deliberately clicking "Sign out" — signOut()
+  // below flips this right before calling supabase.auth.signOut() so
+  // the auth-state-change handler knows not to treat it as an expiry.
+  const intentionalSignOutRef = useRef(false);
+  const hadUserRef = useRef(false);
 
   const fetchProfile = useCallback(async (userId: string) => {
     const { data, error } = await supabase
@@ -78,13 +88,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
+        hadUserRef.current = true;
         fetchProfile(session.user.id);
       } else {
+        if (event === 'SIGNED_OUT' && hadUserRef.current && !intentionalSignOutRef.current) {
+          setSessionExpired(true);
+        }
+        hadUserRef.current = false;
         setProfile(null);
       }
+      intentionalSignOutRef.current = false;
     });
 
     return () => subscription.unsubscribe();
@@ -138,6 +154,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // If email confirmation is required, Supabase returns a user but no session.
     const needsEmailVerification = Boolean(data.user) && !data.session;
+    void track('signup', { method: 'email' });
     return { error: null, needsEmailVerification };
   };
 
@@ -165,6 +182,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (error) return { error: error.message };
     if (data) setProfile(data as Profile);
+    // The completion step for a Google OAuth account (signUp() above is
+    // never called for OAuth) — this is that path's equivalent "account
+    // fully created" moment.
+    void track('signup', { method: 'google' });
     return { error: null };
   };
 
@@ -178,8 +199,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = async () => {
+    intentionalSignOutRef.current = true;
     await supabase.auth.signOut();
   };
+
+  const clearSessionExpired = () => setSessionExpired(false);
 
   const updateProfile = async (updates: ProfileUpdate): Promise<AuthResult> => {
     if (!user) return { error: 'Not authenticated' };
@@ -365,6 +389,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         updatePassword,
         resendVerificationEmail,
         refreshUser,
+        sessionExpired,
+        clearSessionExpired,
       }}
     >
       {children}

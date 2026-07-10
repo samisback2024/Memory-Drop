@@ -91,7 +91,7 @@ export const CoverPhotoUpload: React.FC<CoverPhotoUploadProps> = ({ src, onUploa
         />
       </div>
       {(error || removeError) && (
-        <p className="text-xs text-red-500">
+        <p className="text-xs text-red-500 dark:text-red-400">
           {error ?? removeError}{' '}
           <button
             type="button"

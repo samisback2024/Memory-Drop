@@ -23,6 +23,14 @@ interface MessageComposerProps {
 
 const TYPING_IDLE_MS = 4000;
 const BUCKET = 'chat-media';
+// Mirrors the chat-media bucket's server-side allowed_mime_types allowlist
+// (supabase/phase13_production_hardening.sql) for the generic "file" attach
+// option — image/video/audio go through their own dedicated attach paths
+// with their own mime handling, so this list only needs to cover documents.
+const ALLOWED_FILE_MIME_TYPES = [
+  'application/pdf', 'text/plain',
+  'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+];
 
 // Handles its own file uploads (image compression via the existing
 // compressImageFile(), same pipeline avatar/cover/feed photos already
@@ -116,6 +124,12 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
   const uploadOne = async (file: File, kind: 'image' | 'video' | 'file'): Promise<{ error: string | null }> => {
     if (kind === 'image' && file.size > MAX_POST_IMAGE_BYTES) return { error: `Images must be ${Math.round(MAX_POST_IMAGE_BYTES / 1024 / 1024)}MB or smaller.` };
     if (kind === 'video' && file.size > MAX_POST_VIDEO_BYTES) return { error: `Videos must be ${Math.round(MAX_POST_VIDEO_BYTES / 1024 / 1024)}MB or smaller.` };
+    // "File" had no client-side cap at all before Phase 13 — the bucket's
+    // blanket 50MB limit was the only backstop. Reusing the video cap
+    // here gives a real, immediate error instead of a confusing failed
+    // upload once the file reaches Storage.
+    if (kind === 'file' && file.size > MAX_POST_VIDEO_BYTES) return { error: `Files must be ${Math.round(MAX_POST_VIDEO_BYTES / 1024 / 1024)}MB or smaller.` };
+    if (kind === 'file' && !ALLOWED_FILE_MIME_TYPES.includes(file.type)) return { error: 'That file type isn\'t supported yet — try a PDF, Word document, or plain text file.' };
 
     setUploading(true);
     const finalFile = kind === 'image' && file.type !== 'image/gif' ? await compressImageFile(file) : file;
@@ -240,7 +254,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
           )}
           <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={e => handleFilePicked(e, 'image')} />
           <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={e => handleFilePicked(e, 'video')} />
-          <input ref={fileInputRef} type="file" className="hidden" onChange={e => handleFilePicked(e, 'file')} />
+          <input ref={fileInputRef} type="file" accept={ALLOWED_FILE_MIME_TYPES.join(',')} className="hidden" onChange={e => handleFilePicked(e, 'file')} />
         </div>
 
         <textarea

@@ -35,25 +35,25 @@ export const LockedDropPlaceholder: React.FC<LockedDropPlaceholderProps> = ({ me
   return (
     <div
       className={[
-        'relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-50 via-white to-blue-50',
-        'border border-purple-100/70 px-6 py-10 flex flex-col items-center text-center gap-3',
+        'relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-50 dark:from-purple-950/40 via-white dark:via-gray-900 to-blue-50 dark:to-blue-950/40',
+        'border border-purple-100/70 dark:border-purple-900/50 px-6 py-10 flex flex-col items-center text-center gap-3',
         'transition-all duration-700 ease-out',
         revealing ? 'scale-105 opacity-0' : 'opacity-100',
       ].join(' ')}
     >
       <div className="absolute inset-0 bg-gradient-to-br from-purple-600/5 via-transparent to-blue-500/5 animate-pulse" aria-hidden="true" />
 
-      <div className="relative w-14 h-14 rounded-full bg-white shadow-md flex items-center justify-center">
+      <div className="relative w-14 h-14 rounded-full bg-white dark:bg-gray-800 shadow-md flex items-center justify-center">
         <Lock size={22} className="text-purple-500" aria-hidden="true" />
       </div>
 
       <div className="relative flex flex-col items-center gap-1">
-        <p className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
-          <MemoryIcon size={14} className="text-gray-400" aria-hidden="true" />
+        <p className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+          <MemoryIcon size={14} className="text-gray-400 dark:text-gray-500" aria-hidden="true" />
           {MEMORY_TYPE_LABELS[memoryType]}
           {moodMeta && <span aria-label={moodMeta.label}>{moodMeta.emoji}</span>}
         </p>
-        <p className="text-xs text-gray-400">Sealed until it's time.</p>
+        <p className="text-xs text-gray-400 dark:text-gray-500">Sealed until it's time.</p>
       </div>
 
       <CountdownPill unlockDate={unlockDate} onUnlock={handleUnlock} />

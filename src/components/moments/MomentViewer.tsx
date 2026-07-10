@@ -198,7 +198,7 @@ export const MomentViewer: React.FC<MomentViewerProps> = ({ authorUserId, includ
         />
 
         {current.media_type === 'photo' && current.media_url && (
-          <img src={current.media_url} alt="" className="max-h-full max-w-full object-contain" />
+          <img src={current.media_url} alt={`Moment shared by ${current.display_name || current.username}`} className="max-h-full max-w-full object-contain" />
         )}
         {current.media_type === 'video' && current.media_url && (
           <video ref={videoRef} src={current.media_url} className="max-h-full max-w-full object-contain" playsInline autoPlay />

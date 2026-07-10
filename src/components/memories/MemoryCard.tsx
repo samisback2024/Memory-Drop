@@ -37,7 +37,7 @@ const MemoryCardImpl: React.FC<MemoryCardProps> = ({ memory, variant = 'timeline
           cover.type === 'video' ? (
             <video src={cover.url} className="w-full h-full object-cover" muted />
           ) : (
-            <img src={cover.url} alt="" loading="lazy" className="w-full h-full object-cover" />
+            <img src={cover.url} alt={snippet} loading="lazy" className="w-full h-full object-cover" />
           )
         ) : (
           <div className="w-full h-full flex flex-col items-center justify-center gap-1.5 p-2 text-center">
@@ -63,7 +63,7 @@ const MemoryCardImpl: React.FC<MemoryCardProps> = ({ memory, variant = 'timeline
       <Link to={href} className="flex items-center gap-3 py-2.5 px-1 hover:bg-white/60 dark:hover:bg-gray-800/60 rounded-xl transition-colors">
         <div className="w-11 h-11 rounded-lg overflow-hidden bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-950/50 dark:to-blue-950/50 flex-shrink-0 flex items-center justify-center">
           {cover && memory.is_unlocked ? (
-            <img src={cover.url} alt="" loading="lazy" className="w-full h-full object-cover" />
+            <img src={cover.url} alt={snippet} loading="lazy" className="w-full h-full object-cover" />
           ) : !memory.is_unlocked ? (
             <Lock size={15} className="text-purple-400" aria-hidden="true" />
           ) : (
@@ -93,7 +93,7 @@ const MemoryCardImpl: React.FC<MemoryCardProps> = ({ memory, variant = 'timeline
         cover.type === 'video' ? (
           <video src={cover.url} className="w-full max-h-72 object-cover bg-black" muted />
         ) : (
-          <img src={cover.url} alt="" loading="lazy" className="w-full max-h-72 object-cover" />
+          <img src={cover.url} alt={snippet} loading="lazy" className="w-full max-h-72 object-cover" />
         )
       )}
       <div className={isJournal ? 'flex flex-col gap-3' : 'p-4 flex flex-col gap-2'}>
@@ -112,7 +112,7 @@ const MemoryCardImpl: React.FC<MemoryCardProps> = ({ memory, variant = 'timeline
           cover.type === 'video' ? (
             <video src={cover.url} className="w-full max-h-96 object-cover rounded-xl bg-black" muted />
           ) : (
-            <img src={cover.url} alt="" loading="lazy" className="w-full max-h-96 object-cover rounded-xl" />
+            <img src={cover.url} alt={snippet} loading="lazy" className="w-full max-h-96 object-cover rounded-xl" />
           )
         )}
 

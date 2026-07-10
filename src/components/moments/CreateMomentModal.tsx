@@ -149,7 +149,7 @@ export const CreateMomentModal: React.FC<CreateMomentModalProps> = ({ isOpen, on
               className={[
                 'flex-1 flex flex-col items-center gap-1 py-3 rounded-xl border text-xs font-medium transition-colors',
                 'focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none',
-                mediaType === type ? 'bg-purple-50 border-purple-300 text-purple-700' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300',
+                mediaType === type ? 'bg-purple-50 dark:bg-purple-950/30 border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300' : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600',
               ].join(' ')}
             >
               <Icon size={18} aria-hidden="true" />
@@ -166,7 +166,7 @@ export const CreateMomentModal: React.FC<CreateMomentModalProps> = ({ isOpen, on
         </div>
 
         {media && mediaType === 'photo' && (
-          <div className="relative rounded-xl overflow-hidden bg-gray-100">
+          <div className="relative rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800">
             <img src={media.previewUrl} alt="" className="w-full max-h-72 object-cover" />
             <button type="button" onClick={() => fileInputRef.current?.click()} aria-label="Remove photo" className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-colors">
               <X size={14} aria-hidden="true" />
@@ -192,19 +192,19 @@ export const CreateMomentModal: React.FC<CreateMomentModalProps> = ({ isOpen, on
               maxLength={500}
               rows={3}
               aria-label="Moment text"
-              className="w-full resize-none border-0 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-0 pt-1.5"
+              className="w-full resize-none border-0 bg-transparent text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-0 pt-1.5"
             />
             <div className="flex items-center justify-end gap-1">
               <EmojiPicker onSelect={emoji => setTextContent(c => c + emoji)} />
-              <span className="text-xs text-gray-400">{textContent.length}/500</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500">{textContent.length}/500</span>
             </div>
           </div>
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="moment-location" className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
-            <MapPin size={15} className="text-gray-400" aria-hidden="true" />
-            Location <span className="text-gray-400 font-normal">(optional)</span>
+          <label htmlFor="moment-location" className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+            <MapPin size={15} className="text-gray-400 dark:text-gray-500" aria-hidden="true" />
+            Location <span className="text-gray-400 dark:text-gray-500 font-normal">(optional)</span>
           </label>
           <input
             id="moment-location"
@@ -213,19 +213,19 @@ export const CreateMomentModal: React.FC<CreateMomentModalProps> = ({ isOpen, on
             onChange={e => setLocationText(e.target.value)}
             maxLength={60}
             placeholder="Where was this?"
-            className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           />
         </div>
 
         <div className="relative flex flex-col gap-1.5">
-          <label htmlFor="moment-mention" className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
-            <AtSign size={15} className="text-gray-400" aria-hidden="true" />
-            Mention someone <span className="text-gray-400 font-normal">(optional)</span>
+          <label htmlFor="moment-mention" className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+            <AtSign size={15} className="text-gray-400 dark:text-gray-500" aria-hidden="true" />
+            Mention someone <span className="text-gray-400 dark:text-gray-500 font-normal">(optional)</span>
           </label>
           {mentioned ? (
-            <div className="flex items-center gap-2 border border-purple-200 bg-purple-50 rounded-xl px-3 py-2 text-sm text-purple-800">
+            <div className="flex items-center gap-2 border border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-950/30 rounded-xl px-3 py-2 text-sm text-purple-800 dark:text-purple-200">
               @{mentioned.username}
-              <button type="button" onClick={() => setMentioned(null)} aria-label="Remove mention" className="ml-auto text-purple-500 hover:text-purple-700">
+              <button type="button" onClick={() => setMentioned(null)} aria-label="Remove mention" className="ml-auto text-purple-500 hover:text-purple-700 dark:hover:text-purple-300">
                 <X size={14} aria-hidden="true" />
               </button>
             </div>
@@ -236,20 +236,20 @@ export const CreateMomentModal: React.FC<CreateMomentModalProps> = ({ isOpen, on
               value={mentionQuery}
               onChange={e => setMentionQuery(e.target.value)}
               placeholder="Search a username…"
-              className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
           )}
           {!mentioned && mentionResults.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-100 rounded-xl shadow-xl z-10 overflow-hidden">
+            <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl shadow-xl z-10 overflow-hidden">
               {mentionResults.map(u => (
                 <button
                   key={u.id}
                   type="button"
                   onClick={() => { setMentioned({ id: u.id, username: u.username }); setMentionQuery(''); setMentionResults([]); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-gray-50 transition-colors"
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                 >
                   <Avatar src={u.profile_photo_url} name={u.display_name || u.username} size="xs" />
-                  <span className="text-sm text-gray-800">@{u.username}</span>
+                  <span className="text-sm text-gray-800 dark:text-gray-200">@{u.username}</span>
                 </button>
               ))}
             </div>
@@ -264,7 +264,7 @@ export const CreateMomentModal: React.FC<CreateMomentModalProps> = ({ isOpen, on
         <div className="flex flex-col gap-1.5">
           <p className="text-sm font-medium text-gray-700">Save this moment for…</p>
           <MomentDurationSelector value={durationHours} onChange={setDurationHours} />
-          <p className="text-xs text-gray-400">Moment expires in {durationHours}h — after that, only you can still see it, in your archive.</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">Moment expires in {durationHours}h — after that, only you can still see it, in your archive.</p>
         </div>
 
         <div className="flex flex-col gap-1.5">
@@ -273,8 +273,8 @@ export const CreateMomentModal: React.FC<CreateMomentModalProps> = ({ isOpen, on
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-100 rounded-xl p-3">
-            <p className="text-sm text-red-600">{error}</p>
+          <div className="bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-900 rounded-xl p-3">
+            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
           </div>
         )}
 

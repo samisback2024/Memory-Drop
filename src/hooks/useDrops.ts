@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
 import { uploadFile, deleteFile, generateStoragePath, extractStoragePath } from '../utils/storage';
 import { compressImageFile } from '../lib/image';
+import { track } from '../lib/analytics';
 import type { AuthResult } from '../types/auth';
 import type { Drop, DropTab, InterestType, MemoryType, Mood, Reflection, ReportReason, Visibility } from '../types/feed';
 
@@ -152,6 +153,7 @@ export const useDrops = () => {
       is_saved_to_unlock: false,
       created_at: dropRow.created_at as string,
     };
+    void track('drop_created', { memory_type: memoryType, visibility });
     return { error: null, drop };
   }, [user, profile]);
 

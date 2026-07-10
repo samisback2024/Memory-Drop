@@ -159,7 +159,7 @@ const CapsuleCardImpl: React.FC<CapsuleCardProps> = ({ capsule, onDeleted }) => 
         <>
           <div className="flex items-center gap-4 px-4 py-3 border-t border-gray-50 dark:border-gray-800">
             <span className="relative inline-flex items-center gap-1.5 text-sm font-medium text-gray-600 dark:text-gray-400">
-              <button type="button" onClick={toggleLike} className="relative flex items-center hover:text-pink-600 transition-colors">
+              <button type="button" onClick={toggleLike} aria-label={content.is_liked ? 'Unlike' : 'Like'} aria-pressed={content.is_liked} className="relative flex items-center hover:text-pink-600 transition-colors">
                 <Heart key={likePopKey} size={16} className={`${content.is_liked ? 'fill-pink-600 text-pink-600' : ''} ${likePopKey > 0 ? 'animate-reaction-pop' : ''}`} aria-hidden="true" />
                 {showLikeFloat && (
                   <Heart size={14} className="absolute left-0 top-0 fill-pink-500 text-pink-500 pointer-events-none animate-reaction-float" aria-hidden="true" />
@@ -167,14 +167,14 @@ const CapsuleCardImpl: React.FC<CapsuleCardProps> = ({ capsule, onDeleted }) => 
               </button>
               <RecentLikersPopover contentType="capsule" contentId={content.id} count={content.like_count} />
             </span>
-            <button type="button" onClick={() => setCommentsOpen(p => !p)} className="flex items-center gap-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-purple-600 transition-colors">
+            <button type="button" onClick={() => setCommentsOpen(p => !p)} aria-label="Comments" className="flex items-center gap-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-purple-600 transition-colors">
               <MessageCircle size={17} aria-hidden="true" />
               {content.comment_count > 0 ? content.comment_count : ''}
             </button>
-            <button type="button" onClick={openReflect} className="flex items-center gap-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-purple-600 transition-colors">
+            <button type="button" onClick={openReflect} aria-label="Reflect" className="flex items-center gap-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-purple-600 transition-colors">
               <Feather size={16} aria-hidden="true" />
             </button>
-            <button type="button" onClick={toggleSave} className="flex items-center gap-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-purple-600 transition-colors">
+            <button type="button" onClick={toggleSave} aria-label={content.is_saved ? 'Unsave' : 'Save'} aria-pressed={content.is_saved} className="flex items-center gap-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-purple-600 transition-colors">
               <Bookmark size={17} className={content.is_saved ? 'fill-purple-600 text-purple-600' : ''} aria-hidden="true" />
             </button>
             <button type="button" onClick={() => setShareOpen(true)} aria-label="Share this memory" className="ml-auto flex items-center gap-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-purple-600 transition-colors">

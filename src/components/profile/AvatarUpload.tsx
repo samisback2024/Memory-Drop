@@ -53,9 +53,9 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({ src, name, onUpload 
           aria-label="Upload profile photo"
         />
       </div>
-      <p className="text-xs text-gray-400">Drag a photo onto your avatar, or tap the camera icon</p>
+      <p className="text-xs text-gray-400 dark:text-gray-500">Drag a photo onto your avatar, or tap the camera icon</p>
       {error && (
-        <p className="text-xs text-red-500">
+        <p className="text-xs text-red-500 dark:text-red-400">
           {error}{' '}
           <button type="button" onClick={() => inputRef.current?.click()} className="underline font-medium">
             Try again

@@ -22,13 +22,13 @@ export const MomentBubble: React.FC<MomentBubbleProps> = ({ name, photoUrl, hasU
     <span
       className={[
         'w-16 h-16 rounded-full flex items-center justify-center p-[2.5px]',
-        hasUnviewed ? 'bg-gradient-to-br from-purple-500 via-fuchsia-500 to-blue-500' : 'bg-gray-200',
+        hasUnviewed ? 'bg-gradient-to-br from-purple-500 via-fuchsia-500 to-blue-500' : 'bg-gray-200 dark:bg-gray-700',
       ].join(' ')}
     >
-      <span className="w-full h-full rounded-full bg-white flex items-center justify-center">
+      <span className="w-full h-full rounded-full bg-white dark:bg-gray-900 flex items-center justify-center">
         <Avatar src={photoUrl} name={name} size="lg" />
       </span>
     </span>
-    <span className="text-xs text-gray-600 truncate w-full text-center">{label}</span>
+    <span className="text-xs text-gray-600 dark:text-gray-300 truncate w-full text-center">{label}</span>
   </button>
 );

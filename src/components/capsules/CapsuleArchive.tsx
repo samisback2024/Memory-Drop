@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Loader2, Archive } from 'lucide-react';
 import { useCapsules } from '../../hooks/useCapsules';
 import { CapsuleFilters } from './CapsuleFilters';
@@ -25,16 +25,25 @@ export const CapsuleArchive: React.FC<CapsuleArchiveProps> = ({ userId, isOwnArc
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  // Bug fix (Phase 13 bug bash): `load` is memoized on [userId, filters,
+  // getUserCapsules] only, so reading `capsules.length` directly inside
+  // it closed over a stale, frozen-at-creation array — every "Load more"
+  // click computed offset from that stale length (usually 0), re-
+  // fetching the same first page forever instead of advancing. A ref
+  // that's always current sidesteps the staleness without forcing `load`
+  // to be recreated (and the initial-load effect to re-fire) on every
+  // page received.
+  const capsulesRef = useRef<Capsule[]>([]);
+  useEffect(() => { capsulesRef.current = capsules; }, [capsules]);
 
   const load = useCallback(async (reset: boolean) => {
     if (reset) setLoading(true); else setLoadingMore(true);
-    const offset = reset ? 0 : capsules.length;
+    const offset = reset ? 0 : capsulesRef.current.length;
     const data = await getUserCapsules(userId, filters, PAGE_SIZE, offset);
     setCapsules(prev => (reset ? data : [...prev, ...data]));
     setHasMore(data.length === PAGE_SIZE);
     setLoading(false);
     setLoadingMore(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, filters, getUserCapsules]);
 
   useEffect(() => { load(true); }, [userId, filters, getUserCapsules]); // eslint-disable-line react-hooks/exhaustive-deps

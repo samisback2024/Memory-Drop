@@ -17,7 +17,7 @@ interface UserListProps {
 }
 
 export const UserListSkeleton: React.FC = () => (
-  <div className="flex flex-col divide-y divide-gray-100" aria-hidden="true">
+  <div className="flex flex-col divide-y divide-gray-100 dark:divide-gray-800" aria-hidden="true">
     {[0, 1, 2, 3].map(i => (
       <div key={i} className="flex items-center gap-3 py-3">
         <Skeleton className="w-10 h-10" rounded="full" />
@@ -58,7 +58,7 @@ export const UserList: React.FC<UserListProps> = ({
   if (rows.length === 0) return <EmptySocialState variant={emptyVariant} />;
 
   return (
-    <div className="flex flex-col divide-y divide-gray-100">
+    <div className="flex flex-col divide-y divide-gray-100 dark:divide-gray-800">
       {rows.map(u => (
         <UserCard
           key={u.id}

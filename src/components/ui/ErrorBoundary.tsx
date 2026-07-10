@@ -1,5 +1,6 @@
 import React from 'react';
 import { ErrorState } from './ErrorState';
+import { logger } from '../../lib/logger';
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -24,9 +25,12 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
     return { hasError: true };
   }
 
-  componentDidCatch(error: unknown) {
-    // eslint-disable-next-line no-console
-    console.error('Unhandled error in routed content:', error);
+  componentDidCatch(error: unknown, info: React.ErrorInfo) {
+    logger.error('Unhandled error in routed content', {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      componentStack: info.componentStack,
+    });
   }
 
   render() {

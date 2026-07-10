@@ -38,11 +38,11 @@ export const MutualFriends: React.FC<MutualFriendsProps> = ({ targetId }) => {
             src={u.profile_photo_url}
             name={u.display_name || u.username}
             size="xs"
-            className="border-2 border-white"
+            className="border-2 border-white dark:border-gray-900"
           />
         ))}
       </div>
-      <p className="text-xs text-gray-400">
+      <p className="text-xs text-gray-400 dark:text-gray-500">
         {count} mutual friend{count === 1 ? '' : 's'}{names ? ` · ${names}` : ''}
       </p>
     </div>

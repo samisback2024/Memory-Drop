@@ -1,6 +1,7 @@
 import { useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
+import { track } from '../lib/analytics';
 import type { AuthResult } from '../types/auth';
 import type {
   Conversation, ConversationFilter, ConversationHeader, ConversationMediaItem, ConversationSearchResult,
@@ -100,6 +101,7 @@ export const useMessages = () => {
       p_attachments: attachments,
     });
     if (error || !data) return { error: error?.message ?? 'Could not send message.', messageId: null };
+    void track('message_sent', { type });
     return { error: null, messageId: data as string };
   }, [user]);
 

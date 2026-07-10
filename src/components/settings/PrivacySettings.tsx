@@ -10,6 +10,7 @@ import { DangerZone } from './DangerZone';
 import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
 import { MESSAGING_PRIVACY_META } from '../../types/message';
+import { setAnalyticsEnabled as setAnalyticsEnabledCache } from '../../lib/analytics';
 import type { MessagingPrivacy } from '../../types/message';
 import type { ManagedUser } from '../../types/settings';
 
@@ -52,6 +53,7 @@ export const PrivacySettings: React.FC = () => {
   const [isPrivate, setIsPrivate] = useState(profile?.is_private ?? false);
   const [messagingPrivacy, setMessagingPrivacy] = useState<MessagingPrivacy | null>(null);
   const [allowMessageRequests, setAllowMessageRequests] = useState(true);
+  const [analyticsEnabled, setAnalyticsEnabledState] = useState(true);
   const [lists, setLists] = useState<Record<ListKind, ManagedUser[]>>({ blocked: [], muted: [], restricted: [], close_friends: [] });
   const [loading, setLoading] = useState<Record<ListKind, boolean>>({ blocked: true, muted: true, restricted: true, close_friends: true });
   const [friendQuery, setFriendQuery] = useState('');
@@ -73,6 +75,7 @@ export const PrivacySettings: React.FC = () => {
       if (!s) return;
       setMessagingPrivacy(s.messaging_privacy);
       setAllowMessageRequests(s.allow_message_requests);
+      setAnalyticsEnabledState(s.analytics_enabled);
     });
   }, [getSettings]);
 
@@ -89,6 +92,12 @@ export const PrivacySettings: React.FC = () => {
   const handleAllowRequestsChange = async (next: boolean) => {
     setAllowMessageRequests(next);
     await updateSettings({ allow_message_requests: next });
+  };
+
+  const handleAnalyticsChange = async (next: boolean) => {
+    setAnalyticsEnabledState(next);
+    setAnalyticsEnabledCache(next);
+    await updateSettings({ analytics_enabled: next });
   };
 
   const handleUnblock = async (id: string) => { await unblockUser(id); setLists(prev => ({ ...prev, blocked: prev.blocked.filter(u => u.id !== id) })); };
@@ -188,6 +197,15 @@ export const PrivacySettings: React.FC = () => {
 
       <SettingsCard title="Restricted users">
         <ManagedList users={lists.restricted} loading={loading.restricted} emptyLabel="You haven't restricted anyone." actionLabel="Unrestrict" onRemove={handleUnrestrict} />
+      </SettingsCard>
+
+      <SettingsCard title="Analytics" description="Helps us understand what's working — never shared with a third party.">
+        <ToggleRow
+          label="Share usage analytics"
+          description="Signups, Drops/Capsules/Moments created, unlocks, follows, searches, and shares — stored only in Memory Drop's own database, never sold or sent to an outside analytics company."
+          checked={analyticsEnabled}
+          onChange={handleAnalyticsChange}
+        />
       </SettingsCard>
 
       <SettingsCard title="Download my data" description="A full export of your memories and account data.">

@@ -6,6 +6,7 @@ import { useDrops } from '../../hooks/useDrops';
 import { useCapsules } from '../../hooks/useCapsules';
 import { generateSharePreview, buildQrCodeUrl } from '../../utils/sharePreview';
 import { useToast } from '../../hooks/useToast';
+import { track } from '../../lib/analytics';
 import { MOOD_META, type Mood } from '../../types/feed';
 
 interface ShareModalProps {
@@ -43,6 +44,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   const recordShare = async () => {
     if (memoryType === 'drop') await incrementDropShare(memoryId);
     else await incrementCapsuleShare(memoryId);
+    void track('share', { memory_type: memoryType });
     onShared?.();
   };
 

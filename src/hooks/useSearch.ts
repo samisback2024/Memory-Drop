@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { supabase } from '../lib/supabase';
+import { track } from '../lib/analytics';
 import type {
   CollectionSearchResult, ExploreTab, Memory, RecentSearch, SearchSuggestion, TrendingSearch,
 } from '../types/memory';
@@ -46,6 +47,7 @@ export const useSearch = () => {
   const recordSearch = useCallback(async (query: string): Promise<void> => {
     if (!query.trim()) return;
     await supabase.rpc('record_search', { p_query: query });
+    void track('search_performed', {});
   }, []);
 
   const getRecentSearches = useCallback(async (limit = 10): Promise<RecentSearch[]> => {

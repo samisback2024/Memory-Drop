@@ -70,31 +70,31 @@ export const RelationshipMenu: React.FC<RelationshipMenuProps> = ({
         aria-label="More options"
         aria-haspopup="menu"
         aria-expanded={open}
-        className="p-2 rounded-xl text-gray-500 hover:bg-gray-100 transition-colors focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none"
+        className="p-2 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none"
       >
         <MoreHorizontal size={16} aria-hidden="true" />
       </button>
       {open && (
-        <div role="menu" className="absolute right-0 top-11 w-52 bg-white border border-gray-100 rounded-2xl shadow-xl z-50 overflow-hidden py-1 animate-fade-in">
+        <div role="menu" className="absolute right-0 top-11 w-52 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl z-50 overflow-hidden py-1 animate-fade-in">
           {showRemoveFollower && (
             <button
               role="menuitem"
               onClick={() => { setOpen(false); onRemoveFollower?.(); }}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
             >
               <UserMinus size={15} aria-hidden="true" /> Remove follower
             </button>
           )}
-          <button role="menuitem" onClick={toggleMute} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+          <button role="menuitem" onClick={toggleMute} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
             {muted ? <Volume2 size={15} aria-hidden="true" /> : <VolumeX size={15} aria-hidden="true" />}
             {muted ? 'Unmute' : 'Mute'}
           </button>
-          <button role="menuitem" onClick={toggleRestrict} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+          <button role="menuitem" onClick={toggleRestrict} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
             {restricted ? <ShieldCheck size={15} aria-hidden="true" /> : <ShieldOff size={15} aria-hidden="true" />}
             {restricted ? 'Unrestrict' : 'Restrict'}
           </button>
-          <div className="border-t border-gray-100 my-1" />
-          <button role="menuitem" onClick={toggleBlock} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+          <div className="border-t border-gray-100 dark:border-gray-800 my-1" />
+          <button role="menuitem" onClick={toggleBlock} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors">
             {blocked ? <Shield size={15} aria-hidden="true" /> : <Ban size={15} aria-hidden="true" />}
             {blocked ? 'Unblock' : 'Block'}
           </button>

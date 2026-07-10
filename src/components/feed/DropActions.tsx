@@ -60,7 +60,7 @@ export const DropActions: React.FC<DropActionsProps> = ({ drop, onUpdate, onRefl
           <button
             type="button"
             onClick={onReflect}
-            className="flex items-center gap-1.5 text-sm font-medium text-gray-500 hover:text-purple-600 transition-colors focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none rounded-lg px-1.5 py-1 -mx-1.5"
+            className="flex items-center gap-1.5 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none rounded-lg px-1.5 py-1 -mx-1.5"
           >
             <Feather size={15} aria-hidden="true" />
             Reflect
@@ -71,7 +71,7 @@ export const DropActions: React.FC<DropActionsProps> = ({ drop, onUpdate, onRefl
   }
 
   return (
-    <div className="flex items-center gap-4 px-4 py-3 border-t border-gray-50">
+    <div className="flex items-center gap-4 px-4 py-3 border-t border-gray-50 dark:border-gray-800">
       <LikeButton
         dropId={drop.id}
         isLiked={drop.is_liked}
@@ -82,7 +82,7 @@ export const DropActions: React.FC<DropActionsProps> = ({ drop, onUpdate, onRefl
       <button
         type="button"
         onClick={onReflect}
-        className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none rounded-lg px-1.5 py-1 -mx-1.5"
+        className="flex items-center gap-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none rounded-lg px-1.5 py-1 -mx-1.5"
       >
         <Feather size={16} aria-hidden="true" />
         Reflect
@@ -91,7 +91,7 @@ export const DropActions: React.FC<DropActionsProps> = ({ drop, onUpdate, onRefl
       <button
         type="button"
         onClick={onCommentToggle}
-        className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none rounded-lg px-1.5 py-1 -mx-1.5"
+        className="flex items-center gap-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none rounded-lg px-1.5 py-1 -mx-1.5"
       >
         <MessageCircle size={17} aria-hidden="true" />
         {drop.comment_count > 0 ? drop.comment_count : ''}

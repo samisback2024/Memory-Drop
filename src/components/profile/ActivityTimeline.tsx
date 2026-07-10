@@ -31,19 +31,19 @@ export const ActivityTimeline: React.FC<{ userId?: string }> = ({ userId }) => {
     getActivityTimeline(userId, 20, 0).then(data => { setItems(data); setLoading(false); });
   }, [userId, getActivityTimeline]);
 
-  if (loading) return <div className="flex flex-col gap-2">{[0, 1, 2].map(i => <div key={i} className="h-10 rounded-xl bg-gray-50 animate-pulse" />)}</div>;
+  if (loading) return <div className="flex flex-col gap-2">{[0, 1, 2].map(i => <div key={i} className="h-10 rounded-xl bg-gray-50 dark:bg-gray-800 animate-pulse" />)}</div>;
 
   if (items.length === 0) {
     return <EmptyState icon={Clock} title="No activity yet" description="Drops, Capsules, and Moments you create will show up here." />;
   }
 
   return (
-    <div className="flex flex-col divide-y divide-gray-50">
+    <div className="flex flex-col divide-y divide-gray-50 dark:divide-gray-800">
       {items.map((item, i) => (
         <Link
           key={`${item.activity_type}-${item.source_type}-${item.source_id}-${i}`}
           to={`/memories/${item.source_type}/${item.source_id}`}
-          className="flex items-start gap-2.5 py-2.5 text-sm hover:bg-gray-50/60 -mx-1 px-1 rounded-lg transition-colors"
+          className="flex items-start gap-2.5 py-2.5 text-sm hover:bg-gray-50/60 dark:hover:bg-gray-800/60 -mx-1 px-1 rounded-lg transition-colors"
         >
           {item.activity_type === 'created' ? (
             <Sparkles size={14} className="text-purple-500 mt-0.5 flex-shrink-0" aria-hidden="true" />
@@ -51,8 +51,8 @@ export const ActivityTimeline: React.FC<{ userId?: string }> = ({ userId }) => {
             <MessageCircle size={14} className="text-blue-500 mt-0.5 flex-shrink-0" aria-hidden="true" />
           )}
           <div className="flex-1 min-w-0">
-            <p className="text-gray-800 truncate">{describe(item)}</p>
-            <p className="text-xs text-gray-400">{formatDate(item.created_at)}</p>
+            <p className="text-gray-800 dark:text-gray-200 truncate">{describe(item)}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500">{formatDate(item.created_at)}</p>
           </div>
         </Link>
       ))}

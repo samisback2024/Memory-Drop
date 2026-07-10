@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
 import { uploadFile, deleteFile, generateStoragePath, extractStoragePath } from '../utils/storage';
 import { compressImageFile } from '../lib/image';
+import { track } from '../lib/analytics';
 import type { AuthResult } from '../types/auth';
 import type { Mood } from '../types/feed';
 import type {
@@ -72,6 +73,7 @@ export const useCapsules = () => {
   // getCapsule right after to pick up the now-unlocked content.
   const unlockCapsule = useCallback(async (capsuleId: string): Promise<AuthResult> => {
     const { error } = await supabase.rpc('unlock_capsule', { p_capsule_id: capsuleId });
+    if (!error) void track('capsule_unlocked', {});
     return { error: error?.message ?? null };
   }, []);
 
@@ -148,6 +150,7 @@ export const useCapsules = () => {
       share_count: 0,
       created_at: capsuleRow.created_at as string,
     };
+    void track('capsule_created', { memory_types: memoryTypes, visibility });
     return { error: null, capsule };
   }, [user, profile]);
 

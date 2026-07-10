@@ -3,6 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
 import { uploadFile, deleteFile, generateStoragePath, extractStoragePath } from '../utils/storage';
 import { compressImageFile } from '../lib/image';
+import { track } from '../lib/analytics';
 import type { AuthResult } from '../types/auth';
 import type { Mood } from '../types/feed';
 import type {
@@ -129,6 +130,7 @@ export const useMoments = () => {
       is_viewed: true,
       created_at: data.created_at as string,
     };
+    void track('moment_created', { media_type: mediaType, privacy });
     return { error: null, moment };
   }, [user, profile]);
 

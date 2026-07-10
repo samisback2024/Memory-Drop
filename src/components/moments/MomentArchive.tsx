@@ -33,7 +33,7 @@ export const MomentArchive: React.FC<MomentArchiveProps> = ({ onOpenMoment, refr
   if (loading) {
     return (
       <div className="grid grid-cols-3 gap-1.5">
-        {[0, 1, 2, 3, 4, 5].map(i => <div key={i} className="aspect-[9/16] rounded-xl bg-gray-100 animate-pulse" />)}
+        {[0, 1, 2, 3, 4, 5].map(i => <div key={i} className="aspect-[9/16] rounded-xl bg-gray-100 dark:bg-gray-800 animate-pulse" />)}
       </div>
     );
   }
@@ -51,7 +51,7 @@ export const MomentArchive: React.FC<MomentArchiveProps> = ({ onOpenMoment, refr
             key={m.id}
             type="button"
             onClick={() => onOpenMoment(m.id)}
-            className="relative aspect-[9/16] rounded-xl overflow-hidden bg-gray-100 group"
+            className="relative aspect-[9/16] rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800 group"
           >
             {m.media_url ? (
               m.media_type === 'video' ? (

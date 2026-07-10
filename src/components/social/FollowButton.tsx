@@ -64,7 +64,7 @@ export const FollowButton: React.FC<FollowButtonProps> = ({
 
   if (blocked) {
     return (
-      <Button variant="outline" size={size} onClick={handleClick} loading={loading} className="text-red-600 border-red-200 hover:bg-red-50">
+      <Button variant="outline" size={size} onClick={handleClick} loading={loading} className="text-red-600 dark:text-red-400 border-red-200 dark:border-red-900 hover:bg-red-50 dark:hover:bg-red-950/30">
         Unblock
       </Button>
     );
@@ -79,7 +79,7 @@ export const FollowButton: React.FC<FollowButtonProps> = ({
         loading={loading}
         onMouseEnter={() => setHovering(true)}
         onMouseLeave={() => setHovering(false)}
-        className={hovering ? 'text-red-600 border-red-200 hover:bg-red-50' : ''}
+        className={hovering ? 'text-red-600 dark:text-red-400 border-red-200 dark:border-red-900 hover:bg-red-50 dark:hover:bg-red-950/30' : ''}
       >
         {loading ? <Loader2 size={14} className="animate-spin" /> : hovering ? 'Unfollow' : 'Following'}
       </Button>

@@ -24,12 +24,12 @@ export const SocialStats: React.FC<SocialStatsProps> = ({ profileId, username })
   return (
     <>
       <Link to={`/u/${username}/followers`} className="text-center hover:opacity-70 transition-opacity">
-        {counts ? <p className="font-bold text-gray-900">{counts.followers_count}</p> : <Skeleton className="h-4 w-6 mx-auto" />}
-        <p className="text-xs text-gray-500 mt-0.5">Followers</p>
+        {counts ? <p className="font-bold text-gray-900 dark:text-gray-100">{counts.followers_count}</p> : <Skeleton className="h-4 w-6 mx-auto" />}
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Followers</p>
       </Link>
       <Link to={`/u/${username}/following`} className="text-center hover:opacity-70 transition-opacity">
-        {counts ? <p className="font-bold text-gray-900">{counts.following_count}</p> : <Skeleton className="h-4 w-6 mx-auto" />}
-        <p className="text-xs text-gray-500 mt-0.5">Following</p>
+        {counts ? <p className="font-bold text-gray-900 dark:text-gray-100">{counts.following_count}</p> : <Skeleton className="h-4 w-6 mx-auto" />}
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Following</p>
       </Link>
     </>
   );

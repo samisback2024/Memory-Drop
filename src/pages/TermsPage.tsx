@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { LegalLayout, LegalSection } from '../components/legal/LegalLayout';
 
 // Placeholder legal copy — replace with real, counsel-reviewed Terms of
@@ -37,7 +38,10 @@ export const TermsPage: React.FC = () => (
       </p>
     </LegalSection>
     <LegalSection heading="6. Contact">
-      <p>Questions about these terms? Reach out at support@memorydrop.app.</p>
+      <p>
+        Questions about these terms? Reach out at support@memorydrop.app, or visit our{' '}
+        <Link to="/support" className="text-purple-600 dark:text-purple-400 font-medium">Support page</Link>.
+      </p>
     </LegalSection>
   </LegalLayout>
 );

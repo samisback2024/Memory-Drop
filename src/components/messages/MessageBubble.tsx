@@ -44,7 +44,7 @@ const formatDuration = (seconds: number | null): string => {
 // itself renders, the parent decides layout context). A long
 // press/right-click opens MessageActionsSheet (owned by the parent too,
 // since only one can be open across the whole message list at a time).
-export const MessageBubble: React.FC<MessageBubbleProps> = ({
+const MessageBubbleImpl: React.FC<MessageBubbleProps> = ({
   message: m, isMine, showAvatar, showSenderName, otherName, otherPhotoUrl, onLongPress,
 }) => {
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
@@ -85,7 +85,7 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
           <div className="flex flex-wrap gap-1 max-w-[220px]">
             {m.attachments.map((a, i) => (
               <button key={a.id} type="button" onClick={() => setViewerIndex(i)} className="block">
-                <img src={a.thumbnail_url || a.url} alt="" loading="lazy" className="rounded-xl max-h-64 object-cover" />
+                <img src={a.thumbnail_url || a.url} alt={`Photo from ${isMine ? 'you' : otherName}`} loading="lazy" className="rounded-xl max-h-64 object-cover" />
               </button>
             ))}
             {m.content && <p className="text-sm w-full mt-1">{linkify(m.content)}</p>}
@@ -203,3 +203,9 @@ export const MessageBubble: React.FC<MessageBubbleProps> = ({
     </div>
   );
 };
+
+// Memoized — same reasoning as DropCard/MemoryCard/ConversationListItem:
+// ConversationPage's refreshRecent() replaces the whole messages array on
+// every realtime event, so memoizing keeps an update to one message from
+// re-rendering the entire scrollback.
+export const MessageBubble = React.memo(MessageBubbleImpl);
