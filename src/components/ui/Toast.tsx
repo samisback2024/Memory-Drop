@@ -27,6 +27,15 @@ export const ToastStack: React.FC<ToastStackProps> = ({ toasts }) => (
       >
         {t.variant === 'error' ? <AlertCircle size={15} aria-hidden="true" /> : <CheckCircle2 size={15} aria-hidden="true" />}
         {t.message}
+        {t.action && (
+          <button
+            type="button"
+            onClick={t.action.onClick}
+            className="ml-1 font-semibold underline underline-offset-2 hover:opacity-80"
+          >
+            {t.action.label}
+          </button>
+        )}
       </div>
     ))}
   </div>

@@ -28,6 +28,8 @@ export interface NotificationPreferences {
   replies: boolean;
   weekly_recap: boolean;
   product_updates: boolean;
+  mentions: boolean;
+  security_alerts: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -65,4 +67,6 @@ export const NOTIFICATION_PREFERENCE_META: Record<keyof Omit<NotificationPrefere
   replies: { label: 'Replies', description: 'When someone replies to your moment.' },
   weekly_recap: { label: 'Weekly recap', description: 'A weekly summary of what unlocked and what you missed.' },
   product_updates: { label: 'Product updates', description: 'News about new Memory Drop features.' },
+  mentions: { label: 'Mentions', description: 'When someone @mentions you in a comment.' },
+  security_alerts: { label: 'Security alerts', description: 'Password changes and new sign-ins on your account.' },
 };

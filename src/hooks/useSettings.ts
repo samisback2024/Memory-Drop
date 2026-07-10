@@ -146,6 +146,7 @@ export const useSettings = () => {
     const { error } = await updatePassword(newPassword);
     if (error) return { error };
     await supabase.from('user_settings').update({ password_changed_at: new Date().toISOString() }).eq('user_id', user.id);
+    await supabase.rpc('notify_password_changed');
     return { error: null };
   }, [user, updatePassword]);
 

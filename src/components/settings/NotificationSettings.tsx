@@ -9,12 +9,14 @@ import type { NotificationPreferences } from '../../types/settings';
 type PreferenceKey = keyof Omit<NotificationPreferences, 'user_id' | 'created_at' | 'updated_at'>;
 
 const PREFERENCE_ORDER: PreferenceKey[] = [
-  'unlock_reminders', 'new_followers', 'follow_requests', 'comments', 'reactions', 'replies', 'weekly_recap', 'product_updates',
+  'unlock_reminders', 'new_followers', 'follow_requests', 'mentions', 'comments', 'reactions', 'replies', 'weekly_recap', 'security_alerts', 'product_updates',
 ];
 
-// Store-only, per this phase's own scope — there's no push delivery yet
-// (that's a later phase), but every toggle here is real and persisted,
-// so nothing needs re-asking once notifications actually ship.
+// Real delivery since Phase 11 — every trigger that creates a
+// notification checks the matching column here first (see
+// supabase/phase11_notifications.sql's create_notification()), so
+// turning one of these off genuinely stops that category from ever
+// reaching the Activity Center, not just a cosmetic preference.
 export const NotificationSettings: React.FC = () => {
   const { getNotificationPreferences, updateNotificationPreferences } = useSettings();
   const [prefs, setPrefs] = useState<NotificationPreferences | null>(null);
@@ -23,7 +25,7 @@ export const NotificationSettings: React.FC = () => {
 
   if (!prefs) {
     return (
-      <SettingsSection title="Notification Preferences" description="Choose what you'd want to hear about — delivery comes in a later phase.">
+      <SettingsSection title="Notification Preferences" description="Choose what you'd want to hear about.">
         <div className="h-40 rounded-2xl bg-white/60 dark:bg-gray-900/60 animate-pulse" />
       </SettingsSection>
     );
@@ -35,7 +37,7 @@ export const NotificationSettings: React.FC = () => {
   };
 
   return (
-    <SettingsSection title="Notification Preferences" description="Choose what you'd want to hear about — delivery comes in a later phase, but your choices are saved now.">
+    <SettingsSection title="Notification Preferences" description="Choose what you'd want to hear about in your Activity Center.">
       <SettingsCard>
         <div className="flex flex-col gap-4">
           {PREFERENCE_ORDER.map(key => (

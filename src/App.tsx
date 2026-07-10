@@ -40,6 +40,7 @@ const SearchPage = lazy(() => import('./pages/SearchPage').then(m => ({ default:
 const ExplorePage = lazy(() => import('./pages/ExplorePage').then(m => ({ default: m.ExplorePage })));
 const MemoriesPage = lazy(() => import('./pages/MemoriesPage').then(m => ({ default: m.MemoriesPage })));
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
+const NotificationsPage = lazy(() => import('./pages/NotificationsPage').then(m => ({ default: m.NotificationsPage })));
 
 const RouteLoadingFallback = () => (
   <div className="flex flex-col gap-3 py-6" aria-busy="true" aria-label="Loading page">
@@ -100,6 +101,7 @@ function App() {
               <Route path="/profile/edit" element={<EditProfilePage />} />
               <Route path="/search" element={<SearchPage />} />
               <Route path="/explore" element={<ExplorePage />} />
+              <Route path="/notifications" element={<NotificationsPage />} />
               <Route path="/friends" element={<FriendsPage />} />
               <Route path="/friends/requests" element={<FriendRequestsPage />} />
             </Route>
