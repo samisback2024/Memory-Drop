@@ -22,7 +22,7 @@ export const Input: React.FC<InputProps> = ({
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
-        <label htmlFor={inputId} className="text-sm font-medium text-gray-700">
+        <label htmlFor={inputId} className="text-sm font-medium text-gray-700 dark:text-gray-300">
           {label}
         </label>
       )}
@@ -37,10 +37,11 @@ export const Input: React.FC<InputProps> = ({
           id={inputId}
           className={[
             'w-full border rounded-xl bg-white text-gray-900 placeholder-gray-400',
+            'dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500',
             'focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent',
-            'transition duration-150 disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-gray-50',
+            'transition duration-150 disabled:opacity-60 disabled:cursor-not-allowed disabled:bg-gray-50 dark:disabled:bg-gray-800',
             leftIcon ? 'pl-10 pr-4 py-3' : rightElement ? 'pl-4 pr-10 py-3' : 'px-4 py-3',
-            error ? 'border-red-400 focus:ring-red-400' : 'border-gray-200',
+            error ? 'border-red-400 focus:ring-red-400' : 'border-gray-200 dark:border-gray-700',
             className,
           ].join(' ')}
         />
@@ -83,9 +84,10 @@ export const Textarea: React.FC<TextareaProps> = ({
         id={textareaId}
         className={[
           'w-full border rounded-xl bg-white text-gray-900 placeholder-gray-400',
+          'dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500',
           'focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent',
           'transition duration-150 resize-none px-4 py-3',
-          error ? 'border-red-400 focus:ring-red-400' : 'border-gray-200',
+          error ? 'border-red-400 focus:ring-red-400' : 'border-gray-200 dark:border-gray-700',
           className,
         ].join(' ')}
       />

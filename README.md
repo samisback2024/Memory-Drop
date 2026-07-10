@@ -202,7 +202,23 @@ An audit found three real gaps: reporting was Drop-only (`reports`, a one-way ma
 - **`moderation_status`** (`'active'` / `'hidden'` / `'removed'`) plus `moderated_at`/`moderated_by`/`moderation_reason` on `posts`/`capsules`/`moments` — the auditable alternative to a silent hard delete. The only way this can change is through `moderate_content()`, a new admin-only `SECURITY DEFINER` RPC — there's deliberately no direct-UPDATE RLS policy for these columns, so "who changed this and why" always has exactly one answer.
 - **`get_content_reports()`** — a new admin-only RPC that unions all three report tables into one normalized shape (content type, content, reporter, reason, timestamp). This *is* the "content reports dashboard structure" the brief asks for — a ready-made data source for a future admin screen, without building that screen.
 - **Deliberately not done in this pass**: no existing read RPC (`get_drops_feed`, `get_memories`, `search_memories`, ...) was modified to exclude `moderation_status <> 'active'` content. See Known limitations for why.
-- **Scale-test seed data** — a separate, clearly-marked `supabase/dev_seed_scale_test.sql` (not a schema migration — never run it against production) that generates ~60 fake accounts and roughly 1000 Drops, 500 Moments, 500 Capsules, ~900 follows, ~4,500 comments, ~6,000 likes/reactions, and ~600 bookmarks, all tagged `scaletest_*`/`Scale-test *` for easy identification and one-command cleanup via cascade delete.
+- **Scale-test seed data** — a separate, clearly-marked `supabase/dev_seed_scale_test.sql` (not a schema migration — never run it against production). Updated in Phase 10g to match the revised spec's exact counts — see below.
+
+### Product Polish & Social Experience — hardening pass (Phase 10g — complete)
+A second, much more detailed pass at the same "Phase 10" brief, requested after 10a–10f had already shipped. Rather than a rewrite, this was a reconciliation: an audit found the two briefs overlapping almost entirely, with a handful of concrete mismatches (a pin cap of 3 vs. the shipped 6; an Explore section list that didn't match what was live; a mobile bottom-nav requirement nothing had built yet; the Drops-vs-Capsules RLS gap the README had documented since Phase 6, called out by name as something to actually close). Everything below is that reconciliation, in one migration (`supabase/phase10g_polish_fixes.sql`) plus a frontend pass — see Known limitations for what was deliberately left as honest, scoped progress rather than claimed as finished.
+
+- **Pinned Memories cap 6 → 3** — `enforce_pin_limit()` updated to match the revised spec exactly.
+- **Saved page restructured into 4 named tabs** — Waiting to Unlock (drop_interests' pre-unlock save marker, reusing the same `getDropsFeed('saved_to_unlock', ...)` query Feed's own tab already used), Saved Memories (the existing unified saved-Drops+Capsules view, unchanged), Favorites, and Collections — the last two reuse Memories' own mechanisms unchanged, so this page is a second entry point onto the same data, not a competing system.
+- **Explore rebuilt around the revised spec's exact section list** — Unlocking Soon, Today's Unlocks, Recently Unlocked, Popular Public Drops, Public Capsules, New Creators, Suggested People — replacing the original Phase 10a tab set (Trending/Newest/6 tag categories, which weren't in the new spec). The two "person" tabs (New Creators, Suggested People) render real accounts, not memories — Suggested People reuses Phase 3's `get_suggested_friends()` unchanged; New Creators is one new small RPC. `ExplorePage` branches its renderer by tab rather than forcing both shapes through one type.
+- **Mobile bottom navigation** — genuinely new; nothing like it existed before this pass. A fixed bottom bar (Feed, Capsules, **Create**, Memories, Profile) shown only below the `sm` breakpoint, additive to the existing top `Navbar` (which now hides its own icon row on mobile to avoid a redundant second nav — Search/Explore/Friends move into the always-visible account menu on narrow viewports). **Create** opens a small action sheet (Create Drop / Create Moment / Create Capsule) reusing the existing `DropComposer`/`/moments/create`/`/capsules/create` — no new composer logic.
+- **Security hardening — the one the brief called out by name.** `posts`' SELECT RLS only ever checked visibility, never `unlock_date <= now()`, unlike `capsules` — meaning a non-owner who could see the author's posts in general could read a still-locked Drop's *raw row* via a direct `/rest/v1/posts` request, even though every RPC already nulled the content. `posts` now has the exact same table-level guarantee `capsules` has had since Phase 6: a locked Drop you don't own returns **no row at all**, not a row with nulled columns.
+- **Storage bucket policies spot-checked, found consistent, left alone** — all four content buckets use the same `bucket_id = 'x'` public-read policy paired with unguessable per-user storage paths, which is Supabase's own standard pattern for object storage layered under app-level access gating (the app already never leaks a media URL before unlock). Not a gap; documented rather than "fixed."
+- **A real `ErrorBoundary`** — wraps `AppShell`'s routed content; previously a render-phase crash anywhere had no fallback at all.
+- **A shared toast system** (`useToast`/`ToastProvider`) — established as the going-forward pattern for confirmations/errors (comment post/edit/delete/pin failures, share-preview-card download success/failure); existing inline confirmations (e.g. ShareModal's own "Link copied" label) were left as-is rather than ripped out wholesale.
+- **Dark mode — scoped, honest progress, not full coverage.** Fixed, in priority order: every shared UI primitive (`Button`, `Input`/`Textarea`, `Modal`, `EmptyState`, `ErrorState`, `Skeleton`, `Avatar`), every new component this pass added, and the highest-traffic surfaces named in the brief (`MemoryCard` fully — the single component behind every grid/list/timeline view in the app — plus the core chrome of `DropCard`, `CapsuleCard`, `FeedPage`/`DropTabs`, `MemoriesPage`, `SavedPage`, `ExplorePage`, `ProfilePage`/`PublicProfilePage`/`SearchPage`). **Not claimed as complete** — see Known limitations for exactly what's still light-mode-only.
+- **Accessibility — targeted, not a rebuild.** Modal's focus trap/Escape-to-close/focus rings were already solid app-wide (confirmed, not rebuilt). Added: screen-reader `aria-live` announcements for comment post/reply/delete and capsule-unlock completion; confirmed the new mobile nav's tap targets clear 44px even though its visual "Create" pill is smaller (the surrounding button fills the full nav-bar cell).
+- **Performance — targeted.** `PublicProfilePage`'s five independent reads (relationship, moments, public stats, public memories, pins) went from a partly-sequential chain of `await`s to one `Promise.all`. Search/Explore/Memories/Settings are now `React.lazy`-loaded route chunks — the main JS bundle dropped from ~817kB to ~484kB and the build's "chunk larger than 500kB" warning is gone. No virtualization work beyond the `content-visibility: auto` utility already shipped in 10e.
+- **Scale-test seed data updated** to the revised spec's exact numbers — 100 fake accounts (10 explicitly private), 1000 Drops, 300 Capsules, 300 Moments, ~1,500 follows, 2 block relationships, ~4,500 comments, ~6,000 likes/reactions, ~600 bookmarks, ~100 collections with ~300 items, and ~500 favorites.
 
 ---
 
@@ -245,7 +261,8 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
    - `supabase/phase10c_saved_share.sql` — Bookmark Experience (Phase 10c): adds a `note` column + UPDATE policy to `saved_posts`/`capsule_saves`, and the `get_saved_memories()`/`update_saved_note()` RPCs (no schema changes for Share — that part is entirely client-side)
    - `supabase/phase10d_comments_reactions.sql` — Comments + Reactions (Phase 10d): activates `parent_comment_id` on `comments`, adds it plus `edited_at`/`is_pinned` to both comment tables, adds the `enforce_comment_rules()`/`enforce_capsule_comment_rules()` triggers + new UPDATE policies, a new `comment_reactions` table, widened `get_drop_comments()`/`get_capsule_comments()` (DROP + CREATE — return shape changed), and the `get_comment_reactions()`/`get_recent_likers()` RPCs
    - `supabase/phase10f_admin_prep.sql` — Admin Preparation (Phase 10f): adds `profiles.is_admin`, new `capsule_reports`/`moment_reports` tables, `moderation_status`/audit columns on `posts`/`capsules`/`moments`, and the admin-only `moderate_content()`/`get_content_reports()` RPCs — architecture only, no admin UI ships in this phase (Phase 10e has no dedicated SQL file — it was a frontend-only sub-phase)
-   - `supabase/dev_seed_scale_test.sql` — **not a migration, do not run against production** — optional scale-test fixture data (see Phase 10f docs below) for load/consistency testing only
+   - `supabase/phase10g_polish_fixes.sql` — hardening pass (Phase 10g): pin cap 6→3, `get_explore_feed()` rebuilt around the revised tab list, new `get_new_creators()` RPC, and `posts`' SELECT RLS hardened to the same table-level lock guarantee `capsules` already had
+   - `supabase/dev_seed_scale_test.sql` — **not a migration, do not run against production** — optional scale-test fixture data (see Phase 10f/10g docs below) for load/consistency testing only
 
 5. Restart the dev server.
 
@@ -309,7 +326,9 @@ src/
 │   └── TermsPage.tsx, PrivacyPage.tsx
 ├── components/
 │   ├── auth/         # AuthLayout, GoogleButton, RouteGuards
-│   ├── layout/       # AppShell (page-transition wrapper), Navbar, OfflineBanner, PublicPageHeader
+│   ├── layout/       # AppShell (page-transition wrapper, ErrorBoundary + MobileNav mount),
+│   │                 #   Navbar (top bar, icon row hidden below `sm`), MobileNav (bottom
+│   │                 #   bar + Create action sheet), OfflineBanner, PublicPageHeader
 │   ├── profile/      # ProfileHeader (+ skeleton), AvatarUpload,
 │   │                 #   CoverPhotoUpload, ImageCropModal, StatsRow,
 │   │                 #   BadgesAndAchievements (+ skeleton), ProfileCompletionBar,
@@ -318,7 +337,7 @@ src/
 │   │                 #   RelationshipMenu, FriendRequestCard, MutualFriends,
 │   │                 #   SocialStats, EmptySocialState, UserSearchBar,
 │   │                 #   UserSearchResults, FollowersList, FollowingList,
-│   │                 #   SuggestedFriends
+│   │                 #   SuggestedFriends, NewCreators
 │   ├── feed/         # Feed, DropTabs, DropCard, DropComposer, DropActions,
 │   │                 #   SaveButton, LikeButton (animated), InterestActions,
 │   │                 #   CommentSection, CommentItem, CommentComposer (shared by
@@ -346,10 +365,11 @@ src/
 │   ├── saved/        # SavedMemoryRow (notes, folders, unsave)
 │   ├── legal/        # LegalLayout
 │   └── ui/           # Button, Input, Avatar, Card, Modal, Checkbox,
-│                      #   Toggle, Badge, EmptyState, ErrorState, Skeleton
+│                      #   Toggle, Badge, EmptyState, ErrorState, Skeleton,
+│                      #   ErrorBoundary, Toast (ToastStack)
 ├── hooks/
 │   ├── useAuth.tsx               # full auth + profile context
-│   ├── useSocial.ts              # follow/block/mute/restrict, search, lists
+│   ├── useSocial.ts              # follow/block/mute/restrict, search, lists, get_new_creators
 │   ├── useDrops.ts                # drops, comments, reflections, likes, interests, saves, hide, report
 │   ├── useMoments.ts              # moments, views, reactions, replies, archive
 │   ├── useCapsules.ts             # capsules, media, unlocks, likes, comments, reflections
@@ -367,7 +387,8 @@ src/
 │   ├── useImageUpload.ts         # shared drag-drop/crop/upload pipeline
 │   ├── useInView.ts              # IntersectionObserver (video lazy-load, infinite scroll)
 │   ├── usePullToRefresh.ts       # touch-only pull-to-refresh
-│   └── useOnlineStatus.ts        # navigator.onLine + online/offline events
+│   ├── useOnlineStatus.ts        # navigator.onLine + online/offline events
+│   └── useToast.tsx              # ToastProvider — shared success/error confirmations
 ├── lib/
 │   ├── supabase.ts    # Supabase client + isSupabaseConfigured()
 │   ├── validators.ts  # every field's validation rules
@@ -410,6 +431,7 @@ supabase/
 ├── phase10c_saved_share.sql           # note column + UPDATE policy on saved_posts/capsule_saves, get_saved_memories(), update_saved_note()
 ├── phase10d_comments_reactions.sql    # parent_comment_id/edited_at/is_pinned + rules triggers on both comment tables, comment_reactions, widened get_drop_comments()/get_capsule_comments(), get_comment_reactions(), get_recent_likers()
 ├── phase10f_admin_prep.sql            # profiles.is_admin, capsule_reports/moment_reports, moderation_status + audit columns, moderate_content(), get_content_reports()
+├── phase10g_polish_fixes.sql          # pin cap 6→3, get_explore_feed() rebuilt, get_new_creators(), posts SELECT RLS hardened
 └── dev_seed_scale_test.sql            # NOT a migration — optional scale-test fixture data, never run against production
 ```
 
@@ -573,6 +595,10 @@ No new content table — this phase is schema-light on purpose, since it's a wir
 
 **`dev_seed_scale_test.sql` is explicitly not part of the migration sequence** — it's a load-testing fixture, meant to be run against a disposable local/staging project and then discarded (a one-line cascade DELETE removes everything it creates, since every seeded row hangs off a `scaletest_*` `auth.users` row via the same FK-cascade chain real account deletion already relies on).
 
+## Database tables (Phase 10g — hardening pass)
+
+No new tables — this pass is schema-light on purpose, same posture as Phase 9. `posts`' SELECT RLS policy is dropped and recreated with an added `unlock_date <= now()` clause (see Security notes); `enforce_pin_limit()` and `get_explore_feed()` are both `create or replace` in place (neither changed its column/return shape, so no DROP was needed); `get_new_creators()` is the one genuinely new function, same shape as Phase 3's `get_suggested_friends()`.
+
 ## Security notes
 
 - **Row Level Security** on `profiles`: everyone can read/write only their own row directly. Reading *someone else's* profile goes through `get_profile_by_username`, a `SECURITY DEFINER` function that's the one place allowed to decide what a private account exposes — bio, location, and website are nulled out unless the viewer is the owner *or an accepted follower* (Phase 3 extended this from "owner only"); birthday is never returned by it at all, to anyone, ever. The function also hides the profile entirely between two users with a block relationship in either direction.
@@ -630,6 +656,8 @@ No new content table — this phase is schema-light on purpose, since it's a wir
 - **`is_admin` grants nothing by itself — every capability it unlocks re-checks it explicitly.** Setting the column to `true` on a row doesn't change what that user's own client-side RLS access looks like anywhere else in the app; it only changes the outcome of the two new functions that explicitly query it. There is no "if admin, bypass RLS generally" path anywhere.
 - **Moderation status changes are impossible to make untraceable** — `moderate_content()` always stamps `moderated_by = auth.uid()` itself (never trusts a client-supplied value), so there's no way to attribute a moderation action to the wrong admin, accidentally or otherwise.
 - **Content reports remain a one-way mailbox for reporters, exactly as before** — `get_content_reports()` is admin-only; a user who files a report still can't read it back afterward, the same as Drops' original `reports` behavior since Phase 4. Extending "can I see my own report" would be a deliberate, separate decision, not a side effect of this phase.
+- **`posts`' SELECT RLS now matches `capsules`' table-level lock guarantee exactly** — `user_id = auth.uid() or (unlock_date <= now() and moderation_status = 'active' and not is_blocked_either_way(user_id) and can_view_drop(user_id, visibility))`. Every app read path (`get_drops_feed`, `get_drop`, `search_memories`, ...) is `SECURITY DEFINER` and was already unaffected by table-level RLS (those functions bypass RLS by running as the function owner) — this change only closes the *direct-table-access* path (`/rest/v1/posts` via PostgREST), which previously returned a locked Drop's full raw row to anyone who passed the visibility check, regardless of unlock state.
+- **This is the one table-level RLS policy in the schema that checks `moderation_status`** — a deliberate, narrow choice, not the start of a wider sweep. It's a natural, low-risk addition since the policy was already being rewritten for the unlock-parity fix and the column defaults to `'active'` for every existing row (zero behavior change until a future admin UI actually sets something to `'hidden'`/`'removed'`); the display-layer RPCs still don't check it — see Known limitations.
 
 ---
 
@@ -837,13 +865,27 @@ Validate with two accounts, User A (owner) and User B (follower/public viewer), 
 - **Revoke `is_admin`** when done testing and confirm both RPCs immediately reject that account again.
 
 **Scale test** — run `supabase/dev_seed_scale_test.sql` against a disposable local/staging project (never production), then work through:
-- **No broken navigation** — with ~1000 Drops/500 Moments/500 Capsules in the database, click through Feed (all 6 tabs), Explore (all 11 tabs), Memories (all 8 tabs), Capsules (both modes), Search, and a handful of the fake profiles; confirm nothing 404s, infinite-spins, or throws a console error under the larger dataset.
+- **No broken navigation** — with 1000 Drops/300 Moments/300 Capsules and 100 fake accounts in the database, click through Feed (all 6 tabs), Explore (all 7 tabs, including the two person-tabs), Memories (all 8 tabs), Capsules (both modes), Search, Saved (all 4 tabs), and a handful of the fake profiles (including the 10 private ones); confirm nothing 404s, infinite-spins, or throws a console error under the larger dataset.
 - **No inconsistent stats** — check `get_memory_stats()`'s numbers on a seeded account against manually counting a sample of its rows; confirm Profile's stats card, Explore's Popular tabs, and a Capsule's own like/comment/save counts all agree with what's actually in the tables (no drift between a trigger-maintained counter and the rows it's supposed to be counting).
 - **No duplicated memories** — spot-check that no Drop/Capsule/Moment appears twice in Memories' Timeline, Search results, or Explore — the seed script's `on conflict do nothing` clauses prevent duplicate reaction/save/comment rows, but this checks the read side, not just the write side.
-- **No RLS leaks** — as a *non-seeded*, ordinary test account, confirm you never see a seeded `only_me`/`private` Drop, Capsule, or Moment anywhere (Search, Explore, a seeded user's profile) — the seed script deliberately created a realistic mix of all visibility tiers specifically so this is a meaningful check, not a trivially-empty one.
+- **No RLS leaks** — as a *non-seeded*, ordinary test account, confirm you never see a seeded `only_me`/`private` Drop, Capsule, or Moment anywhere (Search, Explore, a seeded user's profile), and that the two seeded block relationships (rn 1↔2, rn 3↔4) are invisible to each other everywhere. Then, specifically: pick a still-locked seeded Drop and issue a direct `GET {SUPABASE_URL}/rest/v1/posts?id=eq.<id>` with a non-owner's access token — confirm it returns **zero rows**, not a row with nulled columns (this is exactly what Phase 10g's RLS hardening changed; before it, this request would have returned the full raw row).
 - **No loading loops** — open Feed/Explore/Memories/Search with the seeded dataset and confirm `loadMore`/infinite-scroll terminates correctly once `hasMore` goes `false`, rather than looping or hammering the network.
 - **No console errors** — open the browser console while navigating the pages above; confirm no errors or unhandled promise rejections surface under the larger, more varied dataset (empty arrays, nulls, and edge-case combinations that a small hand-tested dataset might not have exercised).
-- **Cleanup** — run `delete from auth.users where email like 'scaletest_%@memorydrop.test';` and confirm every seeded row (profiles, posts, capsules, moments, follows, comments, likes, saves — everything) is gone via cascade, with nothing left behind to manually clean up.
+- **Cleanup** — run `delete from auth.users where email like 'scaletest_%@memorydrop.test';` and confirm every seeded row (profiles, posts, capsules, moments, follows, blocks, comments, likes, saves, collections, favorites — everything) is gone via cascade, with nothing left behind to manually clean up.
+- **TypeScript build** — `npx tsc -b` clean.
+- **Production build** — `npm run build` clean.
+
+## Testing Phase 10g (hardening pass)
+
+- **Pin cap** — pin 3 memories, confirm a 4th is rejected with the "up to 3" message; unpin one, confirm pinning a new one now succeeds.
+- **Saved page's 4 tabs** — save a Drop pre-unlock (Save to Unlock) and confirm it appears under Waiting to Unlock; save an already-unlocked Drop/Capsule and confirm it appears under Saved Memories instead; favorite something and confirm it shows under Favorites; confirm Collections matches what Memories' own Collections tab shows for the same account.
+- **Explore's 7 tabs** — cycle through all of them, including New Creators and Suggested People; confirm the two person-tabs render account cards (with a working Follow button) rather than memory cards, and that memory-tabs never show locked or unauthorized content.
+- **Mobile bottom nav** — at a narrow viewport (or real device), confirm the bottom bar shows Feed/Capsules/Create/Memories/Profile with the active route highlighted; tap Create, confirm the action sheet opens with all three options, Escape/outside-tap closes it; create a Drop from it and confirm it appears on Feed afterward; confirm the top Navbar's icon row is hidden at this width (no duplicate nav) and that Search/Explore/Friends are still reachable from the account menu.
+- **No horizontal overflow / no clipped labels** — at 320px width, confirm the bottom nav's five items and the top Navbar never cause the page to scroll sideways, and no label text is cut off.
+- **Security — locked Drop direct access** — see the scale-test RLS-leak bullet above; this is the single most important thing to verify in this pass.
+- **Dark mode spot-check** — toggle dark mode and browse Feed, Capsules, Memories, Search, Explore, and Profile; confirm the surfaces this pass touched (see the Phase 10g feature list above) have no white-card-on-dark-background or unreadable-text instances. Known gaps are listed below, not hidden.
+- **Toasts and error boundary** — trigger a comment post/edit/delete failure (e.g. by revoking network mid-action) and confirm a toast appears with a clear message; force a render error in dev tools and confirm the ErrorBoundary's calm fallback appears instead of a blank page.
+- **Bundle size** — run `npm run build` and confirm the main bundle is meaningfully smaller than before this pass and the chunk-size warning is gone (Search/Explore/Memories/Settings now load as separate chunks).
 - **TypeScript build** — `npx tsc -b` clean.
 - **Production build** — `npm run build` clean.
 
@@ -919,6 +961,11 @@ Validate with two accounts, User A (owner) and User B (follower/public viewer), 
 - **No moderation UI also means no way to *reverse* a `moderate_content()` call except calling it again** — there's no history/log table beyond the single current `moderated_at`/`moderated_by`/`moderation_reason` snapshot on the row itself, so a second moderation action overwrites the first one's record rather than appending to a trail. Fine for "architecture," not sufficient for a real moderation team's audit needs — a proper `moderation_log` table recording every action (not just the latest) would be the natural next step.
 - **The scale-test seed script's `auth.users` insert is best-effort, not guaranteed** — `auth.users` is Supabase-managed and not defined in this repo's own migrations, so its exact required columns can vary by project/Postgres version. The script's own header says to dry-run the "Fake accounts" section alone first; if it fails, the fix is adjusting that one INSERT's column list to match your specific instance, not the rest of the script.
 - **Seed data is text-only for Drops/Moments/Capsules** — no photo/video/audio content, since that would require actually uploading files to Storage per row (slow, and unnecessary for a data-consistency/scale test rather than a visual/media-rendering one). If you specifically need to load-test image-heavy rendering, this script isn't that tool.
+- **Dark mode is meaningfully further along after Phase 10g but still not complete app-wide.** Fixed: every shared primitive, every new component this pass added, and the core chrome of `MemoryCard` (fully), `DropCard`, `CapsuleCard`, `FeedPage`/`DropTabs`, `MemoriesPage`, `SavedPage`, `ExplorePage`, `ProfilePage`/`PublicProfilePage`/`SearchPage`. **Not yet touched**: Moments components (`MomentTray`, `MomentViewer`, `CreateMomentModal`, ...), Friends/Followers/Following pages, most of Settings' individual sub-forms, `DropActions`/`InterestActions`/`LockedDropPlaceholder`/`CommentItem`'s own literal colors (only the container chrome around them was fixed), `CapsuleLockedCard`/`CapsuleUnlockedCard`/`UnlockAnimation`, and secondary/tertiary text colors within files that only got their outermost card background and heading fixed. A genuinely exhaustive pass across all ~155 component/page files would be its own multi-day effort — this pass prioritized the highest-traffic surfaces for the best coverage-per-edit, not full coverage.
+- **Accessibility got targeted additions, not a certified audit.** `aria-live` announcements exist for comment post/reply/delete and capsule unlock, but not yet for favorite/save/pin toggles (those already expose state via `aria-pressed`, which is a real but weaker signal than an explicit announcement) or for Drop/Moment unlock reveals. No automated contrast-ratio tool or real screen reader was run against this pass — the testing checklist above spells out what a human should verify instead.
+- **Mobile bottom nav's Create action sheet has no animation-out** — it appears with `animate-slide-up` but disappears instantly on outside-tap/Escape/selection rather than reverse-animating closed. A minor polish gap, not a functional one.
+- **Storage bucket policies were spot-checked and left alone, not hardened further** — see the Phase 10g Security notes bullet. If a future need arises to make media URLs themselves unguessable-and-time-limited (e.g. Supabase signed URLs) rather than "public bucket + hope the path isn't discovered," that's a real, separate architecture change, not something this pass attempted.
+- **`get_new_creators()` has no real "new" signal beyond `created_at` ordering** — no filter for accounts that never completed onboarding, no minimum-content threshold. Good enough for a discovery tab at this app's current scale; would want tightening if spam/abandoned-signup accounts become a real problem.
 - **Phase 9's "service layer" is the existing hooks, widened, not five newly-named files.** The brief asked for `memoryService`/`capsuleService`/`dropService`/`momentService`/`statsService`; rather than creating parallel files that would duplicate or shadow the already-correct, already-tested `useMemories`/`useCapsules`/`useDrops`/`useMoments` hooks, those hooks were widened in place and `getMemoryStats`/`getPublicStats` were added to `useMemories` as the stats-service equivalent. Flagging this explicitly in case literally-named service files were the intent — reorganizing later is a rename/re-export, not a rewrite.
 - **Drops still don't support tags, location, or archiving (hide/restore).** Widening `get_memories()` to include Drops surfaces them everywhere Capsules/Moments appear, but `posts` has no `hidden_at`, `tags`, or `location_text` columns — `MemoryViewer` hides those controls for Drops rather than erroring, and `updateTags`/`hideMemory`/`restoreMemory` return an explicit "not available for Drops yet" error if called on one. Adding real support would mean adding those columns to `posts`, which felt like scope creep beyond "wiring."
 - **"Locked Until Later" on the Memories page sorts client-side, not via a new SQL sort mode.** `get_memories()`'s `p_sort` only orders by `created_at` (newest/oldest); soonest-to-unlock ordering needed a different column (`matured_at`/`unlock_at`) entirely. Rather than adding a new sort parameter (a signature change to an already-widened, already-tested function), the page fetches a wider locked set and re-sorts the 20 rows client-side, keeping the top 5. Fine at personal-library scale; would want a real `sort: 'unlocking_soon'` mode server-side if the locked set grows large.
@@ -960,5 +1007,6 @@ Environment variables required in Vercel (Project Settings → Environment Varia
 | 10d | Comments (unified Drop+Capsule UI, one-level replies, edit/delete, @mentions, emoji reactions, pinned) + Reactions polish (animated likes, recent likers) | ✅ Complete |
 | 10e | Feed polish (offline detection + retry) + UX (page transitions, unlock reveal animation) + Performance (memoization, content-visibility, lazy Avatar, tab caching) | ✅ Complete |
 | 10f | Admin-prep architecture (`is_admin`, Capsule/Moment reports, auditable `moderation_status`, admin-gated RPCs — no UI) + scale-test seed data | ✅ Complete |
+| 10g | Hardening pass on a revised, stricter Phase 10 spec: pin cap 6→3, Explore rebuilt to the new section list, mobile bottom nav + Create menu, `posts` RLS lock parity, ErrorBoundary + toast system, scoped dark-mode/accessibility/performance passes, seed data updated to 1000/300/300/100 | ✅ Complete |
 | 11 | Messages (DMs, conversation list) | Planned |
 | 12 | Notifications | Planned |

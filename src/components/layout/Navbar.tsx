@@ -65,30 +65,38 @@ export const Navbar: React.FC = () => {
         </NavLink>
 
         <nav className="flex items-center gap-1">
-          {NAV_LINKS.map(({ to, label, icon: Icon }) => (
-            <NavLink
-              key={to}
-              to={to}
-              aria-label={label}
-              className={({ isActive }) =>
-                `flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none ${
-                  isActive
-                    ? 'bg-purple-50 text-purple-700'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                }`
-              }
-            >
-              <span className="relative">
-                <Icon size={16} aria-hidden="true" />
-                {to === '/friends' && pendingCount > 0 && (
-                  <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full bg-red-500 text-white text-[9px] font-semibold flex items-center justify-center leading-none">
-                    {pendingCount > 9 ? '9+' : pendingCount}
-                  </span>
-                )}
-              </span>
-              <span className="hidden sm:inline">{label}</span>
-            </NavLink>
-          ))}
+          {/* Below `sm`, MobileNav's bottom bar owns primary navigation
+              (Feed/Capsules/Memories/Profile) — showing the same
+              destinations again as icons up here too would be a
+              redundant, cluttered second nav row. Search/Explore/
+              Friends/Settings remain reachable from the account menu,
+              which stays visible at every width. */}
+          <div className="hidden sm:flex items-center gap-1">
+            {NAV_LINKS.map(({ to, label, icon: Icon }) => (
+              <NavLink
+                key={to}
+                to={to}
+                aria-label={label}
+                className={({ isActive }) =>
+                  `flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none ${
+                    isActive
+                      ? 'bg-purple-50 text-purple-700'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`
+                }
+              >
+                <span className="relative">
+                  <Icon size={16} aria-hidden="true" />
+                  {to === '/friends' && pendingCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 rounded-full bg-red-500 text-white text-[9px] font-semibold flex items-center justify-center leading-none">
+                      {pendingCount > 9 ? '9+' : pendingCount}
+                    </span>
+                  )}
+                </span>
+                <span className="hidden sm:inline">{label}</span>
+              </NavLink>
+            ))}
+          </div>
 
           <div className="relative ml-1" ref={dropdownRef}>
             <button
@@ -106,6 +114,40 @@ export const Navbar: React.FC = () => {
                 <div className="px-4 py-3 border-b border-gray-100">
                   <p className="font-semibold text-gray-900 text-sm truncate">{displayName}</p>
                   {profile?.username && <p className="text-xs text-gray-500 truncate">@{profile.username}</p>}
+                </div>
+                <div className="py-1 sm:hidden">
+                  {/* Only these three are otherwise unreachable on mobile
+                      now that MobileNav's bottom bar replaces the icon
+                      row above — Feed/Capsules/Memories/Profile already
+                      have a dedicated bottom-bar slot each. */}
+                  <button
+                    role="menuitem"
+                    onClick={() => { navigate('/search'); setDropdownOpen(false); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <Search size={15} aria-hidden="true" /> Search
+                  </button>
+                  <button
+                    role="menuitem"
+                    onClick={() => { navigate('/explore'); setDropdownOpen(false); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <Compass size={15} aria-hidden="true" /> Explore
+                  </button>
+                  <button
+                    role="menuitem"
+                    onClick={() => { navigate('/friends'); setDropdownOpen(false); }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  >
+                    <Users size={15} aria-hidden="true" />
+                    Friends
+                    {pendingCount > 0 && (
+                      <span className="ml-auto w-4 h-4 rounded-full bg-red-500 text-white text-[9px] font-semibold flex items-center justify-center leading-none">
+                        {pendingCount > 9 ? '9+' : pendingCount}
+                      </span>
+                    )}
+                  </button>
+                  <div className="border-t border-gray-100" />
                 </div>
                 <div className="py-1">
                   <button

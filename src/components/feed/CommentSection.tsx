@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useComments } from '../../hooks/useComments';
+import { useToast } from '../../hooks/useToast';
 import { Skeleton } from '../ui/Skeleton';
 import { CommentItem } from './CommentItem';
 import { CommentComposer } from './CommentComposer';
@@ -23,9 +24,11 @@ interface CommentSectionProps {
 export const CommentSection: React.FC<CommentSectionProps> = ({ contentType, contentId, contentOwnerId, onCountChange }) => {
   const { user, profile } = useAuth();
   const { getComments, addComment, updateComment, deleteComment, setCommentPinned, reactToComment, unreactToComment } = useComments();
+  const { showToast } = useToast();
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
+  const [announcement, setAnnouncement] = useState('');
 
   const isModerator = user?.id === contentOwnerId;
 
@@ -53,6 +56,9 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ contentType, con
         return next;
       });
       setReplyingTo(null);
+      setAnnouncement(parentCommentId ? 'Reply posted.' : 'Comment posted.');
+    } else if (error) {
+      showToast(error, 'error');
     }
   };
 
@@ -64,19 +70,26 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ contentType, con
         onCountChange?.(next.filter(c => !c.parent_comment_id).length);
         return next;
       });
+      setAnnouncement('Comment deleted.');
+    } else {
+      showToast('Could not delete comment — try again.', 'error');
     }
   };
 
   const handleEdit = async (commentId: string, content: string) => {
     const { error } = await updateComment(contentType, commentId, content);
     if (!error) patchComment(commentId, { content, edited_at: new Date().toISOString() });
+    else showToast('Could not save your edit — try again.', 'error');
   };
 
   const handleTogglePin = async (comment: Comment) => {
     const next = !comment.is_pinned;
     patchComment(comment.id, { is_pinned: next });
     const { error } = await setCommentPinned(contentType, comment.id, next);
-    if (error) patchComment(comment.id, { is_pinned: !next });
+    if (error) {
+      patchComment(comment.id, { is_pinned: !next });
+      showToast('Could not update pin — try again.', 'error');
+    }
   };
 
   const handleReact = async (comment: Comment, emoji: string) => {
@@ -97,7 +110,8 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ contentType, con
   const repliesFor = (id: string) => comments.filter(c => c.parent_comment_id === id);
 
   return (
-    <div className="border-t border-gray-100 px-4 py-3">
+    <div className="border-t border-gray-100 dark:border-gray-800 px-4 py-3">
+      <span role="status" aria-live="polite" className="sr-only">{announcement}</span>
       {loading ? (
         <div className="flex flex-col gap-3 py-1">
           {[0, 1].map(i => (

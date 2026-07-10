@@ -71,7 +71,7 @@ export const ProfilePage: React.FC = () => {
 
   if (!profile) {
     return (
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
         <ErrorState
           title="Couldn't load your profile"
           description="Something went wrong loading your profile data."
@@ -91,8 +91,8 @@ export const ProfilePage: React.FC = () => {
       />
       {completion && <ProfileCompletionBar completion={completion} />}
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
-        <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 flex flex-col gap-3">
+        <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
           <BookHeart size={15} className="text-purple-500" aria-hidden="true" />
           Memory Stats
         </h2>
@@ -102,8 +102,8 @@ export const ProfilePage: React.FC = () => {
       <BadgesAndAchievements />
 
       {pinnedMemories.length > 0 && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
-          <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 flex flex-col gap-3">
+          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
             <Pin size={15} className="text-purple-500" aria-hidden="true" />
             Pinned Memories
           </h2>
@@ -112,8 +112,8 @@ export const ProfilePage: React.FC = () => {
       )}
 
       {pinnedDrops.length > 0 && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
-          <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 flex flex-col gap-3">
+          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
             <Pin size={15} className="text-purple-500" aria-hidden="true" />
             Pinned Drops
           </h2>
@@ -121,16 +121,16 @@ export const ProfilePage: React.FC = () => {
         </div>
       )}
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
             <BookHeart size={15} className="text-purple-500" aria-hidden="true" />
             Recent Memories
           </h2>
           <Link to="/memories" className="text-xs font-medium text-purple-600 hover:text-purple-700">See all</Link>
         </div>
         {recentLoading ? (
-          <div className="grid grid-cols-3 gap-1.5">{[0, 1, 2].map(i => <div key={i} className="aspect-square rounded-xl bg-gray-50 animate-pulse" />)}</div>
+          <div className="grid grid-cols-3 gap-1.5">{[0, 1, 2].map(i => <div key={i} className="aspect-square rounded-xl bg-gray-50 dark:bg-gray-800 animate-pulse" />)}</div>
         ) : recentMemories.length === 0 ? (
           <EmptyState icon={BookHeart} title="No memories yet" description="Unlocked Drops, Capsules, and expired Moments will show up here." />
         ) : (
@@ -138,8 +138,8 @@ export const ProfilePage: React.FC = () => {
         )}
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
-        <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 flex flex-col gap-3">
+        <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
           <ActivityIcon size={15} className="text-purple-500" aria-hidden="true" />
           Activity
         </h2>
@@ -147,8 +147,8 @@ export const ProfilePage: React.FC = () => {
       </div>
 
       {lockedDrops.length > 0 && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
-          <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 flex flex-col gap-3">
+          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
             <Lock size={15} className="text-purple-500" aria-hidden="true" />
             Locked Drops
           </h2>
@@ -156,13 +156,13 @@ export const ProfilePage: React.FC = () => {
         </div>
       )}
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
-        <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 flex flex-col gap-3">
+        <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
           <Globe2 size={15} className="text-purple-500" aria-hidden="true" />
           Public Memories
         </h2>
         {recentLoading ? (
-          <div className="grid grid-cols-3 gap-1.5">{[0, 1, 2].map(i => <div key={i} className="aspect-square rounded-xl bg-gray-50 animate-pulse" />)}</div>
+          <div className="grid grid-cols-3 gap-1.5">{[0, 1, 2].map(i => <div key={i} className="aspect-square rounded-xl bg-gray-50 dark:bg-gray-800 animate-pulse" />)}</div>
         ) : publicMemories.length === 0 ? (
           <EmptyState icon={Globe2} title="Nothing public yet" description="Memories set to Public will show up here once unlocked." />
         ) : (
@@ -171,8 +171,8 @@ export const ProfilePage: React.FC = () => {
       </div>
 
       {!recentLoading && publicCapsules.length > 0 && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
-          <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 flex flex-col gap-3">
+          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
             <Clock size={15} className="text-purple-500" aria-hidden="true" />
             Public Capsules
           </h2>
@@ -181,8 +181,8 @@ export const ProfilePage: React.FC = () => {
       )}
 
       {!recentLoading && publicMoments.length > 0 && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
-          <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 flex flex-col gap-3">
+          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
             <Send size={15} className="text-purple-500" aria-hidden="true" />
             Public Moments
           </h2>
@@ -190,8 +190,8 @@ export const ProfilePage: React.FC = () => {
         </div>
       )}
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
-        <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 flex flex-col gap-3">
+        <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
           <Clock size={15} className="text-purple-500" aria-hidden="true" />
           Time Capsules
         </h2>

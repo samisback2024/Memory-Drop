@@ -17,12 +17,12 @@ export const ErrorState: React.FC<ErrorStateProps> = ({
   onRetry,
 }) => (
   <div className="flex flex-col items-center text-center gap-3 py-8">
-    <div className="w-10 h-10 rounded-2xl bg-red-50 flex items-center justify-center">
+    <div className="w-10 h-10 rounded-2xl bg-red-50 dark:bg-red-950/40 flex items-center justify-center">
       <AlertTriangle size={18} className="text-red-500" aria-hidden="true" />
     </div>
     <div>
-      <p className="text-sm font-medium text-gray-900">{title}</p>
-      <p className="text-xs text-gray-400 max-w-[240px] mt-0.5">{description}</p>
+      <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{title}</p>
+      <p className="text-xs text-gray-400 dark:text-gray-500 max-w-[240px] mt-0.5">{description}</p>
     </div>
     {onRetry && (
       <Button size="sm" variant="outline" onClick={onRetry}>

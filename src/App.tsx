@@ -1,6 +1,8 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './hooks/useAuth';
 import { ThemeProvider } from './hooks/useTheme';
+import { ToastProvider } from './hooks/useToast';
 import { AppShell } from './components/layout/AppShell';
 import { AuthProtectedRoute, PublicOnlyRoute, RootRedirect } from './components/auth/RouteGuards';
 import { LoginPage } from './pages/LoginPage';
@@ -13,8 +15,6 @@ import { DashboardPage } from './pages/DashboardPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { EditProfilePage } from './pages/EditProfilePage';
 import { PublicProfilePage } from './pages/PublicProfilePage';
-import { SearchPage } from './pages/SearchPage';
-import { ExplorePage } from './pages/ExplorePage';
 import { FriendsPage } from './pages/FriendsPage';
 import { FriendRequestsPage } from './pages/FriendRequestsPage';
 import { FollowersPage } from './pages/FollowersPage';
@@ -28,17 +28,32 @@ import { MomentViewerPage } from './pages/MomentViewerPage';
 import { CapsulesPage } from './pages/CapsulesPage';
 import { CapsuleCreatePage } from './pages/CapsuleCreatePage';
 import { CapsuleViewerPage } from './pages/CapsuleViewerPage';
-import { MemoriesPage } from './pages/MemoriesPage';
 import { MemoryDetailPage } from './pages/MemoryDetailPage';
-import { SettingsPage } from './pages/SettingsPage';
 import { TermsPage } from './pages/TermsPage';
 import { PrivacyPage } from './pages/PrivacyPage';
+
+// Route-level code splitting for the heavier, less-frequently-first-
+// loaded pages (chips away at the >500kB bundle warning) — Feed/
+// Capsules/Profile stay eager since they're the most common landing
+// destinations right after login and shouldn't show a loading flash.
+const SearchPage = lazy(() => import('./pages/SearchPage').then(m => ({ default: m.SearchPage })));
+const ExplorePage = lazy(() => import('./pages/ExplorePage').then(m => ({ default: m.ExplorePage })));
+const MemoriesPage = lazy(() => import('./pages/MemoriesPage').then(m => ({ default: m.MemoriesPage })));
+const SettingsPage = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
+
+const RouteLoadingFallback = () => (
+  <div className="flex flex-col gap-3 py-6" aria-busy="true" aria-label="Loading page">
+    {[0, 1, 2].map(i => <div key={i} className="h-16 rounded-2xl bg-gray-100 dark:bg-gray-800 animate-pulse" />)}
+  </div>
+);
 
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
         <ThemeProvider>
+        <ToastProvider>
+          <Suspense fallback={<RouteLoadingFallback />}>
           <Routes>
             <Route index element={<RootRedirect />} />
 
@@ -91,6 +106,8 @@ function App() {
 
             <Route path="*" element={<RootRedirect />} />
           </Routes>
+          </Suspense>
+        </ToastProvider>
         </ThemeProvider>
       </AuthProvider>
     </BrowserRouter>

@@ -44,6 +44,7 @@ const CapsuleCardImpl: React.FC<CapsuleCardProps> = ({ capsule, onDeleted }) => 
   const [shareOpen, setShareOpen] = useState(false);
   const [likePopKey, setLikePopKey] = useState(0);
   const [showLikeFloat, setShowLikeFloat] = useState(false);
+  const [announcement, setAnnouncement] = useState('');
   const menuRef = useRef<HTMLDivElement>(null);
   const pendingRevealRef = useRef<Capsule | null>(null);
 
@@ -64,7 +65,10 @@ const CapsuleCardImpl: React.FC<CapsuleCardProps> = ({ capsule, onDeleted }) => 
 
   const handleAnimationComplete = () => {
     setAnimating(false);
-    if (pendingRevealRef.current) patchContent({ ...pendingRevealRef.current, has_opened: true });
+    if (pendingRevealRef.current) {
+      patchContent({ ...pendingRevealRef.current, has_opened: true });
+      setAnnouncement('Capsule unlocked.');
+    }
   };
 
   const handleDelete = async () => {
@@ -112,26 +116,27 @@ const CapsuleCardImpl: React.FC<CapsuleCardProps> = ({ capsule, onDeleted }) => 
   if (deleting) return null;
 
   return (
-    <article className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_8px_24px_-8px_rgba(124,58,237,0.12)] overflow-hidden cv-auto">
+    <article className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_8px_24px_-8px_rgba(124,58,237,0.12)] overflow-hidden cv-auto">
+      <span role="status" aria-live="polite" className="sr-only">{announcement}</span>
       <div className="flex items-center gap-3 p-4">
         <Link to={`/u/${content.username}`} className="flex-shrink-0">
           <Avatar src={content.profile_photo_url} name={displayName} size="md" />
         </Link>
         <div className="min-w-0 flex-1">
-          <Link to={`/u/${content.username}`} className="text-sm font-semibold text-gray-900 hover:underline truncate block">{displayName}</Link>
-          <p className="text-xs text-gray-500">@{content.username} · {formatRelativeTime(content.created_at)}</p>
+          <Link to={`/u/${content.username}`} className="text-sm font-semibold text-gray-900 dark:text-gray-100 hover:underline truncate block">{displayName}</Link>
+          <p className="text-xs text-gray-500 dark:text-gray-400">@{content.username} · {formatRelativeTime(content.created_at)}</p>
         </div>
         <div className="relative flex-shrink-0" ref={menuRef}>
-          <button type="button" onClick={() => setMenuOpen(p => !p)} aria-label="More options" className="p-2 rounded-xl text-gray-500 hover:bg-gray-100 transition-colors focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none">
+          <button type="button" onClick={() => setMenuOpen(p => !p)} aria-label="More options" className="p-2 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none">
             <MoreHorizontal size={16} aria-hidden="true" />
           </button>
           {menuOpen && (
-            <div role="menu" className="absolute right-0 top-11 w-48 bg-white border border-gray-100 rounded-2xl shadow-xl z-20 overflow-hidden py-1 animate-fade-in">
-              <Link to={`/u/${content.username}`} role="menuitem" onClick={() => setMenuOpen(false)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+            <div role="menu" className="absolute right-0 top-11 w-48 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl z-20 overflow-hidden py-1 animate-fade-in">
+              <Link to={`/u/${content.username}`} role="menuitem" onClick={() => setMenuOpen(false)} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                 <User size={15} aria-hidden="true" /> View profile
               </Link>
               {isOwn && (
-                <button role="menuitem" onClick={handleDelete} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                <button role="menuitem" onClick={handleDelete} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors">
                   <Trash2 size={15} aria-hidden="true" /> Delete capsule
                 </button>
               )}
@@ -152,8 +157,8 @@ const CapsuleCardImpl: React.FC<CapsuleCardProps> = ({ capsule, onDeleted }) => 
 
       {content.is_unlocked && content.has_opened && (
         <>
-          <div className="flex items-center gap-4 px-4 py-3 border-t border-gray-50">
-            <span className="relative inline-flex items-center gap-1.5 text-sm font-medium text-gray-600">
+          <div className="flex items-center gap-4 px-4 py-3 border-t border-gray-50 dark:border-gray-800">
+            <span className="relative inline-flex items-center gap-1.5 text-sm font-medium text-gray-600 dark:text-gray-400">
               <button type="button" onClick={toggleLike} className="relative flex items-center hover:text-pink-600 transition-colors">
                 <Heart key={likePopKey} size={16} className={`${content.is_liked ? 'fill-pink-600 text-pink-600' : ''} ${likePopKey > 0 ? 'animate-reaction-pop' : ''}`} aria-hidden="true" />
                 {showLikeFloat && (
@@ -162,17 +167,17 @@ const CapsuleCardImpl: React.FC<CapsuleCardProps> = ({ capsule, onDeleted }) => 
               </button>
               <RecentLikersPopover contentType="capsule" contentId={content.id} count={content.like_count} />
             </span>
-            <button type="button" onClick={() => setCommentsOpen(p => !p)} className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">
+            <button type="button" onClick={() => setCommentsOpen(p => !p)} className="flex items-center gap-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-purple-600 transition-colors">
               <MessageCircle size={17} aria-hidden="true" />
               {content.comment_count > 0 ? content.comment_count : ''}
             </button>
-            <button type="button" onClick={openReflect} className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">
+            <button type="button" onClick={openReflect} className="flex items-center gap-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-purple-600 transition-colors">
               <Feather size={16} aria-hidden="true" />
             </button>
-            <button type="button" onClick={toggleSave} className="flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">
+            <button type="button" onClick={toggleSave} className="flex items-center gap-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-purple-600 transition-colors">
               <Bookmark size={17} className={content.is_saved ? 'fill-purple-600 text-purple-600' : ''} aria-hidden="true" />
             </button>
-            <button type="button" onClick={() => setShareOpen(true)} aria-label="Share this memory" className="ml-auto flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors">
+            <button type="button" onClick={() => setShareOpen(true)} aria-label="Share this memory" className="ml-auto flex items-center gap-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-purple-600 transition-colors">
               <Share2 size={16} aria-hidden="true" />
             </button>
           </div>

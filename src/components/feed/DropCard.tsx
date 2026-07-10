@@ -102,18 +102,18 @@ const DropCardImpl: React.FC<DropCardProps> = ({ drop, onDeleted, onHidden, onUn
         <div className="w-px flex-1 bg-gradient-to-b from-purple-200 to-transparent mt-1" />
       </div>
 
-      <article className="flex-1 min-w-0 bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_8px_24px_-8px_rgba(124,58,237,0.12)] overflow-hidden">
+      <article className="flex-1 min-w-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_8px_24px_-8px_rgba(124,58,237,0.12)] overflow-hidden">
         <div className="flex items-center gap-3 p-4">
           <Link to={`/u/${content.username}`} className="flex-shrink-0">
             <Avatar src={content.profile_photo_url} name={displayName} size="md" />
           </Link>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
-              <Link to={`/u/${content.username}`} className="text-sm font-semibold text-gray-900 hover:underline truncate">
+              <Link to={`/u/${content.username}`} className="text-sm font-semibold text-gray-900 dark:text-gray-100 hover:underline truncate">
                 {displayName}
               </Link>
             </div>
-            <p className="text-xs text-gray-500 flex items-center gap-1.5 flex-wrap">
+            <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1.5 flex-wrap">
               <Link to={`/u/${content.username}`} className="hover:underline">@{content.username}</Link>
               <span>·</span>
               <span>{formatRelativeTime(content.created_at)}</span>
@@ -134,30 +134,30 @@ const DropCardImpl: React.FC<DropCardProps> = ({ drop, onDeleted, onHidden, onUn
               aria-label="More options"
               aria-haspopup="menu"
               aria-expanded={menuOpen}
-              className="p-2 rounded-xl text-gray-500 hover:bg-gray-100 transition-colors focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none"
+              className="p-2 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none"
             >
               <MoreHorizontal size={16} aria-hidden="true" />
             </button>
             {menuOpen && (
-              <div role="menu" className="absolute right-0 top-11 w-48 bg-white border border-gray-100 rounded-2xl shadow-xl z-20 overflow-hidden py-1 animate-fade-in">
+              <div role="menu" className="absolute right-0 top-11 w-48 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl z-20 overflow-hidden py-1 animate-fade-in">
                 <Link
                   to={`/u/${content.username}`}
                   role="menuitem"
                   onClick={() => setMenuOpen(false)}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                 >
                   <User size={15} aria-hidden="true" /> View profile
                 </Link>
                 {isOwn ? (
-                  <button role="menuitem" onClick={handleDelete} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                  <button role="menuitem" onClick={handleDelete} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors">
                     <Trash2 size={15} aria-hidden="true" /> Delete drop
                   </button>
                 ) : (
                   <>
-                    <button role="menuitem" onClick={handleHide} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                    <button role="menuitem" onClick={handleHide} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                       <EyeOff size={15} aria-hidden="true" /> Hide drop
                     </button>
-                    <button role="menuitem" onClick={() => { setMenuOpen(false); setReportOpen(true); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                    <button role="menuitem" onClick={() => { setMenuOpen(false); setReportOpen(true); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors">
                       <Flag size={15} aria-hidden="true" /> Report drop
                     </button>
                   </>
@@ -177,12 +177,12 @@ const DropCardImpl: React.FC<DropCardProps> = ({ drop, onDeleted, onHidden, onUn
             />
           ) : content.post_type === 'text' ? (
             content.caption && (
-              <div className="rounded-2xl bg-gradient-to-br from-purple-50/60 to-blue-50/60 p-6 text-center">
-                <p className="text-[15px] italic text-gray-700 leading-relaxed whitespace-pre-wrap">{content.caption}</p>
+              <div className="rounded-2xl bg-gradient-to-br from-purple-50/60 to-blue-50/60 dark:from-purple-950/30 dark:to-blue-950/30 p-6 text-center">
+                <p className="text-[15px] italic text-gray-700 dark:text-gray-200 leading-relaxed whitespace-pre-wrap">{content.caption}</p>
               </div>
             )
           ) : (
-            content.caption && <p className="text-sm text-gray-800 whitespace-pre-wrap break-words mb-1">{content.caption}</p>
+            content.caption && <p className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words mb-1">{content.caption}</p>
           )}
         </div>
 

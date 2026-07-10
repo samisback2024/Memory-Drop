@@ -135,7 +135,7 @@ export const SearchPage: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-lg font-bold text-gray-900">Search</h1>
+      <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">Search</h1>
 
       <div className="relative">
         <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" aria-hidden="true" />
@@ -149,7 +149,7 @@ export const SearchPage: React.FC = () => {
           onKeyDown={e => { if (e.key === 'Enter') submitQuery(inputValue.trim()); }}
           placeholder="Search users, drops, capsules, moments, tags, locations..."
           aria-label="Search Memory Drop"
-          className="w-full border border-gray-200 rounded-xl bg-white text-gray-900 placeholder-gray-400 pl-10 pr-10 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition duration-150"
+          className="w-full border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 pl-10 pr-10 py-3 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition duration-150"
         />
         {inputValue && (
           <button
@@ -203,9 +203,9 @@ export const SearchPage: React.FC = () => {
       {!showResults && (
         <div className="flex flex-col gap-4">
           {recentSearches.length > 0 && (
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4">
               <div className="flex items-center justify-between mb-2">
-                <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+                <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
                   <Clock size={14} className="text-purple-500" aria-hidden="true" />
                   Recent searches
                 </h2>
@@ -233,8 +233,8 @@ export const SearchPage: React.FC = () => {
           )}
 
           {trendingSearches.length > 0 && (
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-              <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5 mb-2">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4">
+              <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-1.5 mb-2">
                 <TrendingUp size={14} className="text-purple-500" aria-hidden="true" />
                 Trending searches
               </h2>
@@ -253,7 +253,7 @@ export const SearchPage: React.FC = () => {
             </div>
           )}
 
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4">
             <h2 className="text-sm font-semibold text-gray-900 mb-1">Suggested for you</h2>
             <SuggestedFriends />
           </div>
@@ -265,7 +265,7 @@ export const SearchPage: React.FC = () => {
       )}
 
       {showResults && !loading && nothingFound && (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
           {!isOnline ? (
             <ErrorState title="You're offline" description="Reconnect and try again." onRetry={() => runSearch(committedQuery, activeType)} />
           ) : (
@@ -277,15 +277,15 @@ export const SearchPage: React.FC = () => {
       {showResults && !loading && !nothingFound && (
         <div className="flex flex-col gap-4">
           {showUsers && users.length > 0 && (
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4">
               <h2 className="text-sm font-semibold text-gray-900 mb-2">Users</h2>
               <UserSearchResults users={users} loading={false} />
             </div>
           )}
 
           {showCollections && collections.length > 0 && (
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-2">
-              <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 flex flex-col gap-2">
+              <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
                 <FolderHeart size={14} className="text-purple-500" aria-hidden="true" />
                 Your collections
               </h2>
@@ -302,7 +302,7 @@ export const SearchPage: React.FC = () => {
           )}
 
           {showMemories && memories.length > 0 && (
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-2">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 flex flex-col gap-2">
               <h2 className="text-sm font-semibold text-gray-900">Memories</h2>
               <GridView memories={memories} />
             </div>

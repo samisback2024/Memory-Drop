@@ -18,5 +18,5 @@ const roundedClasses: Record<NonNullable<SkeletonProps['rounded']>, string> = {
 // stats-row, and badges skeletons) rather than each screen shipping its
 // own bespoke skeleton component.
 export const Skeleton: React.FC<SkeletonProps> = ({ className = '', rounded = 'md' }) => (
-  <div className={['animate-pulse bg-gray-200', roundedClasses[rounded], className].join(' ')} aria-hidden="true" />
+  <div className={['animate-pulse bg-gray-200 dark:bg-gray-800', roundedClasses[rounded], className].join(' ')} aria-hidden="true" />
 );

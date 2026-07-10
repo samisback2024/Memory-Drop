@@ -83,20 +83,20 @@ export const Modal: React.FC<ModalProps> = ({
         aria-labelledby={title ? titleId.current : undefined}
         tabIndex={-1}
         className={[
-          'relative bg-white w-full sm:rounded-2xl shadow-2xl animate-slide-up',
+          'relative bg-white dark:bg-gray-900 w-full sm:rounded-2xl shadow-2xl animate-slide-up',
           'rounded-t-2xl max-h-[90vh] overflow-y-auto',
           'focus:outline-none',
           sizeClasses[size],
         ].join(' ')}
       >
         {(title || !hideClose) && (
-          <div className="flex items-center justify-between p-4 border-b border-gray-100">
-            {title && <h2 id={titleId.current} className="text-lg font-semibold text-gray-900">{title}</h2>}
+          <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-800">
+            {title && <h2 id={titleId.current} className="text-lg font-semibold text-gray-900 dark:text-gray-100">{title}</h2>}
             {!hideClose && (
               <button
                 onClick={onClose}
                 aria-label="Close"
-                className="p-1 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors ml-auto focus-visible:ring-2 focus-visible:ring-purple-500"
+                className="p-1 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ml-auto focus-visible:ring-2 focus-visible:ring-purple-500"
               >
                 <X size={20} />
               </button>

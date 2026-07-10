@@ -164,9 +164,17 @@ export interface CollectionSearchResult {
   item_count: number;
 }
 
+// Revised Phase 10 spec's exact section list. The two "person" tabs
+// return SocialUser-shaped rows (get_new_creators()/get_suggested_
+// friends()), not Memory rows — ExplorePage branches its renderer on
+// PERSON_TABS below rather than trying to force both shapes through
+// one generic type.
 export type ExploreTab =
-  | 'trending' | 'newest' | 'popular_memories' | 'popular_drops' | 'todays_unlocks'
-  | 'travel' | 'nature' | 'family' | 'graduation' | 'birthday' | 'achievements';
+  | 'unlocking_soon' | 'todays_unlocks' | 'recently_unlocked'
+  | 'popular_public_drops' | 'public_capsules'
+  | 'new_creators' | 'suggested_people';
+
+export const PERSON_TABS: ExploreTab[] = ['new_creators', 'suggested_people'];
 
 // Phase 10c — Bookmark Experience. get_saved_memories() unifies
 // saved_posts (Drops) + capsule_saves (Capsules) — Moments have no save
@@ -192,15 +200,11 @@ export interface ActivityItem {
 }
 
 export const EXPLORE_TABS: { id: ExploreTab; label: string }[] = [
-  { id: 'trending', label: 'Trending' },
-  { id: 'newest', label: 'Newest' },
-  { id: 'popular_memories', label: 'Popular Memories' },
-  { id: 'popular_drops', label: 'Popular Drops' },
+  { id: 'unlocking_soon', label: 'Unlocking Soon' },
   { id: 'todays_unlocks', label: "Today's Unlocks" },
-  { id: 'travel', label: 'Travel' },
-  { id: 'nature', label: 'Nature' },
-  { id: 'family', label: 'Family' },
-  { id: 'graduation', label: 'Graduation' },
-  { id: 'birthday', label: 'Birthday' },
-  { id: 'achievements', label: 'Achievements' },
+  { id: 'recently_unlocked', label: 'Recently Unlocked' },
+  { id: 'popular_public_drops', label: 'Popular Public Drops' },
+  { id: 'public_capsules', label: 'Public Capsules' },
+  { id: 'new_creators', label: 'New Creators' },
+  { id: 'suggested_people', label: 'Suggested People' },
 ];

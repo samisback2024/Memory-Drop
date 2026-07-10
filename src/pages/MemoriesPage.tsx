@@ -123,11 +123,11 @@ export const MemoriesPage: React.FC = () => {
   return (
     <div className="flex flex-col gap-4 -mx-4 px-4 -mt-6 pt-6 pb-6 bg-gradient-to-b from-purple-50/60 via-transparent to-transparent min-h-[calc(100vh-4rem)]">
       <div>
-        <h1 className="text-xl font-bold text-gray-900">Memories</h1>
-        <p className="text-sm text-gray-500 mt-0.5">Every memory you've ever unlocked, in one place, forever.</p>
+        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Memories</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Every memory you've ever unlocked, in one place, forever.</p>
       </div>
 
-      <div role="tablist" aria-label="Memories views" className="flex bg-white/70 backdrop-blur-xl rounded-xl p-1 gap-1 border border-white/60 shadow-sm overflow-x-auto">
+      <div role="tablist" aria-label="Memories views" className="flex bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-xl p-1 gap-1 border border-white/60 dark:border-gray-800/60 shadow-sm overflow-x-auto">
         {TABS.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
@@ -136,7 +136,7 @@ export const MemoriesPage: React.FC = () => {
             onClick={() => setTab(id)}
             className={[
               'flex items-center gap-1.5 py-2 px-3 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0',
-              tab === id ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white shadow-sm' : 'text-gray-500 hover:text-gray-800',
+              tab === id ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200',
             ].join(' ')}
           >
             <Icon size={14} aria-hidden="true" />
@@ -148,8 +148,8 @@ export const MemoriesPage: React.FC = () => {
       {tab === 'timeline' && (
         <div className="flex flex-col gap-4">
           {!overviewLoading && recentlyUnlocked.length > 0 && (
-            <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm p-4 flex flex-col gap-3">
-              <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+            <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm p-4 flex flex-col gap-3">
+              <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
                 <Unlock size={15} className="text-purple-500" aria-hidden="true" />
                 Recently Unlocked
               </h2>
@@ -158,8 +158,8 @@ export const MemoriesPage: React.FC = () => {
           )}
 
           {!overviewLoading && lockedUntilLater.length > 0 && (
-            <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm p-4 flex flex-col gap-3">
-              <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+            <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm p-4 flex flex-col gap-3">
+              <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
                 <Lock size={15} className="text-purple-500" aria-hidden="true" />
                 Locked Until Later
               </h2>
@@ -181,9 +181,9 @@ export const MemoriesPage: React.FC = () => {
 
       {tab === 'favorites' && (
         favoritesLoading ? (
-          <div className="h-32 rounded-2xl bg-white/60 animate-pulse" />
+          <div className="h-32 rounded-2xl bg-white/60 dark:bg-gray-800/60 animate-pulse" />
         ) : favorites.length === 0 ? (
-          <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm">
+          <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm">
             {!isOnline ? (
               <ErrorState title="You're offline" description="Reconnect and try again." onRetry={loadFavorites} />
             ) : (
@@ -197,9 +197,9 @@ export const MemoriesPage: React.FC = () => {
 
       {tab === 'flashbacks' && (
         flashbacksLoading ? (
-          <div className="h-24 rounded-2xl bg-white/60 animate-pulse" />
+          <div className="h-24 rounded-2xl bg-white/60 dark:bg-gray-800/60 animate-pulse" />
         ) : flashbacks.length === 0 ? (
-          <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm">
+          <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm">
             {!isOnline ? (
               <ErrorState title="You're offline" description="Reconnect and try again." onRetry={loadFlashbacks} />
             ) : (
@@ -221,9 +221,9 @@ export const MemoriesPage: React.FC = () => {
 
       {tab === 'archive' && (
         archivedLoading ? (
-          <div className="h-32 rounded-2xl bg-white/60 animate-pulse" />
+          <div className="h-32 rounded-2xl bg-white/60 dark:bg-gray-800/60 animate-pulse" />
         ) : archived.length === 0 ? (
-          <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm">
+          <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm">
             {!isOnline ? (
               <ErrorState title="You're offline" description="Reconnect and try again." onRetry={loadArchived} />
             ) : (

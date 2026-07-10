@@ -68,7 +68,7 @@ export const Avatar: React.FC<AvatarProps> = ({
         sizeClasses[size],
         ring ? `${ringClasses[size]} ring-offset-1 ${ringColor}` : '',
         onClick ? 'cursor-pointer' : '',
-        showFallback ? `bg-gradient-to-br ${getGradient(name)}` : 'bg-gray-200',
+        showFallback ? `bg-gradient-to-br ${getGradient(name)}` : 'bg-gray-200 dark:bg-gray-700',
         className,
       ].join(' ')}
     >

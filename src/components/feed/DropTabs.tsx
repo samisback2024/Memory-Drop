@@ -16,7 +16,7 @@ const TABS: Array<{ key: DropTab; label: string }> = [
 ];
 
 export const DropTabs: React.FC<DropTabsProps> = ({ active, onChange }) => (
-  <div role="tablist" aria-label="Memory Drop feed" className="flex bg-white/70 backdrop-blur-xl rounded-xl p-1 gap-1 border border-white/60 shadow-sm overflow-x-auto">
+  <div role="tablist" aria-label="Memory Drop feed" className="flex bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-xl p-1 gap-1 border border-white/60 dark:border-gray-800/60 shadow-sm overflow-x-auto">
     {TABS.map(tab => (
       <button
         key={tab.key}
@@ -28,7 +28,7 @@ export const DropTabs: React.FC<DropTabsProps> = ({ active, onChange }) => (
           'focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none',
           active === tab.key
             ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white shadow-sm'
-            : 'text-gray-500 hover:text-gray-800',
+            : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200',
         ].join(' ')}
       >
         {tab.label}

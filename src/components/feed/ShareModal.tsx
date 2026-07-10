@@ -5,6 +5,7 @@ import { Button } from '../ui/Button';
 import { useDrops } from '../../hooks/useDrops';
 import { useCapsules } from '../../hooks/useCapsules';
 import { generateSharePreview, buildQrCodeUrl } from '../../utils/sharePreview';
+import { useToast } from '../../hooks/useToast';
 import { MOOD_META, type Mood } from '../../types/feed';
 
 interface ShareModalProps {
@@ -28,6 +29,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
 }) => {
   const { incrementShareCount: incrementDropShare } = useDrops();
   const { incrementShareCount: incrementCapsuleShare } = useCapsules();
+  const { showToast } = useToast();
   const [copied, setCopied] = useState(false);
   const [textCopied, setTextCopied] = useState(false);
   const [qrOpen, setQrOpen] = useState(false);
@@ -74,13 +76,17 @@ export const ShareModal: React.FC<ShareModalProps> = ({
       moodEmoji: mood ? MOOD_META[mood].emoji : null,
     });
     setGeneratingCard(false);
-    if (!blob) return;
+    if (!blob) {
+      showToast("Couldn't generate a preview card — try again.", 'error');
+      return;
+    }
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = 'memory-drop-share.png';
     a.click();
     URL.revokeObjectURL(url);
+    showToast('Preview card downloaded.');
     await recordShare();
   };
 

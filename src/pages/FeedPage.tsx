@@ -145,10 +145,10 @@ export const FeedPage: React.FC = () => {
       <button
         type="button"
         onClick={() => setComposerOpen(true)}
-        className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm p-4 flex items-center gap-3 text-left hover:shadow-md transition-shadow"
+        className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm p-4 flex items-center gap-3 text-left hover:shadow-md transition-shadow"
       >
         <Avatar src={profile?.profile_photo_url} name={displayName} size="md" />
-        <span className="flex-1 text-sm text-gray-400">What moment do you want to save, {displayName.split(' ')[0]}?</span>
+        <span className="flex-1 text-sm text-gray-400 dark:text-gray-500">What moment do you want to save, {displayName.split(' ')[0]}?</span>
         <span className="flex items-center gap-1.5 text-sm font-medium text-purple-600 flex-shrink-0">
           <Sparkles size={15} aria-hidden="true" />
           Create Drop

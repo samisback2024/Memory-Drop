@@ -116,6 +116,14 @@ export const useSocial = () => {
     return data as SuggestedUser[];
   }, []);
 
+  // Explore's "New Creators" tab (Phase 10g) — recently-joined accounts,
+  // same shape as getSuggestedFriends so both render through UserList.
+  const getNewCreators = useCallback(async (limit = 20): Promise<SuggestedUser[]> => {
+    const { data, error } = await supabase.rpc('get_new_creators', { p_limit: limit });
+    if (error || !data) return [];
+    return data as SuggestedUser[];
+  }, []);
+
   const getMutualFriendsCount = useCallback(async (targetId: string): Promise<number> => {
     const { data, error } = await supabase.rpc('get_mutual_friends_count', { p_target_id: targetId });
     if (error || data === null) return 0;
@@ -169,6 +177,7 @@ export const useSocial = () => {
     unrestrictUser: restrictions.remove,
     searchUsers,
     getSuggestedFriends,
+    getNewCreators,
     getMutualFriendsCount,
     getMutualFriends,
     getFollowers,

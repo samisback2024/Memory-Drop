@@ -2,6 +2,8 @@ import React, { useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Navbar } from './Navbar';
 import { OfflineBanner } from './OfflineBanner';
+import { MobileNav } from './MobileNav';
+import { ErrorBoundary } from '../ui/ErrorBoundary';
 import { useAuth } from '../../hooks/useAuth';
 import { useSettings } from '../../hooks/useSettings';
 
@@ -27,9 +29,12 @@ export const AppShell: React.FC = () => {
       {/* Keyed by pathname so the fade/slide-up replays on every route
           change — a lightweight page-transition without framer-motion
           (not installed) or a route-transition library. */}
-      <main key={location.pathname} className="flex-1 max-w-2xl w-full mx-auto px-4 py-6 animate-page-enter">
-        <Outlet />
+      <main key={location.pathname} className="flex-1 max-w-2xl w-full mx-auto px-4 py-6 pb-24 sm:pb-6 animate-page-enter">
+        <ErrorBoundary>
+          <Outlet />
+        </ErrorBoundary>
       </main>
+      <MobileNav />
     </div>
   );
 };

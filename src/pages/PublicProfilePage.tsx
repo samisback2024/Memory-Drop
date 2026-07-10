@@ -71,17 +71,16 @@ export const PublicProfilePage: React.FC = () => {
     }
     const profile = rows[0] as PublicProfile;
     setData(profile);
-    if (user && !profile.is_own_profile) {
-      const rel = await getRelationship(profile.id);
-      setRelationship(rel);
-    }
-    if (user) {
-      const moments = await getUserMoments(profile.id);
-      setHasActiveMoments(moments.length > 0);
-      getPublicStats(profile.id).then(setPublicStats);
-      getMemories({ ...EMPTY_MEMORY_FILTERS, lockStatus: 'unlocked', visibility: 'public' }, 'newest', 30, 0, profile.id).then(setPublicPool);
-      getPinnedMemories(profile.id).then(setPinned);
-    }
+    // Independent reads, none depending on another's result — fired
+    // together rather than one `await` at a time (was previously
+    // sequential: relationship, then moments, then stats/memories/pins).
+    await Promise.all([
+      user && !profile.is_own_profile ? getRelationship(profile.id).then(setRelationship) : Promise.resolve(),
+      user ? getUserMoments(profile.id).then(moments => setHasActiveMoments(moments.length > 0)) : Promise.resolve(),
+      user ? getPublicStats(profile.id).then(setPublicStats) : Promise.resolve(),
+      user ? getMemories({ ...EMPTY_MEMORY_FILTERS, lockStatus: 'unlocked', visibility: 'public' }, 'newest', 30, 0, profile.id).then(setPublicPool) : Promise.resolve(),
+      user ? getPinnedMemories(profile.id).then(setPinned) : Promise.resolve(),
+    ]);
     setState('ready');
   }, [username, user, getRelationship, getUserMoments, getPublicStats, getMemories, getPinnedMemories]);
 
@@ -108,13 +107,13 @@ export const PublicProfilePage: React.FC = () => {
         )}
 
         {state === 'not_found' && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
             <EmptyState icon={UserX} title="User not found" description={`No account with the username @${username}.`} />
           </div>
         )}
 
         {state === 'error' && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
             <ErrorState title="Couldn't load this profile" description="Check your connection and try again." onRetry={load} />
           </div>
         )}
@@ -130,7 +129,7 @@ export const PublicProfilePage: React.FC = () => {
             />
 
             {!data.is_own_profile && user && relationship && (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center justify-between gap-3">
+              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 flex items-center justify-between gap-3">
                 <MutualFriends targetId={data.id} />
                 <div className="flex items-center gap-2 ml-auto">
                   <FollowButton
@@ -159,28 +158,28 @@ export const PublicProfilePage: React.FC = () => {
             <BadgesAndAchievements />
 
             {user && publicStats && (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-6">
+              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 flex items-center gap-6">
                 <div className="flex flex-col items-center gap-0.5">
                   <Globe2 size={14} className="text-purple-500" aria-hidden="true" />
-                  <span className="text-base font-bold text-gray-900">{publicStats.public_memories_count}</span>
+                  <span className="text-base font-bold text-gray-900 dark:text-gray-100">{publicStats.public_memories_count}</span>
                   <span className="text-[10px] text-gray-400">Public memories</span>
                 </div>
                 <div className="flex flex-col items-center gap-0.5">
                   <Users size={14} className="text-purple-500" aria-hidden="true" />
-                  <span className="text-base font-bold text-gray-900">{publicStats.followers_count}</span>
+                  <span className="text-base font-bold text-gray-900 dark:text-gray-100">{publicStats.followers_count}</span>
                   <span className="text-[10px] text-gray-400">Followers</span>
                 </div>
                 <div className="flex flex-col items-center gap-0.5">
                   <UserPlus size={14} className="text-purple-500" aria-hidden="true" />
-                  <span className="text-base font-bold text-gray-900">{publicStats.following_count}</span>
+                  <span className="text-base font-bold text-gray-900 dark:text-gray-100">{publicStats.following_count}</span>
                   <span className="text-[10px] text-gray-400">Following</span>
                 </div>
               </div>
             )}
 
             {user && pinnedMemories.length > 0 && (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
-                <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 flex flex-col gap-3">
+                <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
                   <Pin size={15} className="text-purple-500" aria-hidden="true" />
                   Pinned Memories
                 </h2>
@@ -189,8 +188,8 @@ export const PublicProfilePage: React.FC = () => {
             )}
 
             {user && pinnedDrops.length > 0 && (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
-                <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 flex flex-col gap-3">
+                <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
                   <Pin size={15} className="text-purple-500" aria-hidden="true" />
                   Pinned Drops
                 </h2>
@@ -199,8 +198,8 @@ export const PublicProfilePage: React.FC = () => {
             )}
 
             {user && publicMemories.length > 0 && (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
-                <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 flex flex-col gap-3">
+                <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
                   <Globe2 size={15} className="text-purple-500" aria-hidden="true" />
                   Public Memories
                 </h2>
@@ -209,8 +208,8 @@ export const PublicProfilePage: React.FC = () => {
             )}
 
             {user && publicCapsules.length > 0 && (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
-                <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 flex flex-col gap-3">
+                <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
                   <Clock size={15} className="text-purple-500" aria-hidden="true" />
                   Public Capsules
                 </h2>
@@ -219,8 +218,8 @@ export const PublicProfilePage: React.FC = () => {
             )}
 
             {user && publicMoments.length > 0 && (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
-                <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 flex flex-col gap-3">
+                <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
                   <Send size={15} className="text-purple-500" aria-hidden="true" />
                   Public Moments
                 </h2>
@@ -229,8 +228,8 @@ export const PublicProfilePage: React.FC = () => {
             )}
 
             {user && (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
-                <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 flex flex-col gap-3">
+                <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
                   <ActivityIcon size={15} className="text-purple-500" aria-hidden="true" />
                   Activity
                 </h2>
@@ -239,8 +238,8 @@ export const PublicProfilePage: React.FC = () => {
             )}
 
             {user && (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex flex-col gap-3">
-                <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 flex flex-col gap-3">
+                <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
                   <Clock size={15} className="text-purple-500" aria-hidden="true" />
                   Time Capsules
                 </h2>
