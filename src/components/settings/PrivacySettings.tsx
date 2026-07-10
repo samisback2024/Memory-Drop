@@ -9,7 +9,11 @@ import { ToggleRow } from './ToggleRow';
 import { DangerZone } from './DangerZone';
 import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
+import { MESSAGING_PRIVACY_META } from '../../types/message';
+import type { MessagingPrivacy } from '../../types/message';
 import type { ManagedUser } from '../../types/settings';
+
+const MESSAGING_PRIVACY_OPTIONS: MessagingPrivacy[] = ['everyone', 'followers', 'mutual_followers', 'nobody'];
 
 type ListKind = 'blocked' | 'muted' | 'restricted' | 'close_friends';
 
@@ -43,9 +47,11 @@ const ManagedList: React.FC<{
 export const PrivacySettings: React.FC = () => {
   const { profile, updateProfile } = useAuth();
   const { unblockUser, unmuteUser, unrestrictUser, searchUsers } = useSocial();
-  const { getBlockedUsers, getMutedUsers, getRestrictedUsers, getCloseFriends, addCloseFriend, removeCloseFriend, deleteAllContent } = useSettings();
+  const { getBlockedUsers, getMutedUsers, getRestrictedUsers, getCloseFriends, addCloseFriend, removeCloseFriend, deleteAllContent, getSettings, updateSettings } = useSettings();
 
   const [isPrivate, setIsPrivate] = useState(profile?.is_private ?? false);
+  const [messagingPrivacy, setMessagingPrivacy] = useState<MessagingPrivacy | null>(null);
+  const [allowMessageRequests, setAllowMessageRequests] = useState(true);
   const [lists, setLists] = useState<Record<ListKind, ManagedUser[]>>({ blocked: [], muted: [], restricted: [], close_friends: [] });
   const [loading, setLoading] = useState<Record<ListKind, boolean>>({ blocked: true, muted: true, restricted: true, close_friends: true });
   const [friendQuery, setFriendQuery] = useState('');
@@ -62,9 +68,27 @@ export const PrivacySettings: React.FC = () => {
 
   useEffect(() => { (['blocked', 'muted', 'restricted', 'close_friends'] as ListKind[]).forEach(loadList); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    getSettings().then(s => {
+      if (!s) return;
+      setMessagingPrivacy(s.messaging_privacy);
+      setAllowMessageRequests(s.allow_message_requests);
+    });
+  }, [getSettings]);
+
   const togglePrivate = async (next: boolean) => {
     setIsPrivate(next);
     await updateProfile({ isPrivate: next });
+  };
+
+  const handleMessagingPrivacyChange = async (next: MessagingPrivacy) => {
+    setMessagingPrivacy(next);
+    await updateSettings({ messaging_privacy: next });
+  };
+
+  const handleAllowRequestsChange = async (next: boolean) => {
+    setAllowMessageRequests(next);
+    await updateSettings({ allow_message_requests: next });
   };
 
   const handleUnblock = async (id: string) => { await unblockUser(id); setLists(prev => ({ ...prev, blocked: prev.blocked.filter(u => u.id !== id) })); };
@@ -99,6 +123,35 @@ export const PrivacySettings: React.FC = () => {
           description="Only accepted followers can see your public-visibility content."
           checked={isPrivate}
           onChange={togglePrivate}
+        />
+      </SettingsCard>
+
+      <SettingsCard title="Who can message you" description="People outside this circle land in Message Requests instead of your main inbox.">
+        <div className="flex flex-col gap-1.5">
+          {MESSAGING_PRIVACY_OPTIONS.map(option => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => handleMessagingPrivacyChange(option)}
+              className={`flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl border text-left transition-colors ${
+                messagingPrivacy === option
+                  ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/30'
+                  : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
+              }`}
+            >
+              <span>
+                <span className="block text-sm font-medium text-gray-900 dark:text-gray-100">{MESSAGING_PRIVACY_META[option].label}</span>
+                <span className="block text-xs text-gray-500 dark:text-gray-400">{MESSAGING_PRIVACY_META[option].description}</span>
+              </span>
+              {messagingPrivacy === option && <span className="w-2 h-2 rounded-full bg-purple-500 flex-shrink-0" aria-hidden="true" />}
+            </button>
+          ))}
+        </div>
+        <ToggleRow
+          label="Allow message requests"
+          description="If off, people outside your circle can't message you at all — not even as a request."
+          checked={allowMessageRequests}
+          onChange={handleAllowRequestsChange}
         />
       </SettingsCard>
 

@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './hooks/useAuth';
 import { ThemeProvider } from './hooks/useTheme';
 import { ToastProvider } from './hooks/useToast';
+import { usePresence } from './hooks/usePresence';
 import { AppShell } from './components/layout/AppShell';
 import { AuthProtectedRoute, PublicOnlyRoute, RootRedirect } from './components/auth/RouteGuards';
 import { LoginPage } from './pages/LoginPage';
@@ -41,6 +42,13 @@ const ExplorePage = lazy(() => import('./pages/ExplorePage').then(m => ({ defaul
 const MemoriesPage = lazy(() => import('./pages/MemoriesPage').then(m => ({ default: m.MemoriesPage })));
 const SettingsPage = lazy(() => import('./pages/SettingsPage').then(m => ({ default: m.SettingsPage })));
 const NotificationsPage = lazy(() => import('./pages/NotificationsPage').then(m => ({ default: m.NotificationsPage })));
+const MessagesPage = lazy(() => import('./pages/MessagesPage').then(m => ({ default: m.MessagesPage })));
+const MessageRequestsPage = lazy(() => import('./pages/MessageRequestsPage').then(m => ({ default: m.MessageRequestsPage })));
+// The heaviest single addition in this phase (bubbles, composer, media
+// viewer, voice recorder, forward/reactions/link-preview UI all pull in
+// together) — lazy, same reasoning as the Phase 10g bundle-size pass,
+// even though it sits outside AppShell like DropPage/MomentViewerPage.
+const ConversationPage = lazy(() => import('./pages/ConversationPage').then(m => ({ default: m.ConversationPage })));
 
 const RouteLoadingFallback = () => (
   <div className="flex flex-col gap-3 py-6" aria-busy="true" aria-label="Loading page">
@@ -48,12 +56,21 @@ const RouteLoadingFallback = () => (
   </div>
 );
 
+// Mounted once, inside AuthProvider (Presence needs the signed-in user's
+// id) but outside any one route — Presence should track "online" for
+// the whole session regardless of which page is open, including
+// /messages/:conversationId, which renders outside AppShell entirely
+// (own chrome, like /drop/:dropId) and would otherwise unmount presence
+// tracking the moment a chat screen opened.
+const PresenceMount = () => { usePresence(); return null; };
+
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
         <ThemeProvider>
         <ToastProvider>
+          <PresenceMount />
           <Suspense fallback={<RouteLoadingFallback />}>
           <Routes>
             <Route index element={<RootRedirect />} />
@@ -84,6 +101,11 @@ function App() {
                 reasoning as /drop/:dropId, get_moment is authenticated-only */}
             <Route path="/moments/:momentId" element={<AuthProtectedRoute><MomentViewerPage /></AuthProtectedRoute>} />
 
+            {/* The chat screen — same "own full-bleed chrome, outside
+                AppShell" treatment, so it can behave like a real mobile
+                chat screen (its own header, no double nav bar). */}
+            <Route path="/messages/:conversationId" element={<AuthProtectedRoute><ConversationPage /></AuthProtectedRoute>} />
+
             <Route element={<AuthProtectedRoute><AppShell /></AuthProtectedRoute>}>
               <Route path="/feed" element={<FeedPage />} />
               <Route path="/saved" element={<SavedPage />} />
@@ -102,6 +124,8 @@ function App() {
               <Route path="/search" element={<SearchPage />} />
               <Route path="/explore" element={<ExplorePage />} />
               <Route path="/notifications" element={<NotificationsPage />} />
+              <Route path="/messages" element={<MessagesPage />} />
+              <Route path="/messages/requests" element={<MessageRequestsPage />} />
               <Route path="/friends" element={<FriendsPage />} />
               <Route path="/friends/requests" element={<FriendRequestsPage />} />
             </Route>

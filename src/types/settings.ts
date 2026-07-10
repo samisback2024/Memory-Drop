@@ -1,5 +1,6 @@
 import type { Visibility } from './feed';
 import type { MomentPrivacy } from './moment';
+import type { MessagingPrivacy } from './message';
 
 export type Theme = 'light' | 'dark' | 'system';
 export type FontSize = 'small' | 'medium' | 'large' | 'xlarge';
@@ -13,6 +14,8 @@ export interface UserSettings {
   reduced_motion: boolean;
   high_contrast: boolean;
   larger_touch_targets: boolean;
+  messaging_privacy: MessagingPrivacy;
+  allow_message_requests: boolean;
   password_changed_at: string | null;
   created_at: string;
   updated_at: string;
@@ -30,6 +33,8 @@ export interface NotificationPreferences {
   product_updates: boolean;
   mentions: boolean;
   security_alerts: boolean;
+  messages: boolean;
+  message_requests: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -69,4 +74,6 @@ export const NOTIFICATION_PREFERENCE_META: Record<keyof Omit<NotificationPrefere
   product_updates: { label: 'Product updates', description: 'News about new Memory Drop features.' },
   mentions: { label: 'Mentions', description: 'When someone @mentions you in a comment.' },
   security_alerts: { label: 'Security alerts', description: 'Password changes and new sign-ins on your account.' },
+  messages: { label: 'Messages', description: 'New messages, replies, and reactions in Memory Chat.' },
+  message_requests: { label: 'Message requests', description: 'When someone outside your circle wants to message you.' },
 };

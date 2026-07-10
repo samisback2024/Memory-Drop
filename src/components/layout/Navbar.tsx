@@ -5,6 +5,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useSocial } from '../../hooks/useSocial';
 import { Avatar } from '../ui/Avatar';
 import { NotificationBell } from '../notifications/NotificationBell';
+import { MessagesNavButton } from '../messages/MessagesNavButton';
 
 // Feed is the primary destination now (Phase 4) — Dashboard moved into the
 // account dropdown below rather than crowding the top bar. Time Capsules
@@ -99,6 +100,7 @@ export const Navbar: React.FC = () => {
             ))}
           </div>
 
+          <MessagesNavButton />
           <NotificationBell />
 
           <div className="relative ml-1" ref={dropdownRef}>
