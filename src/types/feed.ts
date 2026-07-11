@@ -1,5 +1,5 @@
 export type MemoryType = 'photo' | 'video' | 'audio' | 'text';
-export type DropTab = 'my_drops' | 'following' | 'public_drops' | 'unlocking_soon' | 'today_unlocks' | 'saved_to_unlock';
+export type DropTab = 'my_drops' | 'following' | 'public_drops' | 'saved_to_unlock';
 export type Visibility = 'public' | 'followers' | 'private';
 export type Mood = 'joyful' | 'grateful' | 'nostalgic' | 'hopeful' | 'reflective' | 'peaceful' | 'bittersweet' | 'excited';
 export type ReportReason = 'spam' | 'harassment' | 'violence' | 'nudity' | 'fake_account' | 'other';

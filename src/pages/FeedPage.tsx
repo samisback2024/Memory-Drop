@@ -14,7 +14,7 @@ import { Avatar } from '../components/ui/Avatar';
 import type { Drop, DropTab } from '../types/feed';
 
 const PAGE_SIZE = 10;
-const ALL_TABS: DropTab[] = ['my_drops', 'following', 'public_drops', 'unlocking_soon', 'today_unlocks', 'saved_to_unlock'];
+const ALL_TABS: DropTab[] = ['my_drops', 'following', 'public_drops', 'saved_to_unlock'];
 
 interface TabState {
   drops: Drop[];
@@ -39,7 +39,7 @@ export const FeedPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<DropTab>('my_drops');
   const [tabStates, setTabStates] = useState<Record<DropTab, TabState>>({
     my_drops: emptyTabState(), following: emptyTabState(), public_drops: emptyTabState(),
-    unlocking_soon: emptyTabState(), today_unlocks: emptyTabState(), saved_to_unlock: emptyTabState(),
+    saved_to_unlock: emptyTabState(),
   });
   const [searchParams, setSearchParams] = useSearchParams();
   const [composerOpen, setComposerOpen] = useState(false);
@@ -59,7 +59,7 @@ export const FeedPage: React.FC = () => {
   const [viewingMomentsFor, setViewingMomentsFor] = useState<string | null>(null);
   const [momentTrayKey, setMomentTrayKey] = useState(0);
   const scrollPositions = useRef<Record<DropTab, number>>({
-    my_drops: 0, following: 0, public_drops: 0, unlocking_soon: 0, today_unlocks: 0, saved_to_unlock: 0,
+    my_drops: 0, following: 0, public_drops: 0, saved_to_unlock: 0,
   });
 
   const loadTab = useCallback(async (tab: DropTab) => {

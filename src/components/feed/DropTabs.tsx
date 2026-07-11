@@ -10,8 +10,6 @@ const TABS: Array<{ key: DropTab; label: string }> = [
   { key: 'my_drops', label: 'My Drops' },
   { key: 'following', label: 'Following' },
   { key: 'public_drops', label: 'Public Drops' },
-  { key: 'unlocking_soon', label: 'Unlocking Soon' },
-  { key: 'today_unlocks', label: "Today's Unlocks" },
   { key: 'saved_to_unlock', label: 'Saved to Unlock' },
 ];
 
