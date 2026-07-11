@@ -282,6 +282,16 @@ A second, narrower audit pass following Phase 13 — database performance/integr
 - **Eight page titles were invisible in dark mode, fixed** — `text-gray-900` with no `dark:` variant against `AppShell`'s `bg-gray-950` background rendered as near-black-on-near-black. All 15 page titles also standardized from a mixed `text-xl`/`text-lg` split onto one consistent size.
 - **Small consistency fixes**: hover/transition states added to `MessageBubble`'s attachment buttons (previously the only clickable elements in the app with no hover affordance at all); `ShareModal`'s QR wrapper radius corrected to match its sibling buttons.
 
+### Live Sync, Calendar Activity, and Theme Personalization (Phase 14c–14i — complete)
+The hardening pass above closed the broad audit findings; the follow-up Phase 14c–14i migrations are narrower correctness-and-polish fixes found through live testing and product feedback. These are not speculative cleanups — several closed real production bugs.
+
+- **Messaging was repaired in two separate places.** `phase14c_notification_events_entity_type_fix.sql` fixes a broken `notification_events` CHECK constraint that rejected `entity_type = 'conversation'`, which had been rolling back `send_message()` / `accept_message_request()` transactions since Phase 12 whenever they tried to create a notification. `phase14d_get_messages_ambiguous_column_fix.sql` fixes `get_messages()` itself — its `RETURNS TABLE` out-column `conversation_id` collided with unqualified `conversation_members.conversation_id` references inside PL/pgSQL, causing Postgres 42702 (`column reference ... is ambiguous`) on every read. Together these two close the gap where sends or requests could fail at notification time and message history reads could fail even when writes succeeded.
+- **Realtime subscriptions now actually broadcast.** `phase14e_enable_realtime.sql` adds `messages`, `message_reactions`, `message_reads`, `typing_status`, `conversations`, and `notifications` to the `supabase_realtime` publication. The frontend had already been subscribing to all six tables since Phases 11–12; the missing publication wiring meant those subscriptions were silently inert until now. Message delivery, typing, read receipts, conversation previews, and notification badges now update live instead of depending on a manual refresh or some other refetch path.
+- **Memory Calendar became activity-based instead of creation-date-only.** `phase14f_memory_activity_calendar.sql` replaces the old month-grid behavior with two new RPCs: `get_memory_activity_calendar()` and `get_memory_activity_day()`. A day can now surface three distinct event types across Drops, Capsules, and Moments where applicable: **dropped** (you created it), **unlocked** (its unlock date, even if still in the future), and **saved** (when you bookmarked it for later). This is what finally makes Drops appear in Calendar and what lets a future unlock date show up ahead of time without leaking any sealed content early.
+- **Profile stats are now selectively public, never all-or-nothing.** `phase14g_profile_stats_visibility.sql` adds `user_settings.visible_stats` and widens `get_public_stats()` from the original 3 public fields to 13 possible outputs. Visitors still always see only `public_memories_count`, `followers_count`, and `following_count` by default; the other 10 Memory Stats stay private unless the profile owner explicitly opts each one in from Settings. The owner-facing Profile Stats dashboard itself remains unchanged and always private.
+- **Appearance moved from one preset theme pair to full mix-and-match colors.** `phase14h_color_themes.sql` first introduced a single `color_theme` preference, then `phase14i_mix_and_match_colors.sql` replaced it with independent `color_theme_primary` and `color_theme_secondary` columns. The frontend now exposes signature pairs for one-tap presets plus full manual mixing across 12 named hues (`classic_purple`, `classic_blue`, `navy`, `claret`, `cornflower`, `terracotta`, `royal_blue`, `scarlet`, `amber`, `graphite`, `forest`, `plum`), applied instantly via CSS variables on `<html>` and persisted in `user_settings`.
+- **Two visible UI surfaces changed with these later Phase 14 passes.** Memories is no longer the older 8-tab surface this README originally described for the first Phase 7 ship; for first launch it is now a tighter 3-tab page (`Timeline`, `Calendar`, `Years`), with collection filtering still available inside the timeline itself. Appearance Settings likewise now include a real color-theme picker (`ColorThemeSelector`) with preset pairs plus independent primary/secondary hue selection.
+
 ---
 
 ## Getting started
@@ -329,6 +339,13 @@ VITE_SUPABASE_ANON_KEY=your-anon-key
    - `supabase/phase13_production_hardening.sql` — Production Readiness (Phase 13): closes four blocked-user gaps in `get_messages()`/`get_conversation_media()`/`message_reactions`/`typing_status` (`CREATE OR REPLACE`/policy updates, no new tables for these), adds `allowed_mime_types` to the `chat-media` bucket, new `analytics_events` table (self-hosted, insert-only, one-way mailbox), and adds `user_settings.analytics_enabled`
    - `supabase/phase14_database_hardening.sql` — Database Hardening (Phase 14): 45+ missing foreign-key indexes, CHECK constraints on count columns and `notification_events.event_type` (`not valid`/`validate constraint` pattern), `REVOKE` hardening on `create_notification()`, and an N+1 fix in `generate_weekly_recap()`
    - `supabase/phase14b_rls_performance.sql` — RLS Performance (Phase 14): wraps `auth.uid()` as `(select auth.uid())` in six RLS policies (`posts`/`capsules`/`moments`/`messages`/`conversation_members`/`notifications`) so Postgres's planner caches it once per statement instead of per row
+    - `supabase/phase14c_notification_events_entity_type_fix.sql` — fixes `notification_events.entity_type_check` to allow `conversation`, closing a Phase 12 bug that could roll back message sends / message requests when notification creation ran
+    - `supabase/phase14d_get_messages_ambiguous_column_fix.sql` — fixes `get_messages()` failing with Postgres 42702 (`conversation_id` ambiguous) by alias-qualifying the membership checks inside the PL/pgSQL function
+    - `supabase/phase14e_enable_realtime.sql` — adds `messages`, `message_reactions`, `message_reads`, `typing_status`, `conversations`, and `notifications` to the `supabase_realtime` publication so existing frontend subscriptions actually receive live events
+    - `supabase/phase14f_memory_activity_calendar.sql` — replaces the old calendar behavior with `get_memory_activity_calendar()` and `get_memory_activity_day()`, showing dropped / unlocked / saved activity across the memory surfaces instead of only creation dates
+    - `supabase/phase14g_profile_stats_visibility.sql` — adds `user_settings.visible_stats` and widens `get_public_stats()` so profile owners can selectively expose 10 additional Memory Stats on their public profile
+    - `supabase/phase14h_color_themes.sql` — introduces selectable color themes via `user_settings.color_theme` (superseded immediately by 14i, but included here for deployments that applied migrations in order)
+    - `supabase/phase14i_mix_and_match_colors.sql` — replaces the fixed-pair theme column with `user_settings.color_theme_primary` / `color_theme_secondary` for full mix-and-match color customization
    - `supabase/dev_seed_scale_test.sql` — **not a migration, do not run against production** — optional scale-test fixture data (see Phase 10f/10g docs below) for load/consistency testing only
 
 5. Restart the dev server.
@@ -372,13 +389,13 @@ src/
 │   ├── EditProfilePage.tsx      # at /profile/edit
 │   ├── PublicProfilePage.tsx    # anyone's profile, at /u/:username
 │   ├── SearchPage.tsx           # unified search (users/drops/capsules/moments/collections), at /search
-│   ├── ExplorePage.tsx          # 11-tab discovery feed, at /explore
+│   ├── ExplorePage.tsx          # discovery feed (Unlocking Soon / Today's Unlocks / Recently Unlocked / Popular Public Drops / Public Capsules / New Creators / Suggested People), at /explore
 │   ├── FriendsPage.tsx          # at /friends
 │   ├── FriendRequestsPage.tsx   # at /friends/requests
 │   ├── FollowersPage.tsx        # at /followers and /u/:username/followers
 │   ├── FollowingPage.tsx        # at /following and /u/:username/following
 │   ├── FeedPage.tsx             # at /feed — primary landing after login
-│   ├── SavedPage.tsx            # saved Drops + Capsules, folders/notes/sort/filter/search, at /saved
+│   ├── SavedPage.tsx            # Waiting to Unlock / Saved Memories / Favorites / Collections, with notes/folders/search, at /saved
 │   ├── DropPage.tsx             # single-drop permalink, at /drop/:dropId
 │   ├── MomentsPage.tsx          # your own archive (active + expired), at /moments
 │   ├── MomentCreatePage.tsx     # linkable composer, at /moments/create
@@ -386,8 +403,7 @@ src/
 │   ├── CapsulesPage.tsx         # "My Archive" — search + filters, at /capsules
 │   ├── CapsuleCreatePage.tsx    # linkable wizard, at /capsules/create
 │   ├── CapsuleViewerPage.tsx    # single-capsule permalink, at /capsules/:capsuleId
-│   ├── MemoriesPage.tsx         # 8-tab library (Timeline/Calendar/Years/Collections/
-│   │                            #   Favorites/Flashbacks/Highlights/Archive), at /memories
+│   ├── MemoriesPage.tsx         # 3-tab library (Timeline/Calendar/Years), with collection filtering still inside Timeline, at /memories
 │   ├── MemoryDetailPage.tsx     # single-memory permalink, at /memories/:memoryType/:memoryId
 │   ├── SettingsPage.tsx         # 10-section list-then-detail, at /settings and /settings/:section
 │   ├── NotificationsPage.tsx    # Activity Center — filters, time-bucket grouping, undo, at /notifications
@@ -408,8 +424,8 @@ src/
 │   │                 #   ProfileStatsCard, ActivityTimeline
 │   ├── social/       # UserCard, UserList (+ skeleton), FollowButton,
 │   │                 #   RelationshipMenu, FriendRequestCard, MutualFriends,
-│   │                 #   SocialStats, EmptySocialState, UserSearchBar,
-│   │                 #   UserSearchResults, FollowersList, FollowingList,
+│   │                 #   SocialStats, EmptySocialState, UserSearchResults,
+│   │                 #   FollowersList, FollowingList,
 │   │                 #   SuggestedFriends, NewCreators
 │   ├── feed/         # Feed, DropTabs, DropCard, DropComposer, DropActions,
 │   │                 #   SaveButton, LikeButton (animated), InterestActions,
@@ -431,7 +447,7 @@ src/
 │   │                 #   FavoriteButton, PinButton, FlashbackCard, HighlightCard, MemorySearch,
 │   │                 #   MemoryFilters, MemoryViewer
 │   ├── settings/     # SettingsSection, SettingsCard, ToggleRow, DangerZone, SessionList,
-│   │                 #   NotificationSettings, ThemeSelector, StorageUsageCard, FeedbackForm,
+│   │                 #   NotificationSettings, ThemeSelector, ColorThemeSelector, StorageUsageCard, FeedbackForm,
 │   │                 #   AccountSettings, ProfileSettings, PrivacySettings, SecuritySettings,
 │   │                 #   AppearanceSettings, AccessibilitySettings, StorageSettings,
 │   │                 #   HelpSettings, AboutSettings
@@ -443,7 +459,7 @@ src/
 │   │                 #   ConversationMediaPanel, RichLinkPreview, LocationCard,
 │   │                 #   StickerPicker, TypingIndicator, PresenceDot, MessagesNavButton
 │   ├── legal/        # LegalLayout
-│   └── ui/           # Button, Input, Avatar, Card, Modal, Checkbox,
+│   └── ui/           # Button, Input, Avatar, Modal, Checkbox,
 │                      #   Toggle, Badge, EmptyState, ErrorState, Skeleton,
 │                      #   ErrorBoundary, Toast (ToastStack)
 ├── hooks/
@@ -452,7 +468,7 @@ src/
 │   ├── useDrops.ts                # drops, comments, reflections, likes, interests, saves, hide, report
 │   ├── useMoments.ts              # moments, views, reactions, replies, archive
 │   ├── useCapsules.ts             # capsules, media, unlocks, likes, comments, reflections
-│   ├── useMemories.ts             # get_memories/get_memory (Drops+Capsules+Moments), calendar,
+│   ├── useMemories.ts             # get_memories/get_memory (Drops+Capsules+Moments), activity calendar,
 │   │                              #   years, flashbacks, highlights, collections, favorites,
 │   │                              #   hide/restore/delete, get_memory_stats/get_public_stats
 │   ├── useSearch.ts               # search_memories/search_collections/get_explore_feed,
@@ -467,7 +483,7 @@ src/
 │   │                              #   read receipts, typing, requests, search, conversation media
 │   ├── usePresence.ts             # app-wide Presence channel (usePresence) + getPresence() batch lookup
 │   ├── useVoiceRecorder.ts        # record/stop/cancel, live waveform (AnalyserNode), duration timer
-│   ├── useTheme.tsx               # ThemeProvider — dark mode, font size, accessibility toggles
+│   ├── useTheme.tsx               # ThemeProvider — dark mode, mix-and-match color pairs, font size, accessibility toggles
 │   ├── useUsernameAvailability.ts
 │   ├── useImageUpload.ts         # shared drag-drop/crop/upload pipeline
 │   ├── useInView.ts              # IntersectionObserver (video lazy-load, infinite scroll)
@@ -493,7 +509,7 @@ src/
 │   │                    #   TrendingSearch, SearchSuggestion, CollectionSearchResult, ExploreTab,
 │   │                    #   PinnedMemory, ActivityItem, SavedMemory
 │   ├── comment.ts        # Comment (shared Drop+Capsule shape), CommentReactionBreakdown, RecentLiker
-│   ├── settings.ts      # UserSettings, NotificationPreferences, UserSession, ManagedUser, Theme, FontSize
+│   ├── settings.ts      # UserSettings, NotificationPreferences, UserSession, ManagedUser, Theme, FontSize, ColorHue, profile-stat visibility metadata
 │   ├── notification.ts  # NotificationType (27 values), Notification, NotificationFilter, time-bucket
 │   │                     #   grouping helper, buildNotificationLink() (never a guessed/broken URL)
 │   └── message.ts       # Message, Conversation, ConversationHeader, MessageType, MessagingPrivacy,
@@ -531,6 +547,16 @@ supabase/
 ├── phase13_production_hardening.sql   # blocked-user fixes to get_messages()/get_conversation_media()/
 │                                       #   message_reactions/typing_status, chat-media mime allowlist,
 │                                       #   analytics_events table, user_settings.analytics_enabled
+├── phase14_database_hardening.sql     # 45+ FK indexes, count/event CHECK constraints, create_notification() REVOKE,
+│                                       #   generate_weekly_recap() N+1 fix
+├── phase14b_rls_performance.sql       # wraps auth.uid() as (select auth.uid()) in 6 hot-path policies
+├── phase14c_notification_events_entity_type_fix.sql # allows entity_type='conversation' in notification_events
+├── phase14d_get_messages_ambiguous_column_fix.sql   # fixes get_messages() 42702 ambiguous conversation_id
+├── phase14e_enable_realtime.sql       # adds notifications + messaging tables to supabase_realtime publication
+├── phase14f_memory_activity_calendar.sql # activity-based calendar RPCs (dropped/unlocked/saved)
+├── phase14g_profile_stats_visibility.sql # visible_stats setting + widened get_public_stats()
+├── phase14h_color_themes.sql          # first selectable color-theme column (superseded by 14i)
+├── phase14i_mix_and_match_colors.sql  # primary/secondary hue columns for full theme mixing
 └── dev_seed_scale_test.sql            # NOT a migration — optional scale-test fixture data, never run against production
 ```
 
