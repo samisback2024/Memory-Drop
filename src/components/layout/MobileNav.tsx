@@ -10,7 +10,7 @@ const NAV_LINKS = [
 ];
 const NAV_LINKS_RIGHT = [
   { to: '/memories', label: 'Memories', icon: BookHeart },
-  { to: '/profile', label: 'Profile', icon: User },
+  { to: '/profile', label: 'Dashboard', icon: User },
 ];
 
 // A fixed bottom bar shown only below the `sm` breakpoint — additive to

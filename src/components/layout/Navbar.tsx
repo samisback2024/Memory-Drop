@@ -20,7 +20,7 @@ const NAV_LINKS = [
   { to: '/search', label: 'Search', icon: Search },
   { to: '/explore', label: 'Explore', icon: Compass },
   { to: '/friends', label: 'Friends', icon: Users },
-  { to: '/profile', label: 'Profile', icon: User },
+  { to: '/profile', label: 'Dashboard', icon: User },
 ];
 
 export const Navbar: React.FC = () => {
