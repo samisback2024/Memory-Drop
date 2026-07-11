@@ -125,6 +125,12 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
 
   const uploadOne = async (file: File, kind: 'image' | 'video' | 'file'): Promise<{ error: string | null }> => {
     if (!user) return { error: 'Not authenticated' };
+    // GIF sending isn't supported at initial launch — deliberately out
+    // of scope for now (would need a third-party GIF search provider),
+    // not just an unsupported mime type by accident. Blocked explicitly
+    // here as a backstop since the file input's `accept` attribute is
+    // only a hint some pickers/drag-drop paths can bypass.
+    if (kind === 'image' && file.type === 'image/gif') return { error: 'GIFs aren\'t supported yet.' };
     if (kind === 'image' && file.size > MAX_POST_IMAGE_BYTES) return { error: `Images must be ${Math.round(MAX_POST_IMAGE_BYTES / 1024 / 1024)}MB or smaller.` };
     if (kind === 'video' && file.size > MAX_POST_VIDEO_BYTES) return { error: `Videos must be ${Math.round(MAX_POST_VIDEO_BYTES / 1024 / 1024)}MB or smaller.` };
     // "File" had no client-side cap at all before Phase 13 — the bucket's
@@ -135,7 +141,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
     if (kind === 'file' && !ALLOWED_FILE_MIME_TYPES.includes(file.type)) return { error: 'That file type isn\'t supported yet — try a PDF, Word document, or plain text file.' };
 
     setUploading(true);
-    const finalFile = kind === 'image' && file.type !== 'image/gif' ? await compressImageFile(file) : file;
+    const finalFile = kind === 'image' ? await compressImageFile(file) : file;
     // Must be the uploader's own user id, not the conversation id — the
     // chat-media bucket's storage RLS write policy requires the path's
     // first folder segment to equal auth.uid() (same convention every
@@ -148,10 +154,9 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
     setUploading(false);
     if (!url) return { error: 'Upload failed.' };
 
-    const messageType = kind === 'image' && file.type === 'image/gif' ? 'gif' : kind;
     const dims = kind === 'image' ? await readImageDimensions(finalFile) : null;
 
-    const { error } = await sendMessage(conversationId, messageType, kind === 'file' ? file.name : null, {}, replyingTo?.id ?? null, null, [{
+    const { error } = await sendMessage(conversationId, kind, kind === 'file' ? file.name : null, {}, replyingTo?.id ?? null, null, [{
       bucket: BUCKET, storage_path: path, url, mime_type: finalFile.type, size_bytes: finalFile.size,
       width: dims?.width, height: dims?.height,
     }]);
@@ -250,7 +255,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
           {attachMenuOpen && (
             <div className="absolute left-0 bottom-11 w-44 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl z-30 py-1 animate-fade-in">
               <button type="button" onClick={() => imageInputRef.current?.click()} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
-                <ImageIcon size={16} aria-hidden="true" /> Photo or GIF
+                <ImageIcon size={16} aria-hidden="true" /> Photo
               </button>
               <button type="button" onClick={() => videoInputRef.current?.click()} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
                 <Video size={16} aria-hidden="true" /> Video
@@ -263,7 +268,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
               </button>
             </div>
           )}
-          <input ref={imageInputRef} type="file" accept="image/*" className="hidden" onChange={e => handleFilePicked(e, 'image')} />
+          <input ref={imageInputRef} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" onChange={e => handleFilePicked(e, 'image')} />
           <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={e => handleFilePicked(e, 'video')} />
           <input ref={fileInputRef} type="file" accept={ALLOWED_FILE_MIME_TYPES.join(',')} className="hidden" onChange={e => handleFilePicked(e, 'file')} />
         </div>
