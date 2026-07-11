@@ -3,6 +3,7 @@ import { Send, Plus, Image as ImageIcon, Video, FileText, MapPin, X, Loader2 } f
 import { EmojiPicker } from '../feed/EmojiPicker';
 import { StickerPicker } from './StickerPicker';
 import { VoiceRecorderBar, VoiceRecordTrigger } from './VoiceRecorderBar';
+import { useAuth } from '../../hooks/useAuth';
 import { useMessages } from '../../hooks/useMessages';
 import { useToast } from '../../hooks/useToast';
 import { uploadFile, generateStoragePath } from '../../utils/storage';
@@ -41,6 +42,7 @@ const ALLOWED_FILE_MIME_TYPES = [
 export const MessageComposer: React.FC<MessageComposerProps> = ({
   conversationId, replyingTo, onCancelReply, editingMessage, onCancelEdit, onSent, disabled = false,
 }) => {
+  const { user } = useAuth();
   const { sendMessage, editMessage, setTyping } = useMessages();
   const { showToast } = useToast();
   const [text, setText] = useState('');
@@ -122,6 +124,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
   };
 
   const uploadOne = async (file: File, kind: 'image' | 'video' | 'file'): Promise<{ error: string | null }> => {
+    if (!user) return { error: 'Not authenticated' };
     if (kind === 'image' && file.size > MAX_POST_IMAGE_BYTES) return { error: `Images must be ${Math.round(MAX_POST_IMAGE_BYTES / 1024 / 1024)}MB or smaller.` };
     if (kind === 'video' && file.size > MAX_POST_VIDEO_BYTES) return { error: `Videos must be ${Math.round(MAX_POST_VIDEO_BYTES / 1024 / 1024)}MB or smaller.` };
     // "File" had no client-side cap at all before Phase 13 — the bucket's
@@ -133,7 +136,14 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
 
     setUploading(true);
     const finalFile = kind === 'image' && file.type !== 'image/gif' ? await compressImageFile(file) : file;
-    const path = generateStoragePath(conversationId, finalFile.name);
+    // Must be the uploader's own user id, not the conversation id — the
+    // chat-media bucket's storage RLS write policy requires the path's
+    // first folder segment to equal auth.uid() (same convention every
+    // other bucket in this app uses). Using conversationId here meant
+    // every media/voice upload was silently rejected by RLS from the
+    // moment this shipped in Phase 12 — a real, deterministic bug, not
+    // an edge case.
+    const path = generateStoragePath(user.id, finalFile.name);
     const url = await uploadFile(BUCKET, path, finalFile);
     setUploading(false);
     if (!url) return { error: 'Upload failed.' };
@@ -191,12 +201,13 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
 
   const handleVoiceSend = async (recording: VoiceRecording) => {
     setRecordingVoice(false);
+    if (!user) { showToast('Not authenticated', 'error'); return; }
     if (recording.file.size > MAX_VOICE_RECORDING_BYTES) {
       showToast(`Voice notes must be ${Math.round(MAX_VOICE_RECORDING_BYTES / 1024 / 1024)}MB or smaller.`, 'error');
       return;
     }
     setUploading(true);
-    const path = generateStoragePath(conversationId, recording.file.name);
+    const path = generateStoragePath(user.id, recording.file.name);
     const url = await uploadFile(BUCKET, path, recording.file);
     setUploading(false);
     if (!url) { showToast('Upload failed.', 'error'); return; }
