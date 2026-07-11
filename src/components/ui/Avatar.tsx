@@ -4,6 +4,7 @@ interface AvatarProps {
   src?: string | null;
   name?: string;
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl';
+  shape?: 'circle' | 'square';
   ring?: boolean;
   ringColor?: string;
   className?: string;
@@ -52,6 +53,7 @@ export const Avatar: React.FC<AvatarProps> = ({
   src,
   name = 'User',
   size = 'md',
+  shape = 'circle',
   ring = false,
   ringColor = 'ring-purple-500',
   className = '',
@@ -64,7 +66,8 @@ export const Avatar: React.FC<AvatarProps> = ({
     <div
       onClick={onClick}
       className={[
-        'rounded-full overflow-hidden flex-shrink-0 flex items-center justify-center',
+        shape === 'square' ? 'rounded-2xl' : 'rounded-full',
+        'overflow-hidden flex-shrink-0 flex items-center justify-center',
         sizeClasses[size],
         ring ? `${ringClasses[size]} ring-offset-1 ${ringColor}` : '',
         onClick ? 'cursor-pointer' : '',

@@ -41,21 +41,37 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = React.memo(({ profile
             decoding="async"
           />
         )}
+        {isOwnProfile && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/profile/edit')}
+            className="absolute top-3 right-3 shadow-sm"
+          >
+            <Edit3 size={14} aria-hidden="true" />
+            Edit Profile
+          </Button>
+        )}
       </div>
 
       <div className="px-5 pb-5">
-        <div className="flex items-end justify-between -mt-10 mb-4">
+        {/* Centered square avatar, its vertical center resting exactly on
+            the seam between the cover photo and this white panel — half
+            the 96px (2xl) avatar overlaps the cover above, half sits on
+            the panel below. */}
+        <div className="flex justify-center -mt-12 mb-4">
           {hasActiveMoments ? (
             <button
               type="button"
               onClick={onViewMoments}
               aria-label={isOwnProfile ? 'View your moments' : `View ${displayName}'s moments`}
-              className="rounded-full p-[3px] bg-gradient-to-br from-purple-500 via-fuchsia-500 to-blue-500 focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none"
+              className="rounded-2xl p-[3px] bg-gradient-to-br from-purple-500 via-fuchsia-500 to-blue-500 focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none"
             >
               <Avatar
                 src={profile.profile_photo_url}
                 name={displayName}
                 size="2xl"
+                shape="square"
                 className="border-4 border-white dark:border-gray-900 shadow-md"
               />
             </button>
@@ -64,16 +80,11 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = React.memo(({ profile
               src={profile.profile_photo_url}
               name={displayName}
               size="2xl"
+              shape="square"
               ring
               ringColor="ring-white"
               className="border-4 border-white dark:border-gray-900 shadow-md"
             />
-          )}
-          {isOwnProfile && (
-            <Button variant="outline" size="sm" onClick={() => navigate('/profile/edit')}>
-              <Edit3 size={14} aria-hidden="true" />
-              Edit Profile
-            </Button>
           )}
         </div>
 

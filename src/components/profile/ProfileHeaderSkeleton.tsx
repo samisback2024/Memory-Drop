@@ -8,9 +8,8 @@ export const ProfileHeaderSkeleton: React.FC = () => (
   <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden" aria-hidden="true">
     <Skeleton className="h-32 sm:h-40 md:h-48 w-full" rounded="md" />
     <div className="px-5 pb-5">
-      <div className="flex items-end justify-between -mt-10 mb-4">
-        <Skeleton className="w-24 h-24 border-4 border-white dark:border-gray-900" rounded="full" />
-        <Skeleton className="w-28 h-9" rounded="xl" />
+      <div className="flex justify-center -mt-12 mb-4">
+        <Skeleton className="w-24 h-24 border-4 border-white dark:border-gray-900" rounded="2xl" />
       </div>
       <Skeleton className="h-5 w-40 mb-2" />
       <Skeleton className="h-4 w-24 mb-3" />

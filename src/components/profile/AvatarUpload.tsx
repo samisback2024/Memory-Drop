@@ -27,10 +27,10 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({ src, name, onUpload 
   return (
     <div className="flex flex-col items-center gap-2">
       <div
-        className={['relative rounded-full', dragActive ? 'ring-2 ring-purple-500 ring-offset-2' : ''].join(' ')}
+        className={['relative rounded-2xl', dragActive ? 'ring-2 ring-purple-500 ring-offset-2' : ''].join(' ')}
         {...dragHandlers}
       >
-        <Avatar src={src} name={name} size="2xl" ring className="border-4 border-white shadow-md" />
+        <Avatar src={src} name={name} size="2xl" shape="square" ring className="border-4 border-white shadow-md" />
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
@@ -68,7 +68,7 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({ src, name, onUpload 
           file={pendingFile}
           title="Adjust your photo"
           aspect={1}
-          shape="circle"
+          shape="rect"
           outputWidth={AVATAR_OUTPUT_SIZE}
           outputHeight={AVATAR_OUTPUT_SIZE}
           onCancel={cancelCrop}
