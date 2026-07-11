@@ -26,7 +26,11 @@ alter table public.user_settings add constraint user_settings_visible_stats_chec
 ) not valid;
 alter table public.user_settings validate constraint user_settings_visible_stats_check;
 
-create or replace function public.get_public_stats(p_user_id uuid)
+-- get_public_stats' OUT columns are widening (3 -> 13), which CREATE OR
+-- REPLACE can't do — Postgres requires the old signature dropped first.
+drop function if exists public.get_public_stats(uuid);
+
+create function public.get_public_stats(p_user_id uuid)
 returns table (
   public_memories_count bigint,
   followers_count bigint,
