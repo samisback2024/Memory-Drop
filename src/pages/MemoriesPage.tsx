@@ -1,62 +1,36 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import {
-  GitCommitVertical, CalendarDays, CalendarRange, FolderHeart, Heart, Sparkles, Flame, Archive, Unlock, Lock,
-} from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { GitCommitVertical, CalendarDays, CalendarRange, Unlock, Lock } from 'lucide-react';
 import { useMemories } from '../hooks/useMemories';
 import { MemoryTimeline } from '../components/memories/MemoryTimeline';
 import { MemoryCalendar } from '../components/memories/MemoryCalendar';
 import { YearView } from '../components/memories/YearView';
-import { CollectionGrid } from '../components/memories/CollectionGrid';
-import { FlashbackCard } from '../components/memories/FlashbackCard';
-import { HighlightCard } from '../components/memories/HighlightCard';
-import { TimelineView } from '../components/memories/TimelineView';
 import { ListView } from '../components/memories/ListView';
-import { EmptyState } from '../components/ui/EmptyState';
-import { ErrorState } from '../components/ui/ErrorState';
-import { useOnlineStatus } from '../hooks/useOnlineStatus';
-import { EMPTY_MEMORY_FILTERS, type Flashback, type HighlightType, type Memory, type MemoryCollection } from '../types/memory';
+import { EMPTY_MEMORY_FILTERS, type Memory, type MemoryCollection } from '../types/memory';
 
-type MemoriesTab = 'timeline' | 'calendar' | 'years' | 'collections' | 'favorites' | 'flashbacks' | 'highlights' | 'archive';
+type MemoriesTab = 'timeline' | 'calendar' | 'years';
 
 const TABS: { id: MemoriesTab; label: string; icon: typeof GitCommitVertical }[] = [
   { id: 'timeline', label: 'Timeline', icon: GitCommitVertical },
   { id: 'calendar', label: 'Calendar', icon: CalendarDays },
   { id: 'years', label: 'Years', icon: CalendarRange },
-  { id: 'collections', label: 'Collections', icon: FolderHeart },
-  { id: 'favorites', label: 'Favorites', icon: Heart },
-  { id: 'flashbacks', label: 'Flashbacks', icon: Sparkles },
-  { id: 'highlights', label: 'Highlights', icon: Flame },
-  { id: 'archive', label: 'Archive', icon: Archive },
 ];
-
-const HIGHLIGHT_TYPES: HighlightType[] = ['best_month', 'most_viewed', 'most_reacted'];
 
 // The emotional heart of the app once someone's accumulated months and
 // years of memories — a journal/scrapbook, not a profile grid. Every
-// unlocked Capsule and expired Moment lives here, forever, across eight
-// ways of looking back at them.
+// unlocked Capsule and expired Moment lives here, forever, across three
+// ways of looking back at them (Collections/Favorites/Flashbacks/
+// Highlights/Archive were removed as tabs — too much surface for a
+// first launch; MemoryTimeline's own collection filter still works for
+// anyone who already created one).
 export const MemoriesPage: React.FC = () => {
-  const { getMemories, getCollections, getFlashbacks, getArchivedMemories } = useMemories();
-  const isOnline = useOnlineStatus();
+  const { getMemories, getCollections } = useMemories();
   const [tab, setTab] = useState<MemoriesTab>('timeline');
   const [collections, setCollections] = useState<MemoryCollection[]>([]);
-  const [collectionsKey, setCollectionsKey] = useState(0);
-  const [favorites, setFavorites] = useState<Memory[]>([]);
-  const [favoritesLoading, setFavoritesLoading] = useState(true);
-  const [flashbacks, setFlashbacks] = useState<Flashback[]>([]);
-  const [flashbacksLoading, setFlashbacksLoading] = useState(true);
-  const [archived, setArchived] = useState<Memory[]>([]);
-  const [archivedLoading, setArchivedLoading] = useState(true);
   const [recentlyUnlocked, setRecentlyUnlocked] = useState<Memory[]>([]);
   const [lockedUntilLater, setLockedUntilLater] = useState<Memory[]>([]);
   const [overviewLoading, setOverviewLoading] = useState(true);
-  // Loaded once per session per tab, same "don't refetch on every
-  // revisit" pattern FeedPage already established — favorites/
-  // flashbacks/archive don't change often enough to justify refetching
-  // every time this tab is reopened within one visit to the page.
-  const [loadedTabs, setLoadedTabs] = useState<Set<MemoriesTab>>(new Set());
 
-  useEffect(() => { getCollections().then(setCollections); }, [getCollections, collectionsKey]);
+  useEffect(() => { getCollections().then(setCollections); }, [getCollections]);
 
   useEffect(() => {
     if (tab !== 'timeline') return;
@@ -73,52 +47,6 @@ export const MemoriesPage: React.FC = () => {
       setOverviewLoading(false);
     });
   }, [tab, getMemories]);
-
-  const loadFavorites = useCallback(() => {
-    setFavoritesLoading(true);
-    getMemories({ ...EMPTY_MEMORY_FILTERS, favoritesOnly: true }, 'newest', 50, 0).then(data => {
-      setFavorites(data);
-      setFavoritesLoading(false);
-      setLoadedTabs(prev => new Set(prev).add('favorites'));
-    });
-  }, [getMemories]);
-
-  useEffect(() => {
-    if (tab !== 'favorites' || loadedTabs.has('favorites')) return;
-    loadFavorites();
-  }, [tab, loadedTabs, loadFavorites]);
-
-  const loadFlashbacks = useCallback(() => {
-    setFlashbacksLoading(true);
-    getFlashbacks().then(data => {
-      setFlashbacks(data);
-      setFlashbacksLoading(false);
-      setLoadedTabs(prev => new Set(prev).add('flashbacks'));
-    });
-  }, [getFlashbacks]);
-
-  useEffect(() => {
-    if (tab !== 'flashbacks' || loadedTabs.has('flashbacks')) return;
-    loadFlashbacks();
-  }, [tab, loadedTabs, loadFlashbacks]);
-
-  const loadArchived = useCallback(() => {
-    setArchivedLoading(true);
-    getArchivedMemories(50, 0).then(data => {
-      setArchived(data);
-      setArchivedLoading(false);
-      setLoadedTabs(prev => new Set(prev).add('archive'));
-    });
-  }, [getArchivedMemories]);
-
-  useEffect(() => {
-    if (tab !== 'archive' || loadedTabs.has('archive')) return;
-    loadArchived();
-  }, [tab, loadedTabs, loadArchived]);
-
-  const dismissFlashbackCard = useCallback((id: string) => {
-    setTimeout(() => setFlashbacks(prev => prev.filter(f => f.id !== id)), 300);
-  }, []);
 
   return (
     <div className="flex flex-col gap-4 -mx-4 px-4 -mt-6 pt-6 pb-6 bg-gradient-to-b from-purple-50/60 via-transparent to-transparent min-h-[calc(100vh-4rem)]">
@@ -174,66 +102,6 @@ export const MemoriesPage: React.FC = () => {
       {tab === 'calendar' && <MemoryCalendar />}
 
       {tab === 'years' && <YearView />}
-
-      {tab === 'collections' && (
-        <CollectionGrid collections={collections} onCollectionsChanged={() => setCollectionsKey(k => k + 1)} />
-      )}
-
-      {tab === 'favorites' && (
-        favoritesLoading ? (
-          <div className="h-32 rounded-2xl bg-white/60 dark:bg-gray-800/60 animate-pulse" />
-        ) : favorites.length === 0 ? (
-          <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm">
-            {!isOnline ? (
-              <ErrorState title="You're offline" description="Reconnect and try again." onRetry={loadFavorites} />
-            ) : (
-              <EmptyState icon={Heart} title="No favorites yet" description="Tap the heart on any memory to keep it close." />
-            )}
-          </div>
-        ) : (
-          <TimelineView memories={favorites} />
-        )
-      )}
-
-      {tab === 'flashbacks' && (
-        flashbacksLoading ? (
-          <div className="h-24 rounded-2xl bg-white/60 dark:bg-gray-800/60 animate-pulse" />
-        ) : flashbacks.length === 0 ? (
-          <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm">
-            {!isOnline ? (
-              <ErrorState title="You're offline" description="Reconnect and try again." onRetry={loadFlashbacks} />
-            ) : (
-              <EmptyState icon={Sparkles} title="Nothing to look back on today" description="Come back another day — flashbacks appear once you have memories from a year or more ago." />
-            )}
-          </div>
-        ) : (
-          <div className="flex flex-col gap-3">
-            {flashbacks.map(f => <FlashbackCard key={`${f.memory_type}-${f.id}`} flashback={f} onDismissed={dismissFlashbackCard} />)}
-          </div>
-        )
-      )}
-
-      {tab === 'highlights' && (
-        <div className="flex flex-col gap-3">
-          {HIGHLIGHT_TYPES.map(type => <HighlightCard key={type} type={type} />)}
-        </div>
-      )}
-
-      {tab === 'archive' && (
-        archivedLoading ? (
-          <div className="h-32 rounded-2xl bg-white/60 dark:bg-gray-800/60 animate-pulse" />
-        ) : archived.length === 0 ? (
-          <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm">
-            {!isOnline ? (
-              <ErrorState title="You're offline" description="Reconnect and try again." onRetry={loadArchived} />
-            ) : (
-              <EmptyState icon={Archive} title="Nothing archived" description="Memories you hide show up here — nothing is ever truly gone unless you delete it permanently." />
-            )}
-          </div>
-        ) : (
-          <TimelineView memories={archived} />
-        )
-      )}
     </div>
   );
 };
