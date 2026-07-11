@@ -12,7 +12,9 @@ import { Button } from '../ui/Button';
 import { MESSAGING_PRIVACY_META } from '../../types/message';
 import { setAnalyticsEnabled as setAnalyticsEnabledCache } from '../../lib/analytics';
 import type { MessagingPrivacy } from '../../types/message';
-import type { ManagedUser } from '../../types/settings';
+import { PROFILE_STAT_META, type ManagedUser, type ProfileStatKey } from '../../types/settings';
+
+const PROFILE_STAT_KEYS = Object.keys(PROFILE_STAT_META) as ProfileStatKey[];
 
 const MESSAGING_PRIVACY_OPTIONS: MessagingPrivacy[] = ['everyone', 'followers', 'mutual_followers', 'nobody'];
 
@@ -54,6 +56,12 @@ export const PrivacySettings: React.FC = () => {
   const [messagingPrivacy, setMessagingPrivacy] = useState<MessagingPrivacy | null>(null);
   const [allowMessageRequests, setAllowMessageRequests] = useState(true);
   const [analyticsEnabled, setAnalyticsEnabledState] = useState(true);
+  // null until getSettings() resolves — ToggleRow only reads `checked`
+  // as its initial state (it doesn't re-sync on prop changes), so this
+  // gates rendering the checklist until the real saved values are in,
+  // rather than briefly showing everything unchecked for a returning
+  // user who already opted some stats in.
+  const [visibleStats, setVisibleStats] = useState<ProfileStatKey[] | null>(null);
   const [lists, setLists] = useState<Record<ListKind, ManagedUser[]>>({ blocked: [], muted: [], restricted: [], close_friends: [] });
   const [loading, setLoading] = useState<Record<ListKind, boolean>>({ blocked: true, muted: true, restricted: true, close_friends: true });
   const [friendQuery, setFriendQuery] = useState('');
@@ -76,6 +84,7 @@ export const PrivacySettings: React.FC = () => {
       setMessagingPrivacy(s.messaging_privacy);
       setAllowMessageRequests(s.allow_message_requests);
       setAnalyticsEnabledState(s.analytics_enabled);
+      setVisibleStats((s.visible_stats ?? []) as ProfileStatKey[]);
     });
   }, [getSettings]);
 
@@ -98,6 +107,12 @@ export const PrivacySettings: React.FC = () => {
     setAnalyticsEnabledState(next);
     setAnalyticsEnabledCache(next);
     await updateSettings({ analytics_enabled: next });
+  };
+
+  const handleStatVisibilityChange = async (key: ProfileStatKey, next: boolean) => {
+    const updated = next ? [...(visibleStats ?? []), key] : (visibleStats ?? []).filter(k => k !== key);
+    setVisibleStats(updated);
+    await updateSettings({ visible_stats: updated });
   };
 
   const handleUnblock = async (id: string) => { await unblockUser(id); setLists(prev => ({ ...prev, blocked: prev.blocked.filter(u => u.id !== id) })); };
@@ -206,6 +221,24 @@ export const PrivacySettings: React.FC = () => {
           checked={analyticsEnabled}
           onChange={handleAnalyticsChange}
         />
+      </SettingsCard>
+
+      <SettingsCard title="Profile stats visibility" description="Your Memory Stats card is always private to you. Check any of these to also show them on your public profile — everything starts unchecked.">
+        {visibleStats === null ? (
+          <div className="flex flex-col gap-2">
+            {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-10 rounded-xl bg-gray-50 dark:bg-gray-800 animate-pulse" />)}
+          </div>
+        ) : (
+          PROFILE_STAT_KEYS.map(key => (
+            <ToggleRow
+              key={key}
+              label={PROFILE_STAT_META[key].label}
+              description={PROFILE_STAT_META[key].description}
+              checked={visibleStats.includes(key)}
+              onChange={next => handleStatVisibilityChange(key, next)}
+            />
+          ))
+        )}
       </SettingsCard>
 
       <SettingsCard title="Download my data" description="A full export of your memories and account data.">

@@ -128,10 +128,24 @@ export interface MemoryStats {
 // get_public_stats(user_id) — what anyone is allowed to know about
 // someone else. Never leaks locked content, private/only-me/followers
 // visibility, saved-to-unlock, views, reactions, or comments.
+// The 10 fields beyond public_memories_count/followers_count/
+// following_count are only ever non-null if the profile owner opted
+// that specific stat into public visibility (Settings → Privacy) —
+// null means "hidden," not "zero."
 export interface PublicStats {
   public_memories_count: number;
   followers_count: number;
   following_count: number;
+  total_drops: number | null;
+  locked_items: number | null;
+  unlocked_items: number | null;
+  expired_moments: number | null;
+  saved_to_unlock: number | null;
+  public_drops: number | null;
+  total_views: number | null;
+  total_unlocks: number | null;
+  total_reactions: number | null;
+  total_comments: number | null;
 }
 
 export const HIGHLIGHT_META: Record<HighlightType, { label: string; description: string }> = {

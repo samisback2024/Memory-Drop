@@ -1,6 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { UserX, Clock, Globe2, Users, UserPlus, Pin, Send, Activity as ActivityIcon } from 'lucide-react';
+import {
+  UserX, Clock, Globe2, Users, UserPlus, Pin, Send, Activity as ActivityIcon,
+  Lock, Unlock, Archive, Bookmark, Eye, KeyRound, Heart, MessageCircle,
+} from 'lucide-react';
+import { PROFILE_STAT_META, type ProfileStatKey } from '../types/settings';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { useSocial } from '../hooks/useSocial';
@@ -37,6 +41,22 @@ interface PublicProfile {
   created_at: string;
   is_own_profile: boolean;
 }
+
+// Icons matching ProfileStatsCard's own choices, for the same stats
+// shown here only once their owner opts each one into public
+// visibility (Settings → Privacy → Profile stats visibility).
+const EXTRA_STAT_ICONS: Record<ProfileStatKey, typeof Lock> = {
+  total_drops: Globe2,
+  locked_items: Lock,
+  unlocked_items: Unlock,
+  expired_moments: Archive,
+  saved_to_unlock: Bookmark,
+  public_drops: Globe2,
+  total_views: Eye,
+  total_unlocks: KeyRound,
+  total_reactions: Heart,
+  total_comments: MessageCircle,
+};
 
 type FetchState = 'loading' | 'ready' | 'not_found' | 'error';
 
@@ -158,21 +178,35 @@ export const PublicProfilePage: React.FC = () => {
             <BadgesAndAchievements />
 
             {user && publicStats && (
-              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 flex items-center gap-6">
-                <div className="flex flex-col items-center gap-0.5">
-                  <Globe2 size={14} className="text-purple-500" aria-hidden="true" />
-                  <span className="text-base font-bold text-gray-900 dark:text-gray-100">{publicStats.public_memories_count}</span>
-                  <span className="text-[10px] text-gray-400">Public memories</span>
-                </div>
-                <div className="flex flex-col items-center gap-0.5">
-                  <Users size={14} className="text-purple-500" aria-hidden="true" />
-                  <span className="text-base font-bold text-gray-900 dark:text-gray-100">{publicStats.followers_count}</span>
-                  <span className="text-[10px] text-gray-400">Followers</span>
-                </div>
-                <div className="flex flex-col items-center gap-0.5">
-                  <UserPlus size={14} className="text-purple-500" aria-hidden="true" />
-                  <span className="text-base font-bold text-gray-900 dark:text-gray-100">{publicStats.following_count}</span>
-                  <span className="text-[10px] text-gray-400">Following</span>
+              <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4">
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                  <div className="flex flex-col items-center gap-1 rounded-xl bg-gray-50 dark:bg-gray-800 py-3 px-1 text-center">
+                    <Globe2 size={14} className="text-purple-500" aria-hidden="true" />
+                    <span className="text-base font-bold text-gray-900 dark:text-gray-100">{publicStats.public_memories_count}</span>
+                    <span className="text-[10px] text-gray-400 dark:text-gray-500 leading-tight">Public memories</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-1 rounded-xl bg-gray-50 dark:bg-gray-800 py-3 px-1 text-center">
+                    <Users size={14} className="text-purple-500" aria-hidden="true" />
+                    <span className="text-base font-bold text-gray-900 dark:text-gray-100">{publicStats.followers_count}</span>
+                    <span className="text-[10px] text-gray-400 dark:text-gray-500 leading-tight">Followers</span>
+                  </div>
+                  <div className="flex flex-col items-center gap-1 rounded-xl bg-gray-50 dark:bg-gray-800 py-3 px-1 text-center">
+                    <UserPlus size={14} className="text-purple-500" aria-hidden="true" />
+                    <span className="text-base font-bold text-gray-900 dark:text-gray-100">{publicStats.following_count}</span>
+                    <span className="text-[10px] text-gray-400 dark:text-gray-500 leading-tight">Following</span>
+                  </div>
+                  {(Object.keys(PROFILE_STAT_META) as ProfileStatKey[])
+                    .filter(key => publicStats[key] !== null)
+                    .map(key => {
+                      const Icon = EXTRA_STAT_ICONS[key];
+                      return (
+                        <div key={key} className="flex flex-col items-center gap-1 rounded-xl bg-gray-50 dark:bg-gray-800 py-3 px-1 text-center">
+                          <Icon size={14} className="text-purple-500" aria-hidden="true" />
+                          <span className="text-base font-bold text-gray-900 dark:text-gray-100">{publicStats[key]}</span>
+                          <span className="text-[10px] text-gray-400 dark:text-gray-500 leading-tight">{PROFILE_STAT_META[key].label}</span>
+                        </div>
+                      );
+                    })}
                 </div>
               </div>
             )}

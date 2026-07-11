@@ -17,10 +17,32 @@ export interface UserSettings {
   messaging_privacy: MessagingPrivacy;
   allow_message_requests: boolean;
   analytics_enabled: boolean;
+  visible_stats: ProfileStatKey[];
   password_changed_at: string | null;
   created_at: string;
   updated_at: string;
 }
+
+// The 10 Memory Stats tiles a profile owner can opt into showing on
+// their public profile — followers/following stay unconditionally
+// public (a separate, already-existing display) and aren't part of
+// this list.
+export type ProfileStatKey =
+  | 'total_drops' | 'locked_items' | 'unlocked_items' | 'expired_moments' | 'saved_to_unlock'
+  | 'public_drops' | 'total_views' | 'total_unlocks' | 'total_reactions' | 'total_comments';
+
+export const PROFILE_STAT_META: Record<ProfileStatKey, { label: string; description: string }> = {
+  total_drops: { label: 'Drops', description: 'Total number of Drops you\'ve made.' },
+  locked_items: { label: 'Locked', description: 'How many of your memories are still sealed.' },
+  unlocked_items: { label: 'Unlocked', description: 'How many of your memories have unlocked.' },
+  expired_moments: { label: 'Expired moments', description: 'How many Moments you\'ve posted that have expired.' },
+  saved_to_unlock: { label: 'Saved to unlock', description: 'How many Drops you\'ve saved to unlock later.' },
+  public_drops: { label: 'Public drops', description: 'How many of your Drops are set to Everyone.' },
+  total_views: { label: 'Views received', description: 'Total views across everything you\'ve unlocked or posted.' },
+  total_unlocks: { label: 'Unlocks received', description: 'How many times your content has been unlocked by others.' },
+  total_reactions: { label: 'Reactions received', description: 'Likes and reactions across all your content.' },
+  total_comments: { label: 'Comments received', description: 'Comments and replies across all your content.' },
+};
 
 export interface NotificationPreferences {
   user_id: string;
