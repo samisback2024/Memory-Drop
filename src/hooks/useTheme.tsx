@@ -1,11 +1,12 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useAuth } from './useAuth';
 import { useSettings } from './useSettings';
-import { FONT_SIZE_META, type Theme, type FontSize, type ColorTheme } from '../types/settings';
+import { FONT_SIZE_META, type Theme, type FontSize, type ColorHue } from '../types/settings';
 
 interface AppearanceState {
   theme: Theme;
-  colorTheme: ColorTheme;
+  colorPrimary: ColorHue;
+  colorSecondary: ColorHue;
   fontSize: FontSize;
   reducedMotion: boolean;
   highContrast: boolean;
@@ -14,7 +15,7 @@ interface AppearanceState {
 
 interface ThemeContextType extends AppearanceState {
   setTheme: (theme: Theme) => void;
-  setColorTheme: (colorTheme: ColorTheme) => void;
+  setColorPair: (primary: ColorHue, secondary: ColorHue) => void;
   setFontSize: (size: FontSize) => void;
   setReducedMotion: (value: boolean) => void;
   setHighContrast: (value: boolean) => void;
@@ -22,7 +23,10 @@ interface ThemeContextType extends AppearanceState {
 }
 
 const STORAGE_KEY = 'memorydrop_appearance';
-const DEFAULT_STATE: AppearanceState = { theme: 'system', colorTheme: 'classic', fontSize: 'medium', reducedMotion: false, highContrast: false, largerTouchTargets: false };
+const DEFAULT_STATE: AppearanceState = {
+  theme: 'system', colorPrimary: 'classic_purple', colorSecondary: 'classic_blue',
+  fontSize: 'medium', reducedMotion: false, highContrast: false, largerTouchTargets: false,
+};
 
 const readLocal = (): AppearanceState => {
   try {
@@ -39,7 +43,8 @@ const applyToDocument = (state: AppearanceState) => {
   const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   const isDark = state.theme === 'dark' || (state.theme === 'system' && prefersDark);
   root.classList.toggle('dark', isDark);
-  root.setAttribute('data-color-theme', state.colorTheme);
+  root.setAttribute('data-primary', state.colorPrimary);
+  root.setAttribute('data-secondary', state.colorSecondary);
   root.classList.toggle('md-reduced-motion', state.reducedMotion);
   root.classList.toggle('md-high-contrast', state.highContrast);
   root.classList.toggle('md-large-touch', state.largerTouchTargets);
@@ -76,7 +81,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (cancelled || !settings) return;
       setState({
         theme: settings.theme,
-        colorTheme: settings.color_theme,
+        colorPrimary: settings.color_theme_primary,
+        colorSecondary: settings.color_theme_secondary,
         fontSize: settings.font_size,
         reducedMotion: settings.reduced_motion,
         highContrast: settings.high_contrast,
@@ -95,7 +101,10 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const value: ThemeContextType = {
     ...state,
     setTheme: theme => persist({ theme }, { theme }),
-    setColorTheme: colorTheme => persist({ colorTheme }, { color_theme: colorTheme }),
+    setColorPair: (primary, secondary) => persist(
+      { colorPrimary: primary, colorSecondary: secondary },
+      { color_theme_primary: primary, color_theme_secondary: secondary },
+    ),
     setFontSize: fontSize => persist({ fontSize }, { font_size: fontSize }),
     setReducedMotion: reducedMotion => persist({ reducedMotion }, { reduced_motion: reducedMotion }),
     setHighContrast: highContrast => persist({ highContrast }, { high_contrast: highContrast }),

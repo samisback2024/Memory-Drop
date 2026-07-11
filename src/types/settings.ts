@@ -5,25 +5,51 @@ import type { MessagingPrivacy } from './message';
 export type Theme = 'light' | 'dark' | 'system';
 export type FontSize = 'small' | 'medium' | 'large' | 'xlarge';
 
-// The four selectable accent palettes — "purple"/"blue" in Tailwind
-// classes app-wide resolve to whichever of these is active, via CSS
-// variables (src/index.css) swapped by a data-color-theme attribute
-// (src/hooks/useTheme.tsx). See index.css for the full rationale.
-export type ColorTheme = 'classic' | 'ink_claret' | 'riviera' | 'grand_prix';
+// Twelve named hues, any of which can fill either the PRIMARY or
+// SECONDARY slot ("purple"/"blue" in Tailwind classes app-wide — see
+// index.css for why those names stuck) — mix and match, not fixed
+// pairs. The last four (amber/graphite/forest/plum) are designed
+// around this app's own concept rather than more red/white/blue:
+// amber for the unlock-reveal moment, graphite for a clean minimal-
+// professional look, forest/plum for two calmer editorial directions.
+export type ColorHue =
+  | 'classic_purple' | 'classic_blue' | 'navy' | 'claret' | 'cornflower' | 'terracotta'
+  | 'royal_blue' | 'scarlet' | 'amber' | 'graphite' | 'forest' | 'plum';
 
-export const COLOR_THEME_META: Record<ColorTheme, { label: string; description: string; primary: string; secondary: string }> = {
-  classic: { label: 'Classic', description: 'The original Memory Drop purple-to-blue.', primary: '#9333ea', secondary: '#3b82f6' },
-  ink_claret: { label: 'Ink & Claret', description: 'Quiet navy with a claret accent.', primary: '#24387a', secondary: '#9b273a' },
-  riviera: { label: 'Riviera', description: 'Warm cornflower and terracotta.', primary: '#345c8d', secondary: '#993f29' },
-  grand_prix: { label: 'Grand Prix', description: 'Bold royal blue and true red.', primary: '#0e42b4', secondary: '#ae131e' },
+export const COLOR_HUE_META: Record<ColorHue, { label: string; swatch: string }> = {
+  classic_purple: { label: 'Classic Purple', swatch: '#9333ea' },
+  classic_blue: { label: 'Classic Blue', swatch: '#2563eb' },
+  navy: { label: 'Navy', swatch: '#3b56b0' },
+  claret: { label: 'Claret', swatch: '#b93148' },
+  cornflower: { label: 'Cornflower', swatch: '#4270a9' },
+  terracotta: { label: 'Terracotta', swatch: '#b64f35' },
+  royal_blue: { label: 'Royal Blue', swatch: '#1552d5' },
+  scarlet: { label: 'Scarlet', swatch: '#d11a26' },
+  amber: { label: 'Amber', swatch: '#d58f15' },
+  graphite: { label: 'Graphite', swatch: '#677083' },
+  forest: { label: 'Forest', swatch: '#3fab79' },
+  plum: { label: 'Plum', swatch: '#a942a9' },
 };
+
+// One-tap curated combinations — a starting point, not the only
+// option. "Memory Gold" and "Sage & Plum" are new, built specifically
+// to feel like this product rather than a generic palette.
+export const SIGNATURE_PAIRS: { label: string; description: string; primary: ColorHue; secondary: ColorHue }[] = [
+  { label: 'Classic', description: "The original Memory Drop purple-to-blue.", primary: 'classic_purple', secondary: 'classic_blue' },
+  { label: 'Ink & Claret', description: 'Quiet navy with a claret accent.', primary: 'navy', secondary: 'claret' },
+  { label: 'Riviera', description: 'Warm cornflower and terracotta.', primary: 'cornflower', secondary: 'terracotta' },
+  { label: 'Grand Prix', description: 'Bold royal blue and true red.', primary: 'royal_blue', secondary: 'scarlet' },
+  { label: 'Memory Gold', description: 'Amber unlock-gold on graphite — this app\'s own signature.', primary: 'graphite', secondary: 'amber' },
+  { label: 'Sage & Plum', description: 'Calm forest green with a plum accent.', primary: 'forest', secondary: 'plum' },
+];
 
 export interface UserSettings {
   user_id: string;
   default_drop_visibility: Visibility;
   default_moment_visibility: MomentPrivacy;
   theme: Theme;
-  color_theme: ColorTheme;
+  color_theme_primary: ColorHue;
+  color_theme_secondary: ColorHue;
   font_size: FontSize;
   reduced_motion: boolean;
   high_contrast: boolean;
