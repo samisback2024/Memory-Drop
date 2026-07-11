@@ -40,6 +40,17 @@ export interface Memory {
   created_at: string;
 }
 
+export type MemoryActivityType = 'dropped' | 'unlocked' | 'saved';
+
+// Same row shape as Memory, plus which event this is and when it
+// happened — a single Drop can appear once per activity type across
+// different days (dropped on day X, unlocked on day Y, saved by you
+// on day Z), so this is intentionally not deduplicated by id.
+export interface MemoryActivity extends Memory {
+  activity_type: MemoryActivityType;
+  activity_at: string;
+}
+
 export interface MemoryFilters {
   search: string;
   lockStatus: 'locked' | 'unlocked' | null;

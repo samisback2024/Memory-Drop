@@ -7,7 +7,7 @@ import { useDrops } from './useDrops';
 import type { AuthResult } from '../types/auth';
 import type {
   Memory, MemoryFilters, MemoryCollection, Flashback, HighlightCandidate, HighlightType, MemoryStreak,
-  MemoryStats, PublicStats, MemorySort, MemorySourceType, PinnedMemory, ActivityItem,
+  MemoryStats, PublicStats, MemorySort, MemorySourceType, PinnedMemory, ActivityItem, MemoryActivity, MemoryActivityType,
 } from '../types/memory';
 
 // Reads all go through get_memories()/get_memory() and friends — the one
@@ -69,12 +69,22 @@ export const useMemories = () => {
     return data[0] as Memory;
   }, []);
 
-  const getMemoryCalendar = useCallback(async (year: number, month: number): Promise<Record<number, number>> => {
-    const { data, error } = await supabase.rpc('get_memory_calendar', { p_year: year, p_month: month });
+  // Per-day activity-type breakdown for the month grid's dots — a day
+  // can have any combination of dropped/unlocked/saved.
+  const getMemoryActivityCalendar = useCallback(async (year: number, month: number): Promise<Record<number, MemoryActivityType[]>> => {
+    const { data, error } = await supabase.rpc('get_memory_activity_calendar', { p_year: year, p_month: month });
     if (error || !data) return {};
-    const map: Record<number, number> = {};
-    for (const row of data as { day: number; memory_count: number }[]) map[row.day] = row.memory_count;
+    const map: Record<number, MemoryActivityType[]> = {};
+    for (const row of data as { day: number; activity_type: MemoryActivityType; item_count: number }[]) {
+      (map[row.day] ??= []).push(row.activity_type);
+    }
     return map;
+  }, []);
+
+  const getMemoryActivityDay = useCallback(async (year: number, month: number, day: number): Promise<MemoryActivity[]> => {
+    const { data, error } = await supabase.rpc('get_memory_activity_day', { p_year: year, p_month: month, p_day: day });
+    if (error || !data) return [];
+    return data as MemoryActivity[];
   }, []);
 
   const getMemoryYearCounts = useCallback(async (): Promise<{ year: number; memory_count: number }[]> => {
@@ -284,7 +294,8 @@ export const useMemories = () => {
     getMemories,
     getArchivedMemories,
     getMemory,
-    getMemoryCalendar,
+    getMemoryActivityCalendar,
+    getMemoryActivityDay,
     getMemoryYearCounts,
     getFlashbacks,
     dismissFlashback,
