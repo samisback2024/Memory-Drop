@@ -105,7 +105,7 @@ export const EditProfilePage: React.FC = () => {
         Back to profile
       </Link>
 
-      <h1 className="text-lg font-bold text-gray-900 -mb-1">Edit profile</h1>
+      <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 -mb-1">Edit profile</h1>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
         <SectionCard title="Photos">

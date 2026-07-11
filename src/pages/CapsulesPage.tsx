@@ -94,7 +94,7 @@ export const CapsulesPage: React.FC = () => {
     <div className="flex flex-col gap-4 -mx-4 px-4 -mt-6 pt-6 pb-6 bg-gradient-to-b from-purple-50/60 via-transparent to-transparent min-h-[calc(100vh-4rem)]">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-gray-900 flex items-center gap-2">
+          <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
             <Clock size={20} className="text-purple-500" aria-hidden="true" />
             Time Capsules
           </h1>

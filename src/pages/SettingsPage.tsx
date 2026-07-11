@@ -54,7 +54,7 @@ export const SettingsPage: React.FC = () => {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Settings</h1>
+        <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">Settings</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Your account, your privacy, your app.</p>
       </div>
 

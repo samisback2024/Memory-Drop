@@ -32,7 +32,7 @@ export const DashboardPage: React.FC = () => {
         <div className="flex items-center gap-4 min-w-0">
           <Avatar src={profile?.profile_photo_url} name={displayName} size="2xl" ring />
           <div className="min-w-0">
-            <h1 className="text-xl font-bold text-gray-900 truncate">Welcome back, {displayName} 👋</h1>
+            <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 truncate">Welcome back, {displayName} 👋</h1>
             {profile?.username && <p className="text-sm text-gray-500 truncate">@{profile.username}</p>}
           </div>
         </div>

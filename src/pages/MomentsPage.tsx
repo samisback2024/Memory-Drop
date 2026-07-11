@@ -19,7 +19,7 @@ export const MomentsPage: React.FC = () => {
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-gray-900">Your Moments</h1>
+          <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">Your Moments</h1>
           <p className="text-sm text-gray-500 mt-0.5">Active and expired — this view is only ever yours.</p>
         </div>
         <Button variant="gradient" size="sm" onClick={() => navigate('/moments/create')}>

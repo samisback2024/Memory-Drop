@@ -30,7 +30,7 @@ export const FriendRequestsPage: React.FC = () => {
         <ArrowLeft size={15} aria-hidden="true" />
         Back to friends
       </Link>
-      <h1 className="text-lg font-bold text-gray-900 -mb-1">Follow requests</h1>
+      <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 -mb-1">Follow requests</h1>
 
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
         <h2 className="text-sm font-semibold text-gray-900 mb-1">Requests</h2>

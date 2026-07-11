@@ -29,7 +29,7 @@ export const FriendsPage: React.FC = () => {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <h1 className="text-lg font-bold text-gray-900">Friends</h1>
+        <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">Friends</h1>
         <nav className="flex items-center gap-2 text-sm">
           <Link to="/followers" className="text-purple-600 hover:text-purple-700 font-medium">Followers</Link>
           <span className="text-gray-300">·</span>
