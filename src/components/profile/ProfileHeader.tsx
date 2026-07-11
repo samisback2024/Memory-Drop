@@ -52,14 +52,10 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = React.memo(({ profile
             Edit Profile
           </Button>
         )}
-      </div>
 
-      <div className="px-5 pb-5">
-        {/* Centered square avatar, its vertical center resting exactly on
-            the seam between the cover photo and this white panel — half
-            the 96px (2xl) avatar overlaps the cover above, half sits on
-            the panel below. */}
-        <div className="flex justify-center -mt-12 mb-4">
+        {/* Fully on the cover photo, centered, its bottom edge flush with
+            the cover's own bottom edge — not straddling the seam. */}
+        <div className="absolute bottom-0 left-1/2 -translate-x-1/2">
           {hasActiveMoments ? (
             <button
               type="button"
@@ -87,7 +83,9 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = React.memo(({ profile
             />
           )}
         </div>
+      </div>
 
+      <div className="px-5 pt-3 pb-5">
         <div className="mb-3">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">{displayName}</h1>
