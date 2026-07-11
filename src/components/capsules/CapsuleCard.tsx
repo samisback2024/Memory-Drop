@@ -1,8 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, MessageCircle, Feather, Bookmark, Share2, MoreHorizontal, Trash2, User } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useCapsules } from '../../hooks/useCapsules';
+import { useDismissableMenu } from '../../hooks/useDismissableMenu';
 import { Avatar } from '../ui/Avatar';
 import { Modal } from '../ui/Modal';
 import { CapsuleLockedCard } from './CapsuleLockedCard';
@@ -45,17 +46,11 @@ const CapsuleCardImpl: React.FC<CapsuleCardProps> = ({ capsule, onDeleted }) => 
   const [likePopKey, setLikePopKey] = useState(0);
   const [showLikeFloat, setShowLikeFloat] = useState(false);
   const [announcement, setAnnouncement] = useState('');
-  const menuRef = useRef<HTMLDivElement>(null);
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
+  const menuRef = useDismissableMenu<HTMLDivElement>(menuOpen, closeMenu);
   const pendingRevealRef = useRef<Capsule | null>(null);
 
   const patchContent = (patch: Partial<Capsule>) => setContent(c => ({ ...c, ...patch }));
-
-  useEffect(() => {
-    if (!menuOpen) return;
-    const handleClick = (e: MouseEvent) => { if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false); };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [menuOpen]);
 
   const handleOpenCapsule = async () => {
     setAnimating(true);

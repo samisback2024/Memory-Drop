@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Bell, CheckCheck } from 'lucide-react';
 import { useNotifications } from '../../hooks/useNotifications';
+import { useDismissableMenu } from '../../hooks/useDismissableMenu';
 import { NotificationItem } from './NotificationItem';
 import { EmptyState } from '../ui/EmptyState';
 import type { Notification } from '../../types/notification';
@@ -19,25 +20,14 @@ export const NotificationBell: React.FC = () => {
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const close = useCallback(() => setOpen(false), []);
+  const ref = useDismissableMenu<HTMLDivElement>(open, close);
 
   useEffect(() => {
     if (!open) return;
     setLoading(true);
     getNotifications('all', PREVIEW_SIZE, 0).then(data => { setItems(data); setLoading(false); });
   }, [open, getNotifications]);
-
-  useEffect(() => {
-    if (!open) return;
-    const handleClick = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
-    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
-    document.addEventListener('mousedown', handleClick);
-    document.addEventListener('keydown', handleKey);
-    return () => {
-      document.removeEventListener('mousedown', handleClick);
-      document.removeEventListener('keydown', handleKey);
-    };
-  }, [open]);
 
   const handleOpenItem = (id: string, wasUnread: boolean) => {
     if (wasUnread) {

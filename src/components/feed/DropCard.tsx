@@ -1,8 +1,9 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Lock, Globe2, Users, MoreHorizontal, Flag, EyeOff, User, Trash2 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useDrops } from '../../hooks/useDrops';
+import { useDismissableMenu } from '../../hooks/useDismissableMenu';
 import { Avatar } from '../ui/Avatar';
 import { ImageGrid } from './ImageGrid';
 import { VideoPlayer } from './VideoPlayer';
@@ -39,24 +40,11 @@ const DropCardImpl: React.FC<DropCardProps> = ({ drop, onDeleted, onHidden, onUn
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [justUnlocked, setJustUnlocked] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
+  const menuRef = useDismissableMenu<HTMLDivElement>(menuOpen, closeMenu);
   const viewRecorded = useRef(false);
 
   const patchContent = (patch: Partial<Drop>) => setContent(c => ({ ...c, ...patch }));
-
-  useEffect(() => {
-    if (!menuOpen) return;
-    const handleClick = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false);
-    };
-    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuOpen(false); };
-    document.addEventListener('mousedown', handleClick);
-    document.addEventListener('keydown', handleKey);
-    return () => {
-      document.removeEventListener('mousedown', handleClick);
-      document.removeEventListener('keydown', handleKey);
-    };
-  }, [menuOpen]);
 
   // Groundwork for a future "X unlocked your drop" notification (Phase 9)
   // — best-effort, fire-and-forget, once per mount. Never fires for your

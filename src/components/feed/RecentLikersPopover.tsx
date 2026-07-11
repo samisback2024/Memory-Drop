@@ -1,6 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useComments } from '../../hooks/useComments';
+import { useDismissableMenu } from '../../hooks/useDismissableMenu';
 import { Avatar } from '../ui/Avatar';
 import type { CommentContentType, RecentLiker } from '../../types/comment';
 
@@ -19,14 +20,8 @@ export const RecentLikersPopover: React.FC<RecentLikersPopoverProps> = ({ conten
   const [open, setOpen] = useState(false);
   const [likers, setLikers] = useState<RecentLiker[]>([]);
   const [loading, setLoading] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const handleClick = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false); };
-    document.addEventListener('mousedown', handleClick);
-    return () => document.removeEventListener('mousedown', handleClick);
-  }, [open]);
+  const close = useCallback(() => setOpen(false), []);
+  const ref = useDismissableMenu<HTMLSpanElement>(open, close);
 
   const toggle = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -45,15 +40,15 @@ export const RecentLikersPopover: React.FC<RecentLikersPopoverProps> = ({ conten
     <span className="relative" ref={ref}>
       <button type="button" onClick={toggle} className="hover:underline">{count}</button>
       {open && (
-        <div className="absolute left-0 top-6 z-30 w-56 bg-white border border-gray-100 rounded-xl shadow-lg p-2 animate-fade-in">
+        <div className="absolute left-0 top-6 z-30 w-56 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl shadow-lg p-2 animate-fade-in">
           {loading ? (
-            <p className="text-xs text-gray-400 px-2 py-1">Loading...</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 px-2 py-1">Loading...</p>
           ) : likers.length === 0 ? (
-            <p className="text-xs text-gray-400 px-2 py-1">No one yet.</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 px-2 py-1">No one yet.</p>
           ) : (
             <div className="flex flex-col gap-1 max-h-48 overflow-y-auto">
               {likers.map(l => (
-                <Link key={l.user_id} to={`/u/${l.username}`} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-50 text-sm text-gray-700">
+                <Link key={l.user_id} to={`/u/${l.username}`} className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 text-sm text-gray-700 dark:text-gray-300">
                   <Avatar src={l.profile_photo_url} name={l.display_name || l.username} size="xs" />
                   <span className="truncate">{l.display_name || l.username}</span>
                 </Link>

@@ -1,7 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { Rss, Clock, Plus, BookHeart, User, Sparkles, PackageOpen, X } from 'lucide-react';
 import { DropComposer } from '../feed/DropComposer';
+import { useDismissableMenu } from '../../hooks/useDismissableMenu';
 
 const NAV_LINKS = [
   { to: '/feed', label: 'Feed', icon: Rss },
@@ -29,19 +30,8 @@ export const MobileNav: React.FC = () => {
   const navigate = useNavigate();
   const [createOpen, setCreateOpen] = useState(false);
   const [dropComposerOpen, setDropComposerOpen] = useState(false);
-  const sheetRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!createOpen) return;
-    const handleClick = (e: MouseEvent) => { if (sheetRef.current && !sheetRef.current.contains(e.target as Node)) setCreateOpen(false); };
-    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setCreateOpen(false); };
-    document.addEventListener('mousedown', handleClick);
-    document.addEventListener('keydown', handleKey);
-    return () => {
-      document.removeEventListener('mousedown', handleClick);
-      document.removeEventListener('keydown', handleKey);
-    };
-  }, [createOpen]);
+  const closeSheet = useCallback(() => setCreateOpen(false), []);
+  const sheetRef = useDismissableMenu<HTMLDivElement>(createOpen, closeSheet);
 
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     `flex flex-col items-center justify-center gap-0.5 flex-1 min-w-0 py-1.5 text-[10px] font-medium transition-colors focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none rounded-lg ${

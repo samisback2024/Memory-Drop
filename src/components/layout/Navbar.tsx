@@ -1,8 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { Rss, Clock, BookHeart, Search, Compass, Users, User, LayoutGrid, Bookmark, Sparkles, Settings, LogOut, ChevronDown } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useSocial } from '../../hooks/useSocial';
+import { useDismissableMenu } from '../../hooks/useDismissableMenu';
 import { Avatar } from '../ui/Avatar';
 import { NotificationBell } from '../notifications/NotificationBell';
 import { MessagesNavButton } from '../messages/MessagesNavButton';
@@ -28,26 +29,12 @@ export const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const closeDropdown = useCallback(() => setDropdownOpen(false), []);
+  const dropdownRef = useDismissableMenu<HTMLDivElement>(dropdownOpen, closeDropdown);
 
   useEffect(() => {
     getPendingRequestsReceived().then(rows => setPendingCount(rows.length));
   }, [getPendingRequestsReceived]);
-
-  useEffect(() => {
-    const handleClick = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) setDropdownOpen(false);
-    };
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setDropdownOpen(false);
-    };
-    document.addEventListener('mousedown', handleClick);
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('mousedown', handleClick);
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, []);
 
   const handleSignOut = async () => {
     await signOut();

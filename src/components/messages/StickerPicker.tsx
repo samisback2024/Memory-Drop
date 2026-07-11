@@ -1,6 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Sticker as StickerIcon } from 'lucide-react';
 import { STICKERS } from '../../types/message';
+import { useDismissableMenu } from '../../hooks/useDismissableMenu';
 
 interface StickerPickerProps {
   onSelect: (emoji: string) => void;
@@ -12,21 +13,8 @@ interface StickerPickerProps {
 // (see MessageBubble), not a different underlying send mechanism.
 export const StickerPicker: React.FC<StickerPickerProps> = ({ onSelect }) => {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const handleClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
-    document.addEventListener('mousedown', handleClick);
-    document.addEventListener('keydown', handleKey);
-    return () => {
-      document.removeEventListener('mousedown', handleClick);
-      document.removeEventListener('keydown', handleKey);
-    };
-  }, [open]);
+  const close = useCallback(() => setOpen(false), []);
+  const ref = useDismissableMenu<HTMLDivElement>(open, close);
 
   return (
     <div className="relative" ref={ref}>

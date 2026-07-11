@@ -1,6 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { MoreHorizontal, UserMinus, VolumeX, Volume2, ShieldOff, Shield, Ban, ShieldCheck } from 'lucide-react';
 import { useSocial } from '../../hooks/useSocial';
+import { useDismissableMenu } from '../../hooks/useDismissableMenu';
 
 interface RelationshipMenuProps {
   targetId: string;
@@ -24,25 +25,12 @@ export const RelationshipMenu: React.FC<RelationshipMenuProps> = ({
   const [muted, setMuted] = useState(isMuted);
   const [restricted, setRestricted] = useState(isRestricted);
   const [blocked, setBlocked] = useState(isBlocked);
-  const ref = useRef<HTMLDivElement>(null);
+  const closeMenu = useCallback(() => setOpen(false), []);
+  const ref = useDismissableMenu<HTMLDivElement>(open, closeMenu);
 
   useEffect(() => { setMuted(isMuted); }, [isMuted]);
   useEffect(() => { setRestricted(isRestricted); }, [isRestricted]);
   useEffect(() => { setBlocked(isBlocked); }, [isBlocked]);
-
-  useEffect(() => {
-    if (!open) return;
-    const handleClick = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    const handleKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); };
-    document.addEventListener('mousedown', handleClick);
-    document.addEventListener('keydown', handleKey);
-    return () => {
-      document.removeEventListener('mousedown', handleClick);
-      document.removeEventListener('keydown', handleKey);
-    };
-  }, [open]);
 
   const toggleMute = async () => {
     setOpen(false);
