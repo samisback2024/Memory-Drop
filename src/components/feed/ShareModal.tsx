@@ -135,7 +135,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
         </button>
         {qrOpen && (
           <div className="flex justify-center py-2">
-            <img src={buildQrCodeUrl(shareUrl)} alt={`QR code linking to ${shareUrl}`} width={180} height={180} className="rounded-lg border border-gray-100" />
+            <img src={buildQrCodeUrl(shareUrl)} alt={`QR code linking to ${shareUrl}`} width={180} height={180} className="rounded-xl border border-gray-100" />
           </div>
         )}
 

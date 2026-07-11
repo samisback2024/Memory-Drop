@@ -84,7 +84,7 @@ const MessageBubbleImpl: React.FC<MessageBubbleProps> = ({
         return (
           <div className="flex flex-wrap gap-1 max-w-[220px]">
             {m.attachments.map((a, i) => (
-              <button key={a.id} type="button" onClick={() => setViewerIndex(i)} className="block">
+              <button key={a.id} type="button" onClick={() => setViewerIndex(i)} className="block hover:opacity-90 transition-opacity">
                 <img src={a.thumbnail_url || a.url} alt={`Photo from ${isMine ? 'you' : otherName}`} loading="lazy" className="rounded-xl max-h-64 object-cover" />
               </button>
             ))}
@@ -95,7 +95,7 @@ const MessageBubbleImpl: React.FC<MessageBubbleProps> = ({
         return (
           <div className="max-w-[240px]">
             {m.attachments.map((a, i) => (
-              <button key={a.id} type="button" onClick={() => setViewerIndex(i)} className="relative block rounded-xl overflow-hidden">
+              <button key={a.id} type="button" onClick={() => setViewerIndex(i)} className="relative block rounded-xl overflow-hidden hover:opacity-90 transition-opacity">
                 <video src={a.url} className="max-h-64 w-full" preload="metadata" />
                 <span className="absolute inset-0 flex items-center justify-center bg-black/20">
                   <span className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center">▶</span>
@@ -117,7 +117,7 @@ const MessageBubbleImpl: React.FC<MessageBubbleProps> = ({
       case 'file': {
         const a = m.attachments[0];
         return (
-          <a href={a?.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 min-w-[180px]">
+          <a href={a?.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2.5 min-w-[180px] hover:opacity-80 transition-opacity">
             <FileText size={22} className="flex-shrink-0" aria-hidden="true" />
             <span className="flex-1 min-w-0 truncate text-sm">{m.content || 'File'}</span>
             <Download size={15} className="flex-shrink-0" aria-hidden="true" />
