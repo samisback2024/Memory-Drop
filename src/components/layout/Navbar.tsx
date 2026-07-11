@@ -144,17 +144,10 @@ export const Navbar: React.FC = () => {
                 <div className="py-1">
                   <button
                     role="menuitem"
-                    onClick={() => { navigate('/dashboard'); setDropdownOpen(false); }}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
-                    <LayoutGrid size={15} aria-hidden="true" /> Dashboard
-                  </button>
-                  <button
-                    role="menuitem"
                     onClick={() => { navigate('/profile'); setDropdownOpen(false); }}
                     className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                   >
-                    <User size={15} aria-hidden="true" /> Profile
+                    <LayoutGrid size={15} aria-hidden="true" /> Dashboard
                   </button>
                   <button
                     role="menuitem"
