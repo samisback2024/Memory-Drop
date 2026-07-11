@@ -3,6 +3,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { SettingsSection } from './SettingsSection';
 import { SettingsCard } from './SettingsCard';
 import { ThemeSelector } from './ThemeSelector';
+import { ColorThemeSelector } from './ColorThemeSelector';
 import { ToggleRow } from './ToggleRow';
 
 // "Reduce animations" here and Accessibility's "Reduced motion" toggle
@@ -16,6 +17,9 @@ export const AppearanceSettings: React.FC = () => {
     <SettingsSection title="Appearance" description="How Memory Drop looks.">
       <SettingsCard title="Theme">
         <ThemeSelector />
+      </SettingsCard>
+      <SettingsCard title="Color theme" description="Changes the accent color across the whole app.">
+        <ColorThemeSelector />
       </SettingsCard>
       <SettingsCard>
         <ToggleRow

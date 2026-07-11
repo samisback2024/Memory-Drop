@@ -30,6 +30,69 @@ input[type='date']::-webkit-calendar-picker-indicator { cursor: pointer; }
 input[type='datetime-local']::-webkit-calendar-picker-indicator { cursor: pointer; }
 
 /* --------------------------------------------------------------------
+ * Color themes (Phase 14) — every component in this app was written
+ * against Tailwind's stock `purple`/`blue` classes (bg-purple-600,
+ * dark:bg-purple-950/30, from-purple-600 to-blue-500, ...). Rather than
+ * rewrite ~110 files, tailwind.config.js points the `purple` and `blue`
+ * color families at these CSS variables instead of static hex, so every
+ * existing class keeps working unchanged — switching the theme is just
+ * swapping which set of variables is active, via a `data-color-theme`
+ * attribute on <html> (set by useTheme.tsx, persisted to
+ * user_settings.color_theme). "purple" now means each theme's PRIMARY
+ * color and "blue" means its SECONDARY — those two slot names are a
+ * deliberate holdover from the original gradient, not a description of
+ * the actual hue anymore (Ink & Claret's "purple" slot is navy, for
+ * instance). Values are R G B triplets (not hex) — Tailwind's
+ * `rgb(var(--x) / <alpha-value>)` pattern needs the components
+ * separated so opacity modifiers like `purple-950/30` keep working.
+ * `:root` is "classic" — Tailwind's real default purple/blue, so a
+ * user who never touches this setting sees no change at all.
+ * ------------------------------------------------------------------ */
+:root {
+  --color-purple-50: 250 245 255; --color-purple-100: 243 232 255; --color-purple-200: 233 213 255;
+  --color-purple-300: 216 180 254; --color-purple-400: 192 132 252; --color-purple-500: 168 85 247;
+  --color-purple-600: 147 51 234; --color-purple-700: 126 34 206; --color-purple-800: 107 33 168;
+  --color-purple-900: 88 28 135; --color-purple-950: 59 7 100;
+  --color-blue-50: 239 246 255; --color-blue-100: 219 234 254; --color-blue-200: 191 219 254;
+  --color-blue-300: 147 197 253; --color-blue-400: 96 165 250; --color-blue-500: 59 130 246;
+  --color-blue-600: 37 99 235; --color-blue-700: 29 78 216; --color-blue-800: 30 64 175;
+  --color-blue-900: 30 58 138; --color-blue-950: 23 37 84;
+}
+
+[data-color-theme="ink_claret"] {
+  --color-purple-50: 244 246 251; --color-purple-100: 230 233 245; --color-purple-200: 205 212 234;
+  --color-purple-300: 169 181 218; --color-purple-400: 128 146 203; --color-purple-500: 87 112 193;
+  --color-purple-600: 59 86 176; --color-purple-700: 47 70 147; --color-purple-800: 36 56 122;
+  --color-purple-900: 29 45 98; --color-purple-950: 18 29 64;
+  --color-blue-50: 252 243 244; --color-blue-100: 247 227 231; --color-blue-200: 238 201 207;
+  --color-blue-300: 226 162 173; --color-blue-400: 212 119 135; --color-blue-500: 203 77 98;
+  --color-blue-600: 185 49 72; --color-blue-700: 155 39 58; --color-blue-800: 128 30 46;
+  --color-blue-900: 103 24 37; --color-blue-950: 67 14 23;
+}
+
+[data-color-theme="riviera"] {
+  --color-purple-50: 244 247 251; --color-purple-100: 229 236 245; --color-purple-200: 204 218 234;
+  --color-purple-300: 169 191 218; --color-purple-400: 130 162 201; --color-purple-500: 92 135 188;
+  --color-purple-600: 66 112 169; --color-purple-700: 52 92 141; --color-purple-800: 41 75 117;
+  --color-purple-900: 33 61 94; --color-purple-950: 20 39 61;
+  --color-blue-50: 252 245 243; --color-blue-100: 246 232 228; --color-blue-200: 236 209 203;
+  --color-blue-300: 221 177 166; --color-blue-400: 207 141 125; --color-blue-500: 198 106 83;
+  --color-blue-600: 182 79 53; --color-blue-700: 153 63 41; --color-blue-800: 126 51 32;
+  --color-blue-900: 102 41 26; --color-blue-950: 66 26 16;
+}
+
+[data-color-theme="grand_prix"] {
+  --color-purple-50: 242 246 252; --color-purple-100: 226 233 248; --color-purple-200: 198 211 241;
+  --color-purple-300: 156 180 232; --color-purple-400: 107 144 225; --color-purple-500: 55 109 225;
+  --color-purple-600: 21 82 213; --color-purple-700: 14 66 180; --color-purple-800: 9 54 149;
+  --color-purple-900: 8 43 120; --color-purple-950: 5 28 77;
+  --color-blue-50: 253 242 243; --color-blue-100: 249 225 227; --color-blue-200: 241 197 200;
+  --color-blue-300: 233 155 160; --color-blue-400: 226 105 113; --color-blue-500: 225 55 67;
+  --color-blue-600: 209 26 38; --color-blue-700: 174 19 30; --color-blue-800: 144 14 23;
+  --color-blue-900: 116 11 18; --color-blue-950: 74 7 12;
+}
+
+/* --------------------------------------------------------------------
  * Accessibility settings (Phase 8) — applied globally via classes on
  * <html>, toggled from Settings → Accessibility/Appearance and
  * persisted to user_settings. Unlike dark mode (which needs `dark:`

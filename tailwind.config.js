@@ -14,10 +14,24 @@ export default {
         brand: {
           purple: '#9333ea',
           blue: '#3b82f6',
-        }
+        },
+        // Every component uses stock Tailwind purple-*/blue-* classes.
+        // Redefining those two families to read from CSS variables
+        // (set in index.css, swapped via a data-color-theme attribute
+        // on <html>) makes every existing bg-purple-600/dark:bg-purple-
+        // 950/from-purple-600-to-blue-500/etc. class theme-aware with
+        // zero changes to the ~110 files that already use them. See
+        // index.css's own comment for why "purple"/"blue" no longer
+        // describe the actual hue once a non-default theme is active.
+        purple: Object.fromEntries(
+          [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950].map(shade => [shade, `rgb(var(--color-purple-${shade}) / <alpha-value>)`])
+        ),
+        blue: Object.fromEntries(
+          [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950].map(shade => [shade, `rgb(var(--color-blue-${shade}) / <alpha-value>)`])
+        ),
       },
       backgroundImage: {
-        'gradient-brand': 'linear-gradient(135deg, #9333ea 0%, #3b82f6 100%)',
+        'gradient-brand': 'linear-gradient(135deg, rgb(var(--color-purple-600)) 0%, rgb(var(--color-blue-500)) 100%)',
       },
       animation: {
         'fade-in': 'fadeIn 0.2s ease-in-out',

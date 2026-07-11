@@ -5,11 +5,25 @@ import type { MessagingPrivacy } from './message';
 export type Theme = 'light' | 'dark' | 'system';
 export type FontSize = 'small' | 'medium' | 'large' | 'xlarge';
 
+// The four selectable accent palettes — "purple"/"blue" in Tailwind
+// classes app-wide resolve to whichever of these is active, via CSS
+// variables (src/index.css) swapped by a data-color-theme attribute
+// (src/hooks/useTheme.tsx). See index.css for the full rationale.
+export type ColorTheme = 'classic' | 'ink_claret' | 'riviera' | 'grand_prix';
+
+export const COLOR_THEME_META: Record<ColorTheme, { label: string; description: string; primary: string; secondary: string }> = {
+  classic: { label: 'Classic', description: 'The original Memory Drop purple-to-blue.', primary: '#9333ea', secondary: '#3b82f6' },
+  ink_claret: { label: 'Ink & Claret', description: 'Quiet navy with a claret accent.', primary: '#24387a', secondary: '#9b273a' },
+  riviera: { label: 'Riviera', description: 'Warm cornflower and terracotta.', primary: '#345c8d', secondary: '#993f29' },
+  grand_prix: { label: 'Grand Prix', description: 'Bold royal blue and true red.', primary: '#0e42b4', secondary: '#ae131e' },
+};
+
 export interface UserSettings {
   user_id: string;
   default_drop_visibility: Visibility;
   default_moment_visibility: MomentPrivacy;
   theme: Theme;
+  color_theme: ColorTheme;
   font_size: FontSize;
   reduced_motion: boolean;
   high_contrast: boolean;
