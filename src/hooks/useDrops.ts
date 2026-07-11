@@ -4,6 +4,8 @@ import { useAuth } from './useAuth';
 import { uploadFile, deleteFile, generateStoragePath, extractStoragePath } from '../utils/storage';
 import { compressImageFile } from '../lib/image';
 import { track } from '../lib/analytics';
+import { logger } from '../lib/logger';
+import { withAbortTimeout } from '../lib/timeout';
 import type { AuthResult } from '../types/auth';
 import type { Drop, DropTab, InterestType, MemoryType, Mood, Reflection, ReportReason, Visibility } from '../types/feed';
 
@@ -35,8 +37,13 @@ export const useDrops = () => {
   const { user, profile } = useAuth();
 
   const getDropsFeed = useCallback(async (tab: DropTab, limit = 10, offset = 0): Promise<Drop[]> => {
-    const { data, error } = await supabase.rpc('get_drops_feed', { p_tab: tab, p_limit: limit, p_offset: offset });
-    if (error || !data) return [];
+    const { signal, clear } = withAbortTimeout();
+    const { data, error } = await supabase.rpc('get_drops_feed', { p_tab: tab, p_limit: limit, p_offset: offset }).abortSignal(signal);
+    clear();
+    if (error || !data) {
+      if (error) logger.warn('getDropsFeed failed', { tab, message: error.message });
+      return [];
+    }
     return data as Drop[];
   }, []);
 

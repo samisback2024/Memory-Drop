@@ -8,7 +8,9 @@ import { supabase } from '../lib/supabase';
 import { ConversationListItem } from '../components/messages/ConversationListItem';
 import { NewConversationModal } from '../components/messages/NewConversationModal';
 import { EmptyState } from '../components/ui/EmptyState';
+import { ErrorState } from '../components/ui/ErrorState';
 import { Avatar } from '../components/ui/Avatar';
+import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { CONVERSATION_FILTERS, type Conversation, type ConversationFilter, type ConversationSearchResult } from '../types/message';
 
 const SEARCH_DEBOUNCE_MS = 300;
@@ -25,6 +27,7 @@ const SEARCH_DEBOUNCE_MS = 300;
 export const MessagesPage: React.FC = () => {
   const { profile } = useAuth();
   const { getConversations, getMessageRequests, searchConversations } = useMessages();
+  const isOnline = useOnlineStatus();
   const [filter, setFilter] = useState<ConversationFilter>('all');
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [requestCount, setRequestCount] = useState(0);
@@ -173,7 +176,11 @@ export const MessagesPage: React.FC = () => {
             {[0, 1, 2, 3].map(i => <div key={i} className="h-16 animate-pulse bg-gray-50 dark:bg-gray-800" />)}
           </div>
         ) : conversations.length === 0 ? (
-          <EmptyState icon={MessageCircle} title={emptyLabel.title} description={emptyLabel.description} />
+          !isOnline ? (
+            <ErrorState title="You're offline" description="Reconnect and try again." onRetry={load} />
+          ) : (
+            <EmptyState icon={MessageCircle} title={emptyLabel.title} description={emptyLabel.description} />
+          )
         ) : (
           <div className="flex flex-col divide-y divide-gray-50 dark:divide-gray-800">
             {conversations.map(c => <ConversationListItem key={c.id} conversation={c} />)}

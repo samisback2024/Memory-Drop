@@ -2,6 +2,8 @@ import { useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
 import { track } from '../lib/analytics';
+import { logger } from '../lib/logger';
+import { withAbortTimeout } from '../lib/timeout';
 import type { AuthResult } from '../types/auth';
 import type {
   Conversation, ConversationFilter, ConversationHeader, ConversationMediaItem, ConversationSearchResult,
@@ -33,8 +35,13 @@ export const useMessages = () => {
   }, []);
 
   const getConversations = useCallback(async (filter: ConversationFilter = 'all'): Promise<Conversation[]> => {
-    const { data, error } = await supabase.rpc('get_conversations', { p_filter: filter });
-    if (error || !data) return [];
+    const { signal, clear } = withAbortTimeout();
+    const { data, error } = await supabase.rpc('get_conversations', { p_filter: filter }).abortSignal(signal);
+    clear();
+    if (error || !data) {
+      if (error) logger.warn('getConversations failed', { filter, message: error.message });
+      return [];
+    }
     return data as Conversation[];
   }, []);
 

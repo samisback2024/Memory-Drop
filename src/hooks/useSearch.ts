@@ -1,6 +1,8 @@
 import { useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { track } from '../lib/analytics';
+import { logger } from '../lib/logger';
+import { withAbortTimeout } from '../lib/timeout';
 import type {
   CollectionSearchResult, ExploreTab, Memory, RecentSearch, SearchSuggestion, TrendingSearch,
 } from '../types/memory';
@@ -19,6 +21,7 @@ export const useSearch = () => {
     limit = 20,
     offset = 0,
   ): Promise<Memory[]> => {
+    const { signal, clear } = withAbortTimeout();
     const { data, error } = await supabase.rpc('search_memories', {
       p_query: query || null,
       p_tag: null,
@@ -27,8 +30,12 @@ export const useSearch = () => {
       p_today_only: false,
       p_limit: limit,
       p_offset: offset,
-    });
-    if (error || !data) return [];
+    }).abortSignal(signal);
+    clear();
+    if (error || !data) {
+      if (error) logger.warn('searchMemories failed', { query, message: error.message });
+      return [];
+    }
     return data as Memory[];
   }, []);
 

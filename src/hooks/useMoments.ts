@@ -4,6 +4,8 @@ import { useAuth } from './useAuth';
 import { uploadFile, deleteFile, generateStoragePath, extractStoragePath } from '../utils/storage';
 import { compressImageFile } from '../lib/image';
 import { track } from '../lib/analytics';
+import { logger } from '../lib/logger';
+import { withAbortTimeout } from '../lib/timeout';
 import type { AuthResult } from '../types/auth';
 import type { Mood } from '../types/feed';
 import type {
@@ -38,8 +40,13 @@ export const useMoments = () => {
   const { user, profile } = useAuth();
 
   const getMomentsTray = useCallback(async (limit = 50): Promise<MomentTrayItem[]> => {
-    const { data, error } = await supabase.rpc('get_moments_tray', { p_limit: limit });
-    if (error || !data) return [];
+    const { signal, clear } = withAbortTimeout();
+    const { data, error } = await supabase.rpc('get_moments_tray', { p_limit: limit }).abortSignal(signal);
+    clear();
+    if (error || !data) {
+      if (error) logger.warn('getMomentsTray failed', { message: error.message });
+      return [];
+    }
     return data as MomentTrayItem[];
   }, []);
 

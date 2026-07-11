@@ -4,6 +4,8 @@ import { useAuth } from './useAuth';
 import { uploadFile, deleteFile, generateStoragePath, extractStoragePath } from '../utils/storage';
 import { compressImageFile } from '../lib/image';
 import { track } from '../lib/analytics';
+import { logger } from '../lib/logger';
+import { withAbortTimeout } from '../lib/timeout';
 import type { AuthResult } from '../types/auth';
 import type { Mood } from '../types/feed';
 import type {
@@ -53,6 +55,7 @@ export const useCapsules = () => {
     limit = 20,
     offset = 0,
   ): Promise<Capsule[]> => {
+    const { signal, clear } = withAbortTimeout();
     const { data, error } = await supabase.rpc('get_user_capsules', {
       p_user_id: userId,
       p_search: filters.search || null,
@@ -63,8 +66,12 @@ export const useCapsules = () => {
       p_visibility: filters.visibility ?? null,
       p_limit: limit,
       p_offset: offset,
-    });
-    if (error || !data) return [];
+    }).abortSignal(signal);
+    clear();
+    if (error || !data) {
+      if (error) logger.warn('getUserCapsules failed', { userId, message: error.message });
+      return [];
+    }
     return data as Capsule[];
   }, []);
 
