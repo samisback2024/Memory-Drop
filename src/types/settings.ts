@@ -58,6 +58,7 @@ export interface UserSettings {
   allow_message_requests: boolean;
   analytics_enabled: boolean;
   visible_stats: ProfileStatKey[];
+  show_interest_counts: boolean;
   password_changed_at: string | null;
   created_at: string;
   updated_at: string;

@@ -55,6 +55,7 @@ export const PrivacySettings: React.FC = () => {
   const [isPrivate, setIsPrivate] = useState(profile?.is_private ?? false);
   const [messagingPrivacy, setMessagingPrivacy] = useState<MessagingPrivacy | null>(null);
   const [allowMessageRequests, setAllowMessageRequests] = useState(true);
+  const [showInterestCounts, setShowInterestCounts] = useState(true);
   const [analyticsEnabled, setAnalyticsEnabledState] = useState(true);
   // null until getSettings() resolves — ToggleRow only reads `checked`
   // as its initial state (it doesn't re-sync on prop changes), so this
@@ -83,6 +84,7 @@ export const PrivacySettings: React.FC = () => {
       if (!s) return;
       setMessagingPrivacy(s.messaging_privacy);
       setAllowMessageRequests(s.allow_message_requests);
+      setShowInterestCounts(s.show_interest_counts);
       setAnalyticsEnabledState(s.analytics_enabled);
       setVisibleStats((s.visible_stats ?? []) as ProfileStatKey[]);
     });
@@ -101,6 +103,11 @@ export const PrivacySettings: React.FC = () => {
   const handleAllowRequestsChange = async (next: boolean) => {
     setAllowMessageRequests(next);
     await updateSettings({ allow_message_requests: next });
+  };
+
+  const handleShowInterestCountsChange = async (next: boolean) => {
+    setShowInterestCounts(next);
+    await updateSettings({ show_interest_counts: next });
   };
 
   const handleAnalyticsChange = async (next: boolean) => {
@@ -176,6 +183,15 @@ export const PrivacySettings: React.FC = () => {
           description="If off, people outside your circle can't message you at all — not even as a request."
           checked={allowMessageRequests}
           onChange={handleAllowRequestsChange}
+        />
+      </SettingsCard>
+
+      <SettingsCard>
+        <ToggleRow
+          label="Show reaction counts on locked drops"
+          description="Interested / Can't Wait / Good Vibes / Saved to Unlock counts on your still-locked drops. If off, only you see your own counts — everyone else still sees the buttons, just no numbers."
+          checked={showInterestCounts}
+          onChange={handleShowInterestCountsChange}
         />
       </SettingsCard>
 
