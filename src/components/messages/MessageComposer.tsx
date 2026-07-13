@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Send, Plus, Image as ImageIcon, Video, FileText, MapPin, X, Loader2 } from 'lucide-react';
+import { Send, Plus, Image as ImageIcon, Video, FileText, X, Loader2 } from 'lucide-react';
 import { EmojiPicker } from '../feed/EmojiPicker';
 import { StickerPicker } from './StickerPicker';
 import { VoiceRecorderBar, VoiceRecordTrigger } from './VoiceRecorderBar';
@@ -183,21 +183,6 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
     if (error) showToast(error, 'error');
   };
 
-  const handleLocation = () => {
-    setAttachMenuOpen(false);
-    if (!navigator.geolocation) { showToast('Location is not available in this browser.', 'error'); return; }
-    navigator.geolocation.getCurrentPosition(
-      async pos => {
-        const { error } = await sendMessage(conversationId, 'location', null, {
-          lat: pos.coords.latitude, lng: pos.coords.longitude,
-        }, replyingTo?.id ?? null);
-        if (error) showToast(error, 'error');
-        else { onCancelReply(); onSent(); }
-      },
-      () => showToast('Could not get your location.', 'error'),
-    );
-  };
-
   const handleSticker = async (emoji: string) => {
     const { error } = await sendMessage(conversationId, 'sticker', null, { emoji }, replyingTo?.id ?? null);
     if (error) showToast(error, 'error');
@@ -262,9 +247,6 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
               </button>
               <button type="button" onClick={() => fileInputRef.current?.click()} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
                 <FileText size={16} aria-hidden="true" /> File
-              </button>
-              <button type="button" onClick={handleLocation} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
-                <MapPin size={16} aria-hidden="true" /> Location
               </button>
             </div>
           )}
