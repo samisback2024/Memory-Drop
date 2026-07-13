@@ -1,7 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Send, Plus, Image as ImageIcon, Video, FileText, X, Loader2 } from 'lucide-react';
-import { EmojiPicker } from '../feed/EmojiPicker';
-import { StickerPicker } from './StickerPicker';
 import { VoiceRecorderBar, VoiceRecordTrigger } from './VoiceRecorderBar';
 import { useAuth } from '../../hooks/useAuth';
 import { useMessages } from '../../hooks/useMessages';
@@ -183,12 +181,6 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
     if (error) showToast(error, 'error');
   };
 
-  const handleSticker = async (emoji: string) => {
-    const { error } = await sendMessage(conversationId, 'sticker', null, { emoji }, replyingTo?.id ?? null);
-    if (error) showToast(error, 'error');
-    else { onCancelReply(); onSent(); }
-  };
-
   const handleVoiceSend = async (recording: VoiceRecording) => {
     setRecordingVoice(false);
     if (!user) { showToast('Not authenticated', 'error'); return; }
@@ -267,8 +259,6 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
         />
 
         <div className="flex items-center gap-0.5 flex-shrink-0">
-          <EmojiPicker onSelect={emoji => setText(t => t + emoji)} />
-          <StickerPicker onSelect={handleSticker} />
           {!text.trim() && !editingMessage && <VoiceRecordTrigger onClick={() => setRecordingVoice(true)} />}
         </div>
 

@@ -60,7 +60,7 @@ export const MomentTray: React.FC<MomentTrayProps> = ({ onCreate, onOpenAuthor, 
     return (
       <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
         {[0, 1, 2, 3].map(i => (
-          <div key={i} className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-800 animate-pulse flex-shrink-0" />
+          <div key={i} className="w-8 h-32 rounded-2xl bg-gray-100 dark:bg-gray-800 animate-pulse flex-shrink-0" />
         ))}
       </div>
     );
@@ -72,10 +72,10 @@ export const MomentTray: React.FC<MomentTrayProps> = ({ onCreate, onOpenAuthor, 
         type="button"
         onClick={onCreate}
         aria-label="Add Moment"
-        className="flex flex-col items-center gap-1.5 w-16 flex-shrink-0 focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none rounded-2xl py-1"
+        className="flex flex-col items-center gap-1.5 w-11 flex-shrink-0 focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none rounded-2xl py-1"
       >
-        <span className="w-16 h-16 rounded-full border-2 border-dashed border-purple-300 dark:border-purple-700 bg-purple-50/60 dark:bg-purple-950/30 flex items-center justify-center">
-          <Plus size={22} className="text-purple-500" aria-hidden="true" />
+        <span className="w-8 h-32 rounded-2xl border-2 border-dashed border-purple-300 dark:border-purple-700 bg-purple-50/60 dark:bg-purple-950/30 flex items-center justify-center">
+          <Plus size={20} className="text-purple-500" aria-hidden="true" />
         </span>
         <span className="text-xs text-gray-600 dark:text-gray-300 truncate w-full text-center">Add Moment</span>
       </button>

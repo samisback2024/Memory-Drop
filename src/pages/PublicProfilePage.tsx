@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   UserX, Clock, Globe2, Users, UserPlus, Pin, Send, Activity as ActivityIcon,
-  Lock, Unlock, Archive, Bookmark, Eye, KeyRound, Heart, MessageCircle,
+  Lock, Unlock, Archive, Bookmark, Eye, KeyRound, Heart, MessageCircle, Share2,
 } from 'lucide-react';
 import { PROFILE_STAT_META, type ProfileStatKey } from '../types/settings';
 import { supabase } from '../lib/supabase';
@@ -13,7 +13,6 @@ import { useMemories } from '../hooks/useMemories';
 import { PublicPageHeader } from '../components/layout/PublicPageHeader';
 import { ProfileHeader } from '../components/profile/ProfileHeader';
 import { ProfileHeaderSkeleton } from '../components/profile/ProfileHeaderSkeleton';
-import { BadgesAndAchievements, BadgesAndAchievementsSkeleton } from '../components/profile/BadgesAndAchievements';
 import { ActivityTimeline } from '../components/profile/ActivityTimeline';
 import { MomentViewer } from '../components/moments/MomentViewer';
 import { CapsuleArchive } from '../components/capsules/CapsuleArchive';
@@ -21,6 +20,7 @@ import { GridView } from '../components/memories/GridView';
 import { FollowButton } from '../components/social/FollowButton';
 import { RelationshipMenu } from '../components/social/RelationshipMenu';
 import { MutualFriends } from '../components/social/MutualFriends';
+import { ShareProfileModal } from '../components/social/ShareProfileModal';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { EMPTY_MEMORY_FILTERS, type Memory, type PinnedMemory, type PublicStats } from '../types/memory';
@@ -74,6 +74,7 @@ export const PublicProfilePage: React.FC = () => {
   const [publicStats, setPublicStats] = useState<PublicStats | null>(null);
   const [publicPool, setPublicPool] = useState<Memory[]>([]);
   const [pinned, setPinned] = useState<PinnedMemory[]>([]);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const load = useCallback(async () => {
     if (!username) return;
@@ -122,7 +123,6 @@ export const PublicProfilePage: React.FC = () => {
         {state === 'loading' && (
           <div className="flex flex-col gap-4">
             <ProfileHeaderSkeleton />
-            <BadgesAndAchievementsSkeleton />
           </div>
         )}
 
@@ -163,6 +163,16 @@ export const PublicProfilePage: React.FC = () => {
                     onChange={patch => setRelationship(r => (r ? { ...r, is_following: patch.isFollowing ?? r.is_following, is_pending: patch.isPending ?? r.is_pending, i_blocked: patch.iBlocked ?? r.i_blocked } : r))}
                   />
                   {!relationship.blocked_me && (
+                    <button
+                      type="button"
+                      onClick={() => setShareOpen(true)}
+                      aria-label={`Share ${data.display_name || data.username}'s profile`}
+                      className="p-2 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none"
+                    >
+                      <Share2 size={16} aria-hidden="true" />
+                    </button>
+                  )}
+                  {!relationship.blocked_me && (
                     <RelationshipMenu
                       targetId={data.id}
                       isMuted={relationship.i_muted}
@@ -174,8 +184,6 @@ export const PublicProfilePage: React.FC = () => {
                 </div>
               </div>
             )}
-
-            <BadgesAndAchievements />
 
             {user && publicStats && (
               <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4">
@@ -282,6 +290,13 @@ export const PublicProfilePage: React.FC = () => {
             )}
 
             {viewerOpen && <MomentViewer authorUserId={data.id} onClose={() => setViewerOpen(false)} />}
+
+            <ShareProfileModal
+              isOpen={shareOpen}
+              onClose={() => setShareOpen(false)}
+              username={data.username}
+              displayName={data.display_name || data.username}
+            />
           </div>
         )}
       </main>

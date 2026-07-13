@@ -8,7 +8,6 @@ import { ProfileHeader } from '../components/profile/ProfileHeader';
 import { ProfileHeaderSkeleton } from '../components/profile/ProfileHeaderSkeleton';
 import { ProfileCompletionBar } from '../components/profile/ProfileCompletionBar';
 import { ProfileStatsCard } from '../components/profile/ProfileStatsCard';
-import { BadgesAndAchievements, BadgesAndAchievementsSkeleton } from '../components/profile/BadgesAndAchievements';
 import { ActivityTimeline } from '../components/profile/ActivityTimeline';
 import { MomentViewer } from '../components/moments/MomentViewer';
 import { CapsuleArchive } from '../components/capsules/CapsuleArchive';
@@ -64,7 +63,6 @@ export const ProfilePage: React.FC = () => {
     return (
       <div className="flex flex-col gap-4">
         <ProfileHeaderSkeleton />
-        <BadgesAndAchievementsSkeleton />
       </div>
     );
   }
@@ -98,8 +96,6 @@ export const ProfilePage: React.FC = () => {
         </h2>
         <ProfileStatsCard />
       </div>
-
-      <BadgesAndAchievements />
 
       {pinnedMemories.length > 0 && (
         <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 flex flex-col gap-3">
