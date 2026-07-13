@@ -46,6 +46,7 @@ export const OnboardingPage: React.FC = () => {
   const { completeOnboarding } = useAuth();
   const [index, setIndex] = useState(0);
   const [finishing, setFinishing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const isLast = index === SLIDES.length - 1;
   const slide = SLIDES[index];
@@ -54,7 +55,13 @@ export const OnboardingPage: React.FC = () => {
   const finish = async () => {
     if (finishing) return;
     setFinishing(true);
-    await completeOnboarding();
+    setError(null);
+    const { error: completeError } = await completeOnboarding();
+    setFinishing(false);
+    if (completeError) {
+      setError(completeError);
+      return;
+    }
     navigate('/feed', { replace: true });
   };
 
@@ -88,6 +95,12 @@ export const OnboardingPage: React.FC = () => {
       </div>
 
       <div className="flex flex-col items-center gap-6 px-6 pb-10">
+        {error && (
+          <div className="w-full max-w-sm bg-white/15 backdrop-blur-sm border border-white/20 rounded-xl p-3">
+            <p className="text-sm text-white text-center">{error}</p>
+          </div>
+        )}
+
         <div className="flex items-center gap-2" role="tablist" aria-label="Onboarding progress">
           {SLIDES.map((s, i) => (
             <button
