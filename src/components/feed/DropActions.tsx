@@ -1,5 +1,5 @@
 import React from 'react';
-import { Feather, MessageCircle, Share2 } from 'lucide-react';
+import { MessageCircle, Share2 } from 'lucide-react';
 import { SaveButton } from './SaveButton';
 import { LikeButton } from './LikeButton';
 import { InterestActions } from './InterestActions';
@@ -8,17 +8,15 @@ import type { Drop, InterestType } from '../../types/feed';
 interface DropActionsProps {
   drop: Drop;
   onUpdate: (patch: Partial<Drop>) => void;
-  onReflect: () => void;
   onCommentToggle: () => void;
   onShare: () => void;
 }
 
 // Two entirely different action rows depending on lock state — not one
-// row with buttons disabled. Locked: four positive anticipation reactions
-// plus Reflect (a private note, allowed any time). Unlocked: Like,
-// Comment, Reflect, Save, Share — the only point Like/Comment/Share ever
-// appear at all.
-export const DropActions: React.FC<DropActionsProps> = ({ drop, onUpdate, onReflect, onCommentToggle, onShare }) => {
+// row with buttons disabled. Locked: four positive anticipation reactions.
+// Unlocked: Like, Comment, Save, Share — the only point Like/Comment/Share
+// ever appear at all.
+export const DropActions: React.FC<DropActionsProps> = ({ drop, onUpdate, onCommentToggle, onShare }) => {
   if (!drop.is_unlocked) {
     const handleInterestChange = (type: InterestType, isActive: boolean) => {
       const delta = isActive ? 1 : -1;
@@ -39,34 +37,22 @@ export const DropActions: React.FC<DropActionsProps> = ({ drop, onUpdate, onRefl
     };
 
     return (
-      <>
-        <InterestActions
-          dropId={drop.id}
-          counts={{
-            save_to_unlock: drop.save_to_unlock_count,
-            interested: drop.interested_count,
-            cant_wait: drop.cant_wait_count,
-            good_vibes: drop.good_vibes_count,
-          }}
-          active={{
-            save_to_unlock: drop.is_saved_to_unlock,
-            interested: drop.is_interested,
-            cant_wait: drop.is_cant_wait,
-            good_vibes: drop.is_good_vibes,
-          }}
-          onChange={handleInterestChange}
-        />
-        <div className="flex items-center px-4 pb-3 -mt-1">
-          <button
-            type="button"
-            onClick={onReflect}
-            className="flex items-center gap-1.5 text-sm font-medium text-gray-500 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 transition-colors focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none rounded-lg px-1.5 py-1 -mx-1.5"
-          >
-            <Feather size={15} aria-hidden="true" />
-            Reflect
-          </button>
-        </div>
-      </>
+      <InterestActions
+        dropId={drop.id}
+        counts={{
+          save_to_unlock: drop.save_to_unlock_count,
+          interested: drop.interested_count,
+          cant_wait: drop.cant_wait_count,
+          good_vibes: drop.good_vibes_count,
+        }}
+        active={{
+          save_to_unlock: drop.is_saved_to_unlock,
+          interested: drop.is_interested,
+          cant_wait: drop.is_cant_wait,
+          good_vibes: drop.is_good_vibes,
+        }}
+        onChange={handleInterestChange}
+      />
     );
   }
 
@@ -78,15 +64,6 @@ export const DropActions: React.FC<DropActionsProps> = ({ drop, onUpdate, onRefl
         likeCount={drop.like_count}
         onChange={(isLiked, likeCount) => onUpdate({ is_liked: isLiked, like_count: likeCount })}
       />
-
-      <button
-        type="button"
-        onClick={onReflect}
-        className="flex items-center gap-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none rounded-lg px-1.5 py-1 -mx-1.5"
-      >
-        <Feather size={16} aria-hidden="true" />
-        Reflect
-      </button>
 
       <button
         type="button"

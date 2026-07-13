@@ -12,7 +12,6 @@ import { DropActions } from './DropActions';
 import { CommentSection } from './CommentSection';
 import { ShareModal } from './ShareModal';
 import { ReportModal } from './ReportModal';
-import { ReflectionModal } from './ReflectionModal';
 import { LockedDropPlaceholder, MEMORY_TYPE_ICONS } from './LockedDropPlaceholder';
 import { formatRelativeTime } from '../../utils/date';
 import { MOOD_META, MEMORY_TYPE_LABELS, VISIBILITY_META, type Drop } from '../../types/feed';
@@ -36,7 +35,6 @@ const DropCardImpl: React.FC<DropCardProps> = ({ drop, onDeleted, onHidden, onUn
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
-  const [reflectOpen, setReflectOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [justUnlocked, setJustUnlocked] = useState(false);
@@ -188,7 +186,6 @@ const DropCardImpl: React.FC<DropCardProps> = ({ drop, onDeleted, onHidden, onUn
             patchContent(patch);
             if (patch.is_saved === false) onUnsaved?.(content.id);
           }}
-          onReflect={() => setReflectOpen(true)}
           onCommentToggle={() => setCommentsOpen(p => !p)}
           onShare={() => setShareOpen(true)}
         />
@@ -209,7 +206,6 @@ const DropCardImpl: React.FC<DropCardProps> = ({ drop, onDeleted, onHidden, onUn
           onShared={() => patchContent({ share_count: content.share_count + 1 })}
         />
         <ReportModal isOpen={reportOpen} onClose={() => setReportOpen(false)} dropId={content.id} />
-        <ReflectionModal isOpen={reflectOpen} onClose={() => setReflectOpen(false)} dropId={content.id} />
       </article>
     </div>
   );

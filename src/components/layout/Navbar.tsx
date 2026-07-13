@@ -87,6 +87,21 @@ export const Navbar: React.FC = () => {
             ))}
           </div>
 
+          {/* Icon-only, mobile-only — on desktop, Search is already a
+              full labeled link in the NAV_LINKS row above. On mobile it
+              used to be reachable only two taps deep (avatar → account
+              menu → Search); this is the same "always visible, not one
+              of MobileNav's 5 bottom-bar slots" reasoning
+              MessagesNavButton/NotificationBell already use. */}
+          <button
+            type="button"
+            onClick={() => navigate('/search')}
+            aria-label="Search"
+            className="sm:hidden p-2 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100 transition-colors focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none"
+          >
+            <Search size={18} aria-hidden="true" />
+          </button>
+
           <MessagesNavButton />
           <NotificationBell />
 
@@ -108,17 +123,11 @@ export const Navbar: React.FC = () => {
                   {profile?.username && <p className="text-xs text-gray-500 truncate">@{profile.username}</p>}
                 </div>
                 <div className="py-1 sm:hidden">
-                  {/* Only these three are otherwise unreachable on mobile
+                  {/* Only these two are otherwise unreachable on mobile
                       now that MobileNav's bottom bar replaces the icon
                       row above — Feed/Capsules/Memories/Profile already
-                      have a dedicated bottom-bar slot each. */}
-                  <button
-                    role="menuitem"
-                    onClick={() => { navigate('/search'); setDropdownOpen(false); }}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
-                    <Search size={15} aria-hidden="true" /> Search
-                  </button>
+                      have a dedicated bottom-bar slot each, and Search
+                      has its own icon in the top bar above. */}
                   <button
                     role="menuitem"
                     onClick={() => { navigate('/explore'); setDropdownOpen(false); }}

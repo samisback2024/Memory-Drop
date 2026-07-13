@@ -7,7 +7,7 @@ import { track } from '../lib/analytics';
 import { logger } from '../lib/logger';
 import { withAbortTimeout } from '../lib/timeout';
 import type { AuthResult } from '../types/auth';
-import type { Drop, DropTab, InterestType, MemoryType, Mood, Reflection, ReportReason, Visibility } from '../types/feed';
+import type { Drop, DropTab, InterestType, MemoryType, Mood, ReportReason, Visibility } from '../types/feed';
 
 interface CreateDropParams {
   caption: string;
@@ -56,12 +56,6 @@ export const useDrops = () => {
     const { data, error } = await supabase.rpc('get_drop', { p_post_id: dropId });
     if (error || !data || data.length === 0) return null;
     return data[0] as Drop;
-  }, []);
-
-  const getMyReflections = useCallback(async (dropId: string): Promise<Reflection[]> => {
-    const { data, error } = await supabase.rpc('get_my_reflections', { p_post_id: dropId });
-    if (error || !data) return [];
-    return data as Reflection[];
   }, []);
 
   const createDrop = useCallback(async ({
@@ -241,21 +235,6 @@ export const useDrops = () => {
     return { error: null };
   }, [user]);
 
-  // A private note-to-self — allowed any time, locked or unlocked, and
-  // never visible to anyone but the person who wrote it.
-  const addReflection = useCallback(async (dropId: string, content: string): Promise<{ error: string | null; reflection: Reflection | null }> => {
-    if (!user) return { error: 'Not authenticated', reflection: null };
-    const trimmed = content.trim();
-    if (!trimmed) return { error: 'Write something first.', reflection: null };
-    const { data, error } = await supabase
-      .from('comments')
-      .insert({ post_id: dropId, user_id: user.id, content: trimmed, is_reflection: true })
-      .select()
-      .single();
-    if (error || !data) return { error: error?.message ?? 'Could not save reflection.', reflection: null };
-    return { error: null, reflection: { id: data.id, content: trimmed, created_at: data.created_at } };
-  }, [user]);
-
   const incrementShareCount = useCallback(async (dropId: string): Promise<void> => {
     await supabase.rpc('increment_share_count', { p_post_id: dropId });
   }, []);
@@ -264,7 +243,6 @@ export const useDrops = () => {
     getDropsFeed,
     getSavedDrops,
     getDrop,
-    getMyReflections,
     createDrop,
     deleteDrop,
     saveDrop,
@@ -276,7 +254,6 @@ export const useDrops = () => {
     recordUnlockView,
     hideDrop,
     reportDrop,
-    addReflection,
     incrementShareCount,
   };
 };
