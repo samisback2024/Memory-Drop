@@ -7,9 +7,18 @@ interface AuthLayoutProps {
   children: React.ReactNode;
   footer?: React.ReactNode;
   maxWidth?: string;
+  // Opt-in only — pages with a long form (Register, Complete Profile)
+  // pass their primary submit button here instead of leaving it at the
+  // bottom of `children`. On a real phone with the on-screen keyboard
+  // open, a button buried below several form fields can end up below
+  // the visible viewport entirely — scrolling past it isn't obvious,
+  // so it reads as "there's no button, just text" even though one
+  // exists. Pinning it here keeps it reachable at all times without
+  // changing anything for every other page that doesn't pass this prop.
+  stickyAction?: React.ReactNode;
 }
 
-export const AuthLayout: React.FC<AuthLayoutProps> = ({ title, subtitle, children, footer, maxWidth = 'max-w-sm' }) => {
+export const AuthLayout: React.FC<AuthLayoutProps> = ({ title, subtitle, children, footer, maxWidth = 'max-w-sm', stickyAction }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-600 via-purple-500 to-blue-500 flex items-center justify-center p-4">
       <div className={`w-full ${maxWidth}`}>
@@ -21,8 +30,15 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ title, subtitle, childre
           {subtitle && <p className="text-purple-200 text-sm mt-1">{subtitle}</p>}
         </div>
 
-        <div className="bg-white rounded-3xl shadow-2xl p-6">
-          {children}
+        <div className={`bg-white rounded-3xl shadow-2xl p-6 ${stickyAction ? 'max-h-[80vh] flex flex-col' : ''}`}>
+          <div className={stickyAction ? 'overflow-y-auto flex-1 -mx-1 px-1' : ''}>
+            {children}
+          </div>
+          {stickyAction && (
+            <div className="sticky bottom-0 -mx-6 -mb-6 px-6 pb-6 pt-4 mt-2 bg-white rounded-b-3xl border-t border-gray-100">
+              {stickyAction}
+            </div>
+          )}
         </div>
 
         {footer && <div className="text-center text-purple-200 text-xs mt-6">{footer}</div>}

@@ -98,8 +98,16 @@ export const RegisterPage: React.FC = () => {
     'Lowercase letters, numbers, underscores, and periods only.';
 
   return (
-    <AuthLayout title="Create your account" subtitle="Join Memory Drop in under a minute.">
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
+    <AuthLayout
+      title="Create your account"
+      subtitle="Join Memory Drop in under a minute."
+      stickyAction={
+        <Button type="submit" form="register-form" variant="primary" fullWidth loading={loading} size="lg">
+          Create Account
+        </Button>
+      }
+    >
+      <form id="register-form" onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
         <Input
           label="Display name"
           type="text"
@@ -205,9 +213,6 @@ export const RegisterPage: React.FC = () => {
           </div>
         )}
 
-        <Button type="submit" variant="primary" fullWidth loading={loading} size="lg">
-          Create Account
-        </Button>
       </form>
 
       <div className="flex items-center gap-3 my-4">

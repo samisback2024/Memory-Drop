@@ -58,12 +58,20 @@ export const CompleteProfilePage: React.FC = () => {
   };
 
   return (
-    <AuthLayout title="Almost there" subtitle={user?.email ? `Signed in as ${user.email}` : undefined}>
+    <AuthLayout
+      title="Almost there"
+      subtitle={user?.email ? `Signed in as ${user.email}` : undefined}
+      stickyAction={
+        <Button type="submit" form="complete-profile-form" variant="primary" fullWidth loading={loading} size="lg">
+          Finish setting up
+        </Button>
+      }
+    >
       <p className="text-sm text-gray-600 mb-4">
         Pick a username and confirm your details to finish setting up your account.
       </p>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
+      <form id="complete-profile-form" onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
         <Input
           label="Display name"
           type="text"
@@ -136,10 +144,6 @@ export const CompleteProfilePage: React.FC = () => {
             <p className="text-sm text-red-600">{error}</p>
           </div>
         )}
-
-        <Button type="submit" variant="primary" fullWidth loading={loading} size="lg">
-          Finish setting up
-        </Button>
       </form>
 
       <button
