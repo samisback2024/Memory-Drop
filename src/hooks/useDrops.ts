@@ -222,9 +222,17 @@ export const useDrops = () => {
   // Best-effort event log for a future "X unlocked your drop" notification
   // (Phase 9) — nothing reads this back yet, and a failure here (already
   // recorded, blocked, or it's your own drop) is silently fine to ignore.
+  // Fires once per (drop, viewer) — DropCard calls this on every mount for
+  // an unlocked, not-your-own drop, so revisiting the same drop later (a
+  // reload, a re-opened tab) hit the unique (drop_id, user_id) constraint
+  // and 409'd every single time. upsert + ignoreDuplicates turns a repeat
+  // visit into a silent no-op instead of a failed insert.
   const recordUnlockView = useCallback(async (dropId: string): Promise<void> => {
     if (!user) return;
-    await supabase.from('drop_unlock_views').insert({ drop_id: dropId, user_id: user.id });
+    await supabase.from('drop_unlock_views').upsert(
+      { drop_id: dropId, user_id: user.id },
+      { onConflict: 'drop_id,user_id', ignoreDuplicates: true }
+    );
   }, [user]);
 
   const hideDrop = useCallback(async (dropId: string): Promise<AuthResult> => {
