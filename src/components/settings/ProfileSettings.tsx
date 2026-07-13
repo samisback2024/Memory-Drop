@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Edit3, Globe2, Users, Lock, Heart } from 'lucide-react';
+import { Edit3, Globe2, Users, Lock } from 'lucide-react';
 import { useSettings } from '../../hooks/useSettings';
 import { SettingsSection } from './SettingsSection';
 import { SettingsCard } from './SettingsCard';
@@ -17,7 +17,6 @@ const DROP_VISIBILITY_OPTIONS: { value: Visibility; label: string; icon: typeof 
 const MOMENT_VISIBILITY_OPTIONS: { value: MomentPrivacy; label: string; icon: typeof Globe2 }[] = [
   { value: 'everyone', label: 'Everyone', icon: Globe2 },
   { value: 'followers', label: 'Followers', icon: Users },
-  { value: 'close_friends', label: 'Close Friends', icon: Heart },
   { value: 'only_me', label: 'Only me', icon: Lock },
 ];
 

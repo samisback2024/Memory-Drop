@@ -18,7 +18,7 @@ const PROFILE_STAT_KEYS = Object.keys(PROFILE_STAT_META) as ProfileStatKey[];
 
 const MESSAGING_PRIVACY_OPTIONS: MessagingPrivacy[] = ['everyone', 'followers', 'mutual_followers', 'nobody'];
 
-type ListKind = 'blocked' | 'muted' | 'restricted' | 'close_friends';
+type ListKind = 'blocked' | 'muted' | 'restricted';
 
 const ManagedList: React.FC<{
   users: ManagedUser[];
@@ -49,8 +49,8 @@ const ManagedList: React.FC<{
 
 export const PrivacySettings: React.FC = () => {
   const { profile, updateProfile } = useAuth();
-  const { unblockUser, unmuteUser, unrestrictUser, searchUsers } = useSocial();
-  const { getBlockedUsers, getMutedUsers, getRestrictedUsers, getCloseFriends, addCloseFriend, removeCloseFriend, deleteAllContent, getSettings, updateSettings } = useSettings();
+  const { unblockUser, unmuteUser, unrestrictUser } = useSocial();
+  const { getBlockedUsers, getMutedUsers, getRestrictedUsers, deleteAllContent, getSettings, updateSettings } = useSettings();
 
   const [isPrivate, setIsPrivate] = useState(profile?.is_private ?? false);
   const [messagingPrivacy, setMessagingPrivacy] = useState<MessagingPrivacy | null>(null);
@@ -63,21 +63,19 @@ export const PrivacySettings: React.FC = () => {
   // rather than briefly showing everything unchecked for a returning
   // user who already opted some stats in.
   const [visibleStats, setVisibleStats] = useState<ProfileStatKey[] | null>(null);
-  const [lists, setLists] = useState<Record<ListKind, ManagedUser[]>>({ blocked: [], muted: [], restricted: [], close_friends: [] });
-  const [loading, setLoading] = useState<Record<ListKind, boolean>>({ blocked: true, muted: true, restricted: true, close_friends: true });
-  const [friendQuery, setFriendQuery] = useState('');
-  const [friendResults, setFriendResults] = useState<{ id: string; username: string; display_name: string | null; profile_photo_url: string | null }[]>([]);
+  const [lists, setLists] = useState<Record<ListKind, ManagedUser[]>>({ blocked: [], muted: [], restricted: [] });
+  const [loading, setLoading] = useState<Record<ListKind, boolean>>({ blocked: true, muted: true, restricted: true });
   const [deleteAllStatus, setDeleteAllStatus] = useState<string | null>(null);
 
   const loadList = async (kind: ListKind) => {
     setLoading(prev => ({ ...prev, [kind]: true }));
-    const fetcher = kind === 'blocked' ? getBlockedUsers : kind === 'muted' ? getMutedUsers : kind === 'restricted' ? getRestrictedUsers : getCloseFriends;
+    const fetcher = kind === 'blocked' ? getBlockedUsers : kind === 'muted' ? getMutedUsers : getRestrictedUsers;
     const data = await fetcher();
     setLists(prev => ({ ...prev, [kind]: data }));
     setLoading(prev => ({ ...prev, [kind]: false }));
   };
 
-  useEffect(() => { (['blocked', 'muted', 'restricted', 'close_friends'] as ListKind[]).forEach(loadList); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { (['blocked', 'muted', 'restricted'] as ListKind[]).forEach(loadList); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     getSettings().then(s => {
@@ -125,20 +123,6 @@ export const PrivacySettings: React.FC = () => {
   const handleUnblock = async (id: string) => { await unblockUser(id); setLists(prev => ({ ...prev, blocked: prev.blocked.filter(u => u.id !== id) })); };
   const handleUnmute = async (id: string) => { await unmuteUser(id); setLists(prev => ({ ...prev, muted: prev.muted.filter(u => u.id !== id) })); };
   const handleUnrestrict = async (id: string) => { await unrestrictUser(id); setLists(prev => ({ ...prev, restricted: prev.restricted.filter(u => u.id !== id) })); };
-  const handleRemoveCloseFriend = async (id: string) => { await removeCloseFriend(id); setLists(prev => ({ ...prev, close_friends: prev.close_friends.filter(u => u.id !== id) })); };
-
-  useEffect(() => {
-    if (!friendQuery.trim()) { setFriendResults([]); return; }
-    const timer = setTimeout(() => { searchUsers(friendQuery).then(r => setFriendResults(r.slice(0, 5))); }, 250);
-    return () => clearTimeout(timer);
-  }, [friendQuery, searchUsers]);
-
-  const handleAddCloseFriend = async (id: string) => {
-    await addCloseFriend(id);
-    setFriendQuery('');
-    setFriendResults([]);
-    loadList('close_friends');
-  };
 
   const handleDeleteAllContent = async () => {
     setDeleteAllStatus(null);
@@ -193,29 +177,6 @@ export const PrivacySettings: React.FC = () => {
           checked={showInterestCounts}
           onChange={handleShowInterestCountsChange}
         />
-      </SettingsCard>
-
-      <SettingsCard title="Close Friends" description="Memories set to Close-Friends-only visibility are only visible to people on this list.">
-        <div className="relative">
-          <input
-            type="text"
-            value={friendQuery}
-            onChange={e => setFriendQuery(e.target.value)}
-            placeholder="Search a username to add…"
-            className="w-full border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
-          />
-          {friendResults.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 rounded-xl shadow-xl z-10 overflow-hidden">
-              {friendResults.map(u => (
-                <button key={u.id} type="button" onClick={() => handleAddCloseFriend(u.id)} className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
-                  <Avatar src={u.profile_photo_url} name={u.display_name || u.username} size="xs" />
-                  <span className="text-sm text-gray-800 dark:text-gray-200">@{u.username}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-        <ManagedList users={lists.close_friends} loading={loading.close_friends} emptyLabel="Nobody's on your Close Friends list yet." actionLabel="Remove" onRemove={handleRemoveCloseFriend} />
       </SettingsCard>
 
       <SettingsCard title="Blocked users">

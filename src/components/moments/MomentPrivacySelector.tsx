@@ -1,5 +1,5 @@
 import React from 'react';
-import { Globe2, Users, Heart, Lock } from 'lucide-react';
+import { Globe2, Users, Lock } from 'lucide-react';
 import { MOMENT_PRIVACY_META, type MomentPrivacy } from '../../types/moment';
 
 interface MomentPrivacySelectorProps {
@@ -7,10 +7,13 @@ interface MomentPrivacySelectorProps {
   onChange: (privacy: MomentPrivacy) => void;
 }
 
+// Close Friends removed from creation entirely (product decision) — kept
+// in the MomentPrivacy type/META below only so a moment someone already
+// made with that visibility (back when this option existed) still
+// renders correctly wherever its privacy is displayed.
 const OPTIONS: { value: MomentPrivacy; icon: typeof Globe2 }[] = [
   { value: 'everyone', icon: Globe2 },
   { value: 'followers', icon: Users },
-  { value: 'close_friends', icon: Heart },
   { value: 'only_me', icon: Lock },
 ];
 

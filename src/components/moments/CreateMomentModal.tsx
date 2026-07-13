@@ -1,19 +1,15 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Image as ImageIcon, Video, PenLine, X, MapPin, AtSign } from 'lucide-react';
+import { Image as ImageIcon, Video, PenLine, X } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
-import { useSocial } from '../../hooks/useSocial';
 import { useMoments } from '../../hooks/useMoments';
 import { useSettings } from '../../hooks/useSettings';
 import { Modal } from '../ui/Modal';
 import { Button } from '../ui/Button';
 import { Avatar } from '../ui/Avatar';
-import { MoodPicker } from '../feed/MoodPicker';
 import { EmojiPicker } from '../feed/EmojiPicker';
 import { MomentDurationSelector } from './MomentDurationSelector';
 import { MomentPrivacySelector } from './MomentPrivacySelector';
-import { validateMomentText, validateMomentLocation, validateImageFile, validateVideoFile, MAX_POST_IMAGE_BYTES } from '../../lib/validators';
-import type { Mood } from '../../types/feed';
-import type { SocialUserWithRelationship } from '../../types/social';
+import { validateMomentText, validateImageFile, validateVideoFile, MAX_POST_IMAGE_BYTES } from '../../lib/validators';
 import type { Moment, MomentDurationHours, MomentMediaType, MomentPrivacy } from '../../types/moment';
 
 interface CreateMomentModalProps {
@@ -38,32 +34,17 @@ const TYPE_OPTIONS: { type: MomentMediaType; icon: typeof ImageIcon; label: stri
 // nothing more: no filters, no stickers, no music, no swipe-up links.
 export const CreateMomentModal: React.FC<CreateMomentModalProps> = ({ isOpen, onClose, onCreated }) => {
   const { profile } = useAuth();
-  const { searchUsers } = useSocial();
   const { createMoment } = useMoments();
   const { getSettings } = useSettings();
 
   const [mediaType, setMediaType] = useState<MomentMediaType>('text');
   const [textContent, setTextContent] = useState('');
   const [media, setMedia] = useState<PendingFile | null>(null);
-  const [mood, setMood] = useState<Mood | null>(null);
-  const [locationText, setLocationText] = useState('');
-  const [mentionQuery, setMentionQuery] = useState('');
-  const [mentionResults, setMentionResults] = useState<SocialUserWithRelationship[]>([]);
-  const [mentioned, setMentioned] = useState<{ id: string; username: string } | null>(null);
   const [durationHours, setDurationHours] = useState<MomentDurationHours>(24);
   const [privacy, setPrivacy] = useState<MomentPrivacy>('everyone');
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (mentioned || !mentionQuery.trim()) { setMentionResults([]); return; }
-    let cancelled = false;
-    const timer = setTimeout(() => {
-      searchUsers(mentionQuery).then(results => { if (!cancelled) setMentionResults(results.slice(0, 6)); });
-    }, 250);
-    return () => { cancelled = true; clearTimeout(timer); };
-  }, [mentionQuery, mentioned, searchUsers]);
 
   // Applies once per fresh open — never overrides a privacy the user
   // already picked this session.
@@ -78,11 +59,6 @@ export const CreateMomentModal: React.FC<CreateMomentModalProps> = ({ isOpen, on
     setMediaType('text');
     setTextContent('');
     setMedia(null);
-    setMood(null);
-    setLocationText('');
-    setMentionQuery('');
-    setMentionResults([]);
-    setMentioned(null);
     setDurationHours(24);
     setPrivacy('everyone');
     setError(null);
@@ -109,8 +85,6 @@ export const CreateMomentModal: React.FC<CreateMomentModalProps> = ({ isOpen, on
   const handleSubmit = async () => {
     const textError = validateMomentText(textContent, mediaType === 'text');
     if (textError) { setError(textError); return; }
-    const locationError = validateMomentLocation(locationText);
-    if (locationError) { setError(locationError); return; }
     if (mediaType !== 'text' && !media) { setError('Add a photo or video first.'); return; }
 
     setCreating(true);
@@ -119,10 +93,10 @@ export const CreateMomentModal: React.FC<CreateMomentModalProps> = ({ isOpen, on
       mediaType,
       textContent,
       file: media?.file ?? null,
-      mood,
-      locationText,
-      mentionedUserId: mentioned?.id ?? null,
-      mentionedUsername: mentioned?.username ?? null,
+      mood: null,
+      locationText: '',
+      mentionedUserId: null,
+      mentionedUsername: null,
       privacy,
       durationHours,
     });
@@ -199,66 +173,6 @@ export const CreateMomentModal: React.FC<CreateMomentModalProps> = ({ isOpen, on
               <span className="text-xs text-gray-400 dark:text-gray-500">{textContent.length}/500</span>
             </div>
           </div>
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="moment-location" className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
-            <MapPin size={15} className="text-gray-400 dark:text-gray-500" aria-hidden="true" />
-            Location <span className="text-gray-400 dark:text-gray-500 font-normal">(optional)</span>
-          </label>
-          <input
-            id="moment-location"
-            type="text"
-            value={locationText}
-            onChange={e => setLocationText(e.target.value)}
-            maxLength={60}
-            placeholder="Where was this?"
-            className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-          />
-        </div>
-
-        <div className="relative flex flex-col gap-1.5">
-          <label htmlFor="moment-mention" className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
-            <AtSign size={15} className="text-gray-400 dark:text-gray-500" aria-hidden="true" />
-            Mention someone <span className="text-gray-400 dark:text-gray-500 font-normal">(optional)</span>
-          </label>
-          {mentioned ? (
-            <div className="flex items-center gap-2 border border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-950/30 rounded-xl px-3 py-2 text-sm text-purple-800 dark:text-purple-200">
-              @{mentioned.username}
-              <button type="button" onClick={() => setMentioned(null)} aria-label="Remove mention" className="ml-auto text-purple-500 hover:text-purple-700 dark:hover:text-purple-300">
-                <X size={14} aria-hidden="true" />
-              </button>
-            </div>
-          ) : (
-            <input
-              id="moment-mention"
-              type="text"
-              value={mentionQuery}
-              onChange={e => setMentionQuery(e.target.value)}
-              placeholder="Search a username…"
-              className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            />
-          )}
-          {!mentioned && mentionResults.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl shadow-xl z-10 overflow-hidden">
-              {mentionResults.map(u => (
-                <button
-                  key={u.id}
-                  type="button"
-                  onClick={() => { setMentioned({ id: u.id, username: u.username }); setMentionQuery(''); setMentionResults([]); }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                >
-                  <Avatar src={u.profile_photo_url} name={u.display_name || u.username} size="xs" />
-                  <span className="text-sm text-gray-800 dark:text-gray-200">@{u.username}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <p className="text-sm font-medium text-gray-700">Mood</p>
-          <MoodPicker value={mood} onChange={setMood} />
         </div>
 
         <div className="flex flex-col gap-1.5">

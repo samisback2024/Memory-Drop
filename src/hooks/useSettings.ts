@@ -81,25 +81,6 @@ export const useSettings = () => {
     return data as ManagedUser[];
   }, []);
 
-  const getCloseFriends = useCallback(async (): Promise<ManagedUser[]> => {
-    const { data, error } = await supabase.rpc('get_close_friends');
-    if (error || !data) return [];
-    return data as ManagedUser[];
-  }, []);
-
-  const addCloseFriend = useCallback(async (friendId: string): Promise<AuthResult> => {
-    if (!user) return { error: 'Not authenticated' };
-    const { error } = await supabase.from('close_friends').insert({ owner_id: user.id, friend_id: friendId });
-    if (error && !/unique/i.test(error.message)) return { error: error.message };
-    return { error: null };
-  }, [user]);
-
-  const removeCloseFriend = useCallback(async (friendId: string): Promise<AuthResult> => {
-    if (!user) return { error: 'Not authenticated' };
-    const { error } = await supabase.from('close_friends').delete().eq('owner_id', user.id).eq('friend_id', friendId);
-    return { error: error?.message ?? null };
-  }, [user]);
-
   const getSessions = useCallback(async (): Promise<UserSession[]> => {
     if (!user) return [];
     const { data, error } = await supabase.from('user_sessions').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(20);
@@ -216,9 +197,6 @@ export const useSettings = () => {
     getBlockedUsers,
     getMutedUsers,
     getRestrictedUsers,
-    getCloseFriends,
-    addCloseFriend,
-    removeCloseFriend,
     getSessions,
     recordSession,
     clearSessionHistory,
