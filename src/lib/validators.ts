@@ -135,15 +135,6 @@ export const validateVideoFile = (file: File): string | null => {
   return null;
 };
 
-export const MAX_POST_AUDIO_BYTES = 20 * 1024 * 1024;
-const ALLOWED_AUDIO_TYPES = ['audio/mpeg', 'audio/mp4', 'audio/wav', 'audio/webm'];
-
-export const validateAudioFile = (file: File): string | null => {
-  if (!ALLOWED_AUDIO_TYPES.includes(file.type)) return 'Use an MP3, M4A, WAV, or WebM audio file.';
-  if (file.size > MAX_POST_AUDIO_BYTES) return `Audio must be ${Math.round(MAX_POST_AUDIO_BYTES / (1024 * 1024))}MB or smaller.`;
-  return null;
-};
-
 export const validateMomentText = (text: string, required: boolean): string | null => {
   if (required && !text.trim()) return 'Write something to remember, or add a photo or video.';
   if (text.length > 500) return 'A moment can be 500 characters or fewer.';
@@ -171,12 +162,10 @@ export const validateCapsuleMemoryText = (text: string): string | null => {
   return null;
 };
 
+// Still used by chat voice notes (src/components/messages/MessageComposer.tsx)
+// — Drops/Capsules no longer offer audio/voice recording at all, chat is
+// the only place left that does.
 export const MAX_VOICE_RECORDING_BYTES = 15 * 1024 * 1024;
-
-export const validateVoiceRecording = (file: File): string | null => {
-  if (file.size > MAX_VOICE_RECORDING_BYTES) return `Voice recordings must be ${Math.round(MAX_VOICE_RECORDING_BYTES / (1024 * 1024))}MB or smaller.`;
-  return null;
-};
 
 const USERNAME_COOLDOWN_DAYS = 30;
 

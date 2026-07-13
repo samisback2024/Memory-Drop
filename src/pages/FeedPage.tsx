@@ -16,8 +16,11 @@ import type { Drop, DropTab, MemoryType } from '../types/feed';
 
 const PAGE_SIZE = 10;
 const ALL_TABS: DropTab[] = ['my_drops', 'following', 'public_drops', 'saved_to_unlock'];
+// 'audio' stays a valid MemoryType (existing audio drops still need to
+// render), it's just not offered as a filter option anymore — Drops no
+// longer support creating one, see DropComposer.tsx.
 const MEDIA_FILTER_LABELS: Record<MemoryType, string> = { photo: 'Photo', video: 'Video', text: 'Text', audio: 'Voice' };
-const MEDIA_FILTERS: MemoryType[] = ['photo', 'video', 'text', 'audio'];
+const MEDIA_FILTERS: MemoryType[] = ['photo', 'video', 'text'];
 
 interface TabState {
   drops: Drop[];

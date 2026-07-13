@@ -63,12 +63,14 @@ export const EMPTY_CAPSULE_FILTERS: CapsuleArchiveFilters = {
   search: '', lockStatus: null, year: null, mood: null, mediaType: null, visibility: null,
 };
 
+// Audio/voice-recording removed from creation and filtering — 'audio'/
+// 'voice' stay valid CapsuleMemoryType values purely so any capsule
+// that already has one (created before this change) still renders
+// correctly; they're just no longer offered anywhere as a choice.
 export const MEMORY_TYPE_OPTIONS: { type: CapsuleMemoryType; label: string }[] = [
   { type: 'text', label: 'Text' },
   { type: 'photo', label: 'Photo' },
   { type: 'video', label: 'Video' },
-  { type: 'audio', label: 'Audio' },
-  { type: 'voice', label: 'Voice recording' },
 ];
 
 export const CAPSULE_VISIBILITY_META: Record<CapsuleVisibility, { label: string; description: string }> = {
@@ -103,5 +105,3 @@ export const CAPSULE_TITLE_MAX = 100;
 export const CAPSULE_MEMORY_TEXT_MAX = 3000;
 export const CAPSULE_MAX_PHOTOS = 10;
 export const CAPSULE_MAX_VIDEOS = 3;
-export const CAPSULE_MAX_AUDIO = 3;
-export const CAPSULE_MAX_VOICE = 3;

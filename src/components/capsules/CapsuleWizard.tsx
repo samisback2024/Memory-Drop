@@ -1,6 +1,6 @@
 import React, { useMemo, useRef, useState } from 'react';
 import {
-  Image as ImageIcon, Video, Music, Mic, Lock, Globe2, Users,
+  Image as ImageIcon, Video, Lock, Globe2, Users,
   ChevronLeft, ChevronRight, X, CalendarClock,
 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
@@ -12,15 +12,11 @@ import { MoodPicker } from '../feed/MoodPicker';
 import { EmojiPicker } from '../feed/EmojiPicker';
 import { CapsuleCountdown } from './CapsuleCountdown';
 import { MEMORY_TYPE_ICONS } from './CapsuleLockedCard';
-import {
-  validateCapsuleTitle, validateCapsuleMemoryText, validateImageFile, validateVideoFile,
-  validateAudioFile, validateVoiceRecording, MAX_POST_IMAGE_BYTES,
-} from '../../lib/validators';
+import { validateCapsuleTitle, validateCapsuleMemoryText, validateImageFile, validateVideoFile, MAX_POST_IMAGE_BYTES } from '../../lib/validators';
 import { formatDate } from '../../utils/date';
 import {
   MEMORY_TYPE_OPTIONS, CAPSULE_VISIBILITY_META, UNLOCK_PRESETS, computePresetDate,
   CAPSULE_TITLE_MAX, CAPSULE_MEMORY_TEXT_MAX, CAPSULE_MAX_PHOTOS, CAPSULE_MAX_VIDEOS,
-  CAPSULE_MAX_AUDIO, CAPSULE_MAX_VOICE,
   type Capsule, type CapsuleMemoryType, type CapsuleVisibility, type UnlockPresetId,
 } from '../../types/capsule';
 import { MOOD_META, type Mood } from '../../types/feed';
@@ -50,59 +46,7 @@ const STEP_TITLES = [
 ];
 
 const MEDIA_CAPS: Partial<Record<CapsuleMemoryType, number>> = {
-  photo: CAPSULE_MAX_PHOTOS, video: CAPSULE_MAX_VIDEOS, audio: CAPSULE_MAX_AUDIO, voice: CAPSULE_MAX_VOICE,
-};
-
-const VoiceRecorder: React.FC<{ count: number; max: number; onRecorded: (file: File) => void }> = ({ count, max, onRecorded }) => {
-  const [recording, setRecording] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const recorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
-
-  const startRecording = async () => {
-    setError(null);
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
-      chunksRef.current = [];
-      recorder.ondataavailable = e => { if (e.data.size > 0) chunksRef.current.push(e.data); };
-      recorder.onstop = () => {
-        stream.getTracks().forEach(t => t.stop());
-        const blob = new Blob(chunksRef.current, { type: recorder.mimeType || 'audio/webm' });
-        const file = new File([blob], `voice-${Date.now()}.webm`, { type: blob.type });
-        const validationError = validateVoiceRecording(file);
-        if (validationError) { setError(validationError); return; }
-        onRecorded(file);
-      };
-      recorderRef.current = recorder;
-      recorder.start();
-      setRecording(true);
-    } catch {
-      setError('Microphone access is needed to record a voice note.');
-    }
-  };
-
-  const stopRecording = () => { recorderRef.current?.stop(); setRecording(false); };
-
-  if (count >= max) return null;
-
-  return (
-    <div className="flex flex-col items-center gap-2 py-3 bg-blue-50/60 border border-blue-100 rounded-2xl">
-      <button
-        type="button"
-        onClick={recording ? stopRecording : startRecording}
-        aria-label={recording ? 'Stop recording' : 'Record a voice note'}
-        className={[
-          'w-14 h-14 rounded-full flex items-center justify-center transition-colors shadow-sm',
-          recording ? 'bg-red-500 animate-pulse' : 'bg-blue-600 hover:bg-blue-700',
-        ].join(' ')}
-      >
-        <Mic size={20} className="text-white" aria-hidden="true" />
-      </button>
-      <p className="text-xs text-gray-500">{recording ? 'Recording… tap to stop' : 'Tap to record a voice note'}</p>
-      {error && <p className="text-xs text-red-600">{error}</p>}
-    </div>
-  );
+  photo: CAPSULE_MAX_PHOTOS, video: CAPSULE_MAX_VIDEOS,
 };
 
 // Nine steps, one deliberate decision at a time — the opposite of a
@@ -128,8 +72,6 @@ export const CapsuleWizard: React.FC<CapsuleWizardProps> = ({ isOpen, onClose, o
   const [createdCapsule, setCreatedCapsule] = useState<Capsule | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
-  const audioInputRef = useRef<HTMLInputElement>(null);
-
   const mediaCount = (type: CapsuleMemoryType) => media.filter(m => m.type === type).length;
 
   const resetAndClose = () => {
@@ -169,17 +111,11 @@ export const CapsuleWizard: React.FC<CapsuleWizardProps> = ({ isOpen, onClose, o
     const selected = Array.from(files).slice(0, Math.max(remaining, 0));
     const next: PendingMedia[] = [];
     for (const file of selected) {
-      const validationError = type === 'photo' ? validateImageFile(file, MAX_POST_IMAGE_BYTES)
-        : type === 'video' ? validateVideoFile(file)
-        : validateAudioFile(file);
+      const validationError = type === 'photo' ? validateImageFile(file, MAX_POST_IMAGE_BYTES) : validateVideoFile(file);
       if (validationError) { setError(validationError); continue; }
       next.push({ type, file, previewUrl: URL.createObjectURL(file) });
     }
     setMedia(prev => [...prev, ...next]);
-  };
-
-  const addVoiceRecording = (file: File) => {
-    setMedia(prev => [...prev, { type: 'voice', file, previewUrl: URL.createObjectURL(file) }]);
   };
 
   const removeMedia = (index: number) => {
@@ -213,7 +149,7 @@ export const CapsuleWizard: React.FC<CapsuleWizardProps> = ({ isOpen, onClose, o
     if (step === 3) {
       const textError = validateCapsuleMemoryText(memoryText);
       if (textError) return textError;
-      if (!memoryText.trim() && media.length === 0 && !title.trim()) return 'Write something, or attach a photo, video, or audio in the next step.';
+      if (!memoryText.trim() && media.length === 0 && !title.trim()) return 'Write something, or attach a photo or video in the next step.';
     }
     if (step === 7 && (!unlockDate || unlockDate.getTime() <= Date.now())) return 'Choose a moment in the future for this capsule to unlock.';
     return null;
@@ -377,47 +313,6 @@ export const CapsuleWizard: React.FC<CapsuleWizardProps> = ({ isOpen, onClose, o
                   </button>
                 )}
                 <input ref={videoInputRef} type="file" accept="video/mp4,video/webm,video/quicktime" className="hidden" onChange={e => { addMediaFiles('video', e.target.files); e.target.value = ''; }} />
-              </div>
-            )}
-
-            {nonTextTypes.includes('audio') && (
-              <div className="flex flex-col gap-2">
-                <p className="text-sm font-medium text-gray-700 flex items-center gap-1.5"><Music size={15} className="text-gray-400" aria-hidden="true" /> Audio</p>
-                {media.filter(m => m.type === 'audio').map(m => {
-                  const index = media.indexOf(m);
-                  return (
-                    <div key={m.previewUrl} className="flex items-center gap-2 bg-purple-50 rounded-xl p-2.5">
-                      <audio src={m.previewUrl} controls className="flex-1 h-9" />
-                      <button type="button" onClick={() => removeMedia(index)} aria-label="Remove audio" className="w-6 h-6 rounded-full bg-black/10 flex items-center justify-center flex-shrink-0">
-                        <X size={12} aria-hidden="true" />
-                      </button>
-                    </div>
-                  );
-                })}
-                {mediaCount('audio') < CAPSULE_MAX_AUDIO && (
-                  <button type="button" onClick={() => audioInputRef.current?.click()} className="py-3 rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center gap-1.5 text-gray-400 hover:border-purple-300 hover:text-purple-500 transition-colors text-sm">
-                    <Music size={16} aria-hidden="true" /> Add an audio file
-                  </button>
-                )}
-                <input ref={audioInputRef} type="file" accept="audio/mpeg,audio/mp4,audio/wav,audio/webm" className="hidden" onChange={e => { addMediaFiles('audio', e.target.files); e.target.value = ''; }} />
-              </div>
-            )}
-
-            {nonTextTypes.includes('voice') && (
-              <div className="flex flex-col gap-2">
-                <p className="text-sm font-medium text-gray-700 flex items-center gap-1.5"><Mic size={15} className="text-gray-400" aria-hidden="true" /> Voice recordings</p>
-                {media.filter(m => m.type === 'voice').map(m => {
-                  const index = media.indexOf(m);
-                  return (
-                    <div key={m.previewUrl} className="flex items-center gap-2 bg-blue-50 rounded-xl p-2.5">
-                      <audio src={m.previewUrl} controls className="flex-1 h-9" />
-                      <button type="button" onClick={() => removeMedia(index)} aria-label="Remove recording" className="w-6 h-6 rounded-full bg-black/10 flex items-center justify-center flex-shrink-0">
-                        <X size={12} aria-hidden="true" />
-                      </button>
-                    </div>
-                  );
-                })}
-                <VoiceRecorder count={mediaCount('voice')} max={CAPSULE_MAX_VOICE} onRecorded={addVoiceRecording} />
               </div>
             )}
           </div>

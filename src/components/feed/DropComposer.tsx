@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Image as ImageIcon, Video, Mic, X, CalendarClock, Globe2, Users, Lock } from 'lucide-react';
+import { Image as ImageIcon, Video, X, CalendarClock, Globe2, Users, Lock } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useDrops } from '../../hooks/useDrops';
 import { useSettings } from '../../hooks/useSettings';
@@ -10,7 +10,7 @@ import { MoodPicker } from './MoodPicker';
 import { VisibilityPicker } from './VisibilityPicker';
 import { EmojiPicker } from './EmojiPicker';
 import {
-  validateCaption, validateImageFile, validateVideoFile, validateAudioFile,
+  validateCaption, validateImageFile, validateVideoFile,
   CAPTION_MAX, MAX_POST_IMAGES, MAX_POST_IMAGE_BYTES,
 } from '../../lib/validators';
 import { CAPTURE_PROMPTS, type Drop, type MemoryType, type Mood, type Visibility } from '../../types/feed';
@@ -46,7 +46,6 @@ export const DropComposer: React.FC<DropComposerProps> = ({ isOpen, onClose, onD
   const [caption, setCaption] = useState('');
   const [images, setImages] = useState<PendingFile[]>([]);
   const [video, setVideo] = useState<PendingFile | null>(null);
-  const [audio, setAudio] = useState<PendingFile | null>(null);
   const [unlockDate, setUnlockDate] = useState(nowForDatetimeLocal);
   const [visibility, setVisibility] = useState<Visibility>('followers');
   const [mood, setMood] = useState<Mood | null>(null);
@@ -54,7 +53,6 @@ export const DropComposer: React.FC<DropComposerProps> = ({ isOpen, onClose, onD
   const [dropping, setDropping] = useState(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
-  const audioInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -69,7 +67,6 @@ export const DropComposer: React.FC<DropComposerProps> = ({ isOpen, onClose, onD
   const releaseMedia = () => {
     images.forEach(img => URL.revokeObjectURL(img.previewUrl));
     if (video) URL.revokeObjectURL(video.previewUrl);
-    if (audio) URL.revokeObjectURL(audio.previewUrl);
   };
 
   const resetAndClose = (keepDraft: boolean) => {
@@ -79,7 +76,6 @@ export const DropComposer: React.FC<DropComposerProps> = ({ isOpen, onClose, onD
     setCaption('');
     setImages([]);
     setVideo(null);
-    setAudio(null);
     setUnlockDate(nowForDatetimeLocal());
     setVisibility('followers');
     setMood(null);
@@ -89,10 +85,9 @@ export const DropComposer: React.FC<DropComposerProps> = ({ isOpen, onClose, onD
 
   const handleCancel = () => resetAndClose(true);
 
-  const clearOtherMedia = (keep: 'images' | 'video' | 'audio') => {
+  const clearOtherMedia = (keep: 'images' | 'video') => {
     if (keep !== 'images') { images.forEach(img => URL.revokeObjectURL(img.previewUrl)); setImages([]); }
     if (keep !== 'video' && video) { URL.revokeObjectURL(video.previewUrl); setVideo(null); }
-    if (keep !== 'audio' && audio) { URL.revokeObjectURL(audio.previewUrl); setAudio(null); }
   };
 
   const handleImageSelect = (files: FileList | null) => {
@@ -122,16 +117,6 @@ export const DropComposer: React.FC<DropComposerProps> = ({ isOpen, onClose, onD
     setVideo({ file, previewUrl: URL.createObjectURL(file) });
   };
 
-  const handleAudioSelect = (files: FileList | null) => {
-    const file = files?.[0];
-    if (!file) return;
-    setError(null);
-    const validationError = validateAudioFile(file);
-    if (validationError) { setError(validationError); return; }
-    clearOtherMedia('audio');
-    setAudio({ file, previewUrl: URL.createObjectURL(file) });
-  };
-
   const removeImage = (index: number) => {
     setImages(prev => {
       URL.revokeObjectURL(prev[index].previewUrl);
@@ -139,14 +124,14 @@ export const DropComposer: React.FC<DropComposerProps> = ({ isOpen, onClose, onD
     });
   };
 
-  const memoryType: MemoryType = video ? 'video' : audio ? 'audio' : images.length > 0 ? 'photo' : 'text';
+  const memoryType: MemoryType = video ? 'video' : images.length > 0 ? 'photo' : 'text';
   const isFutureUnlock = useMemo(() => new Date(unlockDate).getTime() > Date.now() + 60000, [unlockDate]);
 
   const handleSubmit = async () => {
     const captionError = validateCaption(caption);
     if (captionError) { setError(captionError); return; }
     if (memoryType === 'text' && !caption.trim()) {
-      setError('Write something to remember, or add a photo, video, or voice memory.');
+      setError('Write something to remember, or add a photo or video.');
       return;
     }
 
@@ -157,7 +142,6 @@ export const DropComposer: React.FC<DropComposerProps> = ({ isOpen, onClose, onD
       memoryType,
       images: images.map(img => img.file),
       video: video?.file ?? null,
-      audio: audio?.file ?? null,
       unlockDate: new Date(unlockDate).toISOString(),
       visibility,
       mood,
@@ -210,31 +194,17 @@ export const DropComposer: React.FC<DropComposerProps> = ({ isOpen, onClose, onD
           </div>
         )}
 
-        {audio && (
-          <div className="relative rounded-2xl bg-purple-50 border border-purple-100 p-3 flex items-center gap-3">
-            <Mic size={18} className="text-purple-500 flex-shrink-0" aria-hidden="true" />
-            <audio src={audio.previewUrl} controls className="flex-1 h-9" />
-            <button type="button" onClick={() => clearOtherMedia('images')} aria-label="Remove audio" className="w-7 h-7 rounded-full bg-black/10 flex items-center justify-center hover:bg-black/20 transition-colors flex-shrink-0">
-              <X size={14} aria-hidden="true" />
-            </button>
-          </div>
-        )}
-
         <div className="flex items-center gap-1 border-t border-gray-100 pt-3">
-          <button type="button" onClick={() => imageInputRef.current?.click()} disabled={Boolean(video || audio) || images.length >= MAX_POST_IMAGES} aria-label="Add photos" className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+          <button type="button" onClick={() => imageInputRef.current?.click()} disabled={Boolean(video) || images.length >= MAX_POST_IMAGES} aria-label="Add photos" className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
             <ImageIcon size={19} aria-hidden="true" />
           </button>
-          <button type="button" onClick={() => videoInputRef.current?.click()} disabled={images.length > 0 || Boolean(audio)} aria-label="Add video" className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+          <button type="button" onClick={() => videoInputRef.current?.click()} disabled={images.length > 0} aria-label="Add video" className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
             <Video size={19} aria-hidden="true" />
-          </button>
-          <button type="button" onClick={() => audioInputRef.current?.click()} disabled={images.length > 0 || Boolean(video)} aria-label="Add voice memory" className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-            <Mic size={19} aria-hidden="true" />
           </button>
           <EmojiPicker onSelect={emoji => setCaption(c => c + emoji)} />
           <span className="ml-auto text-xs text-gray-400">{caption.length}/{CAPTION_MAX}</span>
           <input ref={imageInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple className="hidden" onChange={e => { handleImageSelect(e.target.files); e.target.value = ''; }} />
           <input ref={videoInputRef} type="file" accept="video/mp4,video/webm,video/quicktime" className="hidden" onChange={e => { handleVideoSelect(e.target.files); e.target.value = ''; }} />
-          <input ref={audioInputRef} type="file" accept="audio/mpeg,audio/mp4,audio/wav,audio/webm" className="hidden" onChange={e => { handleAudioSelect(e.target.files); e.target.value = ''; }} />
         </div>
 
         <div className="flex flex-col gap-1.5">

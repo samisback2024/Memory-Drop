@@ -14,7 +14,6 @@ interface CreateDropParams {
   memoryType: MemoryType;
   images: File[];
   video: File | null;
-  audio: File | null;
   unlockDate: string;
   visibility: Visibility;
   mood: Mood | null;
@@ -66,7 +65,7 @@ export const useDrops = () => {
   }, []);
 
   const createDrop = useCallback(async ({
-    caption, memoryType, images, video, audio, unlockDate, visibility, mood,
+    caption, memoryType, images, video, unlockDate, visibility, mood,
   }: CreateDropParams): Promise<CreateDropResult> => {
     if (!user) return { error: 'Not authenticated', drop: null };
 
@@ -86,7 +85,6 @@ export const useDrops = () => {
 
     const dropId = dropRow.id as string;
     let videoUrl: string | null = null;
-    let audioUrl: string | null = null;
     const uploadedImages: { url: string; position: number }[] = [];
 
     try {
@@ -96,15 +94,6 @@ export const useDrops = () => {
         if (!url) throw new Error('Video upload failed. Try again.');
         videoUrl = url;
         const { error: updateError } = await supabase.from('posts').update({ video_url: url }).eq('id', dropId);
-        if (updateError) throw new Error(updateError.message);
-      }
-
-      if (memoryType === 'audio' && audio) {
-        const path = generateStoragePath(user.id, audio.name);
-        const url = await uploadFile('post-media', path, audio);
-        if (!url) throw new Error('Audio upload failed. Try again.');
-        audioUrl = url;
-        const { error: updateError } = await supabase.from('posts').update({ audio_url: url }).eq('id', dropId);
         if (updateError) throw new Error(updateError.message);
       }
 
@@ -138,7 +127,7 @@ export const useDrops = () => {
       caption: isUnlocked ? (caption.trim() || null) : null,
       post_type: memoryType,
       video_url: isUnlocked ? videoUrl : null,
-      audio_url: isUnlocked ? audioUrl : null,
+      audio_url: null,
       images: isUnlocked ? uploadedImages.map(img => ({ url: img.url, position: img.position })) : [],
       mood,
       visibility,
