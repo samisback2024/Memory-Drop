@@ -32,7 +32,7 @@ const SLIDES: Slide[] = [
   {
     art: 'moment',
     title: 'Moments come and go',
-    body: 'Share quick, in-the-moment updates with close connections. They disappear after 24 hours.',
+    body: 'Share quick, in-the-moment updates with close connections. Pick how long they last — 12, 24, or 48 hours — then they\'re gone.',
   },
   {
     art: 'memories',
