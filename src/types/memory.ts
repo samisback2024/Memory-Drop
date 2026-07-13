@@ -77,35 +77,6 @@ export interface MemoryCollection {
   created_at: string;
 }
 
-export interface Flashback {
-  id: string;
-  memory_type: MemorySourceType;
-  title: string | null;
-  caption: string | null;
-  media: CapsuleMediaItem[];
-  mood: Mood | null;
-  created_at: string;
-  years_ago: number;
-}
-
-export type HighlightType = 'best_month' | 'most_viewed' | 'most_reacted';
-
-export interface HighlightCandidate {
-  id: string;
-  memory_type: MemorySourceType;
-  title: string | null;
-  caption: string | null;
-  media: CapsuleMediaItem[];
-  mood: Mood | null;
-  created_at: string;
-  score: number;
-}
-
-export interface MemoryStreak {
-  current_streak: number;
-  longest_streak: number;
-}
-
 // get_memory_stats() — the caller's own accurate counts, live-aggregated
 // (never a separately-tracked counter that could drift). locked_items/
 // unlocked_items are combined across Drops+Capsules+Moments; total_drops
@@ -147,12 +118,6 @@ export interface PublicStats {
   total_reactions: number | null;
   total_comments: number | null;
 }
-
-export const HIGHLIGHT_META: Record<HighlightType, { label: string; description: string }> = {
-  best_month: { label: 'Best memories this month', description: 'Your most-loved memories from the last 30 days.' },
-  most_viewed: { label: 'Most viewed memories', description: "Memories that got the most attention." },
-  most_reacted: { label: 'Most reacted memories', description: 'The ones that got the warmest response.' },
-};
 
 export const MONTH_NAMES = [
   'January', 'February', 'March', 'April', 'May', 'June',

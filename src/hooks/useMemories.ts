@@ -6,7 +6,7 @@ import { useMoments } from './useMoments';
 import { useDrops } from './useDrops';
 import type { AuthResult } from '../types/auth';
 import type {
-  Memory, MemoryFilters, MemoryCollection, Flashback, HighlightCandidate, HighlightType, MemoryStreak,
+  Memory, MemoryFilters, MemoryCollection,
   MemoryStats, PublicStats, MemorySort, MemorySourceType, PinnedMemory, ActivityItem, MemoryActivity, MemoryActivityType,
 } from '../types/memory';
 
@@ -92,38 +92,6 @@ export const useMemories = () => {
     if (error || !data) return [];
     return data as { year: number; memory_count: number }[];
   }, []);
-
-  const getFlashbacks = useCallback(async (): Promise<Flashback[]> => {
-    const { data, error } = await supabase.rpc('get_flashbacks');
-    if (error || !data) return [];
-    return data as Flashback[];
-  }, []);
-
-  const dismissFlashback = useCallback(async (memoryType: MemorySourceType, memoryId: string): Promise<void> => {
-    await supabase.rpc('dismiss_flashback', { p_memory_type: memoryType, p_memory_id: memoryId });
-  }, []);
-
-  const getHighlightCandidates = useCallback(async (type: HighlightType, limit = 10): Promise<HighlightCandidate[]> => {
-    const { data, error } = await supabase.rpc('get_highlight_candidates', { p_type: type, p_limit: limit });
-    if (error || !data) return [];
-    return data as HighlightCandidate[];
-  }, []);
-
-  const getMemoryStreak = useCallback(async (): Promise<MemoryStreak> => {
-    const { data, error } = await supabase.rpc('get_memory_streak');
-    if (error || !data || data.length === 0) return { current_streak: 0, longest_streak: 0 };
-    return data[0] as MemoryStreak;
-  }, []);
-
-  const saveHighlight = useCallback(async (title: string, type: HighlightType, candidates: HighlightCandidate[]): Promise<AuthResult> => {
-    if (!user) return { error: 'Not authenticated' };
-    const capsuleIds = candidates.filter(c => c.memory_type === 'capsule').map(c => c.id);
-    const momentIds = candidates.filter(c => c.memory_type === 'moment').map(c => c.id);
-    const { error } = await supabase
-      .from('memory_highlights')
-      .insert({ user_id: user.id, title, highlight_type: type, capsule_ids: capsuleIds, moment_ids: momentIds });
-    return { error: error?.message ?? null };
-  }, [user]);
 
   const getCollections = useCallback(async (): Promise<MemoryCollection[]> => {
     await supabase.rpc('seed_default_collections');
@@ -297,11 +265,6 @@ export const useMemories = () => {
     getMemoryActivityCalendar,
     getMemoryActivityDay,
     getMemoryYearCounts,
-    getFlashbacks,
-    dismissFlashback,
-    getHighlightCandidates,
-    getMemoryStreak,
-    saveHighlight,
     getCollections,
     createCollection,
     deleteCollection,
