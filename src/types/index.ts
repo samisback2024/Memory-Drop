@@ -18,6 +18,7 @@ export interface Profile {
   is_private: boolean;
   profile_completed: boolean;
   username_changed_at: string | null;
+  onboarding_completed_at: string | null;
   created_at: string;
   updated_at: string;
 }

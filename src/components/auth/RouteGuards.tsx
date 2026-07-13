@@ -8,7 +8,7 @@ import { AuthSpinner } from './AuthLayout';
 // Google sign-in lands here with no username/date_of_birth yet, so it's
 // bounced to /complete-profile before it can reach the real page.
 export const AuthProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, loading, needsProfileCompletion } = useAuth();
+  const { user, loading, needsProfileCompletion, needsOnboarding } = useAuth();
   const location = useLocation();
 
   if (loading) return <AuthSpinner />;
@@ -16,17 +16,22 @@ export const AuthProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ ch
   if (needsProfileCompletion && location.pathname !== '/complete-profile') {
     return <Navigate to="/complete-profile" replace />;
   }
+  if (needsOnboarding && location.pathname !== '/onboarding') {
+    return <Navigate to="/onboarding" replace />;
+  }
   return <>{children}</>;
 };
 
 // Wrap pages that only make sense while signed out (item 13: redirect
 // logged-in users away from /login, /register, /forgot-password).
 export const PublicOnlyRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, loading, needsProfileCompletion } = useAuth();
+  const { user, loading, needsProfileCompletion, needsOnboarding } = useAuth();
 
   if (loading) return <AuthSpinner />;
   if (user) {
-    return <Navigate to={needsProfileCompletion ? '/complete-profile' : '/feed'} replace />;
+    if (needsProfileCompletion) return <Navigate to="/complete-profile" replace />;
+    if (needsOnboarding) return <Navigate to="/onboarding" replace />;
+    return <Navigate to="/feed" replace />;
   }
   return <>{children}</>;
 };
@@ -35,10 +40,11 @@ export const PublicOnlyRoute: React.FC<{ children: React.ReactNode }> = ({ child
 // right place instead of a dead route (item 14: redirect logged-out users
 // to login).
 export const RootRedirect: React.FC = () => {
-  const { user, loading, needsProfileCompletion } = useAuth();
+  const { user, loading, needsProfileCompletion, needsOnboarding } = useAuth();
 
   if (loading) return <AuthSpinner />;
   if (!user) return <Navigate to="/login" replace />;
   if (needsProfileCompletion) return <Navigate to="/complete-profile" replace />;
+  if (needsOnboarding) return <Navigate to="/onboarding" replace />;
   return <Navigate to="/feed" replace />;
 };

@@ -35,6 +35,7 @@ interface AuthContextType {
   loading: boolean;
   emailVerified: boolean;
   needsProfileCompletion: boolean;
+  needsOnboarding: boolean;
   signIn: (email: string, password: string) => Promise<AuthResult>;
   signUp: (values: RegisterFormValues) => Promise<SignUpResult>;
   signInWithGoogle: () => Promise<AuthResult>;
@@ -44,6 +45,7 @@ interface AuthContextType {
   uploadCoverPhoto: (file: File) => Promise<AuthResult>;
   removeCoverPhoto: () => Promise<AuthResult>;
   completeProfile: (values: { username: string; displayName: string; dateOfBirth: string }) => Promise<AuthResult>;
+  completeOnboarding: () => Promise<AuthResult>;
   checkUsernameAvailable: (username: string) => Promise<boolean>;
   sendPasswordReset: (email: string) => Promise<AuthResult>;
   updatePassword: (newPassword: string) => Promise<AuthResult>;
@@ -327,6 +329,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return { error: null };
   };
 
+  const completeOnboarding = async (): Promise<AuthResult> => {
+    if (!user) return { error: 'Not authenticated' };
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ onboarding_completed_at: new Date().toISOString() })
+      .eq('id', user.id)
+      .select()
+      .single();
+
+    if (error) return { error: error.message };
+    if (data) setProfile(data as Profile);
+    return { error: null };
+  };
+
   const sendPasswordReset = async (email: string): Promise<AuthResult> => {
     if (!isSupabaseConfigured()) return { error: 'Supabase is not configured.' };
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -366,6 +383,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const emailVerified = Boolean(user?.email_confirmed_at);
   const needsProfileCompletion = Boolean(user) && Boolean(profile) && !profile?.username;
+  const needsOnboarding =
+    Boolean(user) && Boolean(profile) && !needsProfileCompletion && !profile?.onboarding_completed_at;
 
   return (
     <AuthContext.Provider
@@ -375,6 +394,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loading,
         emailVerified,
         needsProfileCompletion,
+        needsOnboarding,
         signIn,
         signUp,
         signInWithGoogle,
@@ -384,6 +404,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         uploadCoverPhoto,
         removeCoverPhoto,
         completeProfile,
+        completeOnboarding,
         checkUsernameAvailable,
         sendPasswordReset,
         updatePassword,

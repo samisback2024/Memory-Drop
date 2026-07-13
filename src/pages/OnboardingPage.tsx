@@ -1,0 +1,121 @@
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Rss, Clock, Flame, BookHeart } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
+import { Button } from '../components/ui/Button';
+
+interface Slide {
+  icon: React.ElementType;
+  title: string;
+  body: string;
+}
+
+// Shown exactly once, right after signup or a first-time Google sign-in —
+// see needsOnboarding in useAuth and AuthProtectedRoute. Full-screen rather
+// than AuthLayout's centered card: this is a tour, not a form.
+const SLIDES: Slide[] = [
+  {
+    icon: Rss,
+    title: 'Welcome to Memory Drop',
+    body: "Capture today. Unlock tomorrow. Here's a quick look at what you can do.",
+  },
+  {
+    icon: Rss,
+    title: 'Drop a memory',
+    body: 'Share a photo, video, or note right now — or seal it to unlock later. You choose who sees it: everyone, followers, or just you.',
+  },
+  {
+    icon: Clock,
+    title: 'Send memories into the future',
+    body: 'Time Capsules hold what you add today and open themselves on a date you pick — days, months, even years from now.',
+  },
+  {
+    icon: Flame,
+    title: 'Moments come and go',
+    body: 'Share quick, in-the-moment updates with close connections. They disappear after 24 hours.',
+  },
+  {
+    icon: BookHeart,
+    title: 'Everything you unlock, forever',
+    body: 'Every memory you open lives in Memories, browsable by timeline, calendar, or year. Add friends to start sharing yours.',
+  },
+];
+
+export const OnboardingPage: React.FC = () => {
+  const navigate = useNavigate();
+  const { completeOnboarding } = useAuth();
+  const [index, setIndex] = useState(0);
+  const [finishing, setFinishing] = useState(false);
+
+  const isLast = index === SLIDES.length - 1;
+  const slide = SLIDES[index];
+  const Icon = slide.icon;
+
+  const finish = async () => {
+    if (finishing) return;
+    setFinishing(true);
+    await completeOnboarding();
+    navigate('/feed', { replace: true });
+  };
+
+  const handleNext = () => {
+    if (isLast) {
+      void finish();
+      return;
+    }
+    setIndex(i => Math.min(i + 1, SLIDES.length - 1));
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-purple-500 to-blue-500 flex flex-col">
+      <div className="flex justify-end p-4">
+        <button
+          type="button"
+          onClick={() => void finish()}
+          disabled={finishing}
+          className="text-sm font-medium text-white/80 hover:text-white transition-colors px-3 py-1.5 disabled:opacity-50"
+        >
+          Skip
+        </button>
+      </div>
+
+      <div className="flex-1 flex flex-col items-center justify-center px-6 text-center">
+        <div className="w-24 h-24 rounded-3xl bg-white/15 backdrop-blur-sm flex items-center justify-center mb-8">
+          <Icon size={44} className="text-white" aria-hidden="true" />
+        </div>
+        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-3 max-w-sm text-balance">{slide.title}</h1>
+        <p className="text-white/85 text-base max-w-sm leading-relaxed">{slide.body}</p>
+      </div>
+
+      <div className="flex flex-col items-center gap-6 px-6 pb-10">
+        <div className="flex items-center gap-2" role="tablist" aria-label="Onboarding progress">
+          {SLIDES.map((s, i) => (
+            <button
+              key={s.title}
+              type="button"
+              role="tab"
+              aria-selected={i === index}
+              aria-label={`Slide ${i + 1} of ${SLIDES.length}`}
+              onClick={() => setIndex(i)}
+              className={[
+                'h-1.5 rounded-full transition-all',
+                i === index ? 'w-6 bg-white' : 'w-1.5 bg-white/40 hover:bg-white/60',
+              ].join(' ')}
+            />
+          ))}
+        </div>
+
+        <Button
+          type="button"
+          onClick={handleNext}
+          loading={finishing}
+          size="lg"
+          fullWidth
+          className="max-w-sm !bg-white !text-purple-700 hover:!bg-white/90"
+        >
+          {isLast ? 'Get Started' : 'Next'}
+        </Button>
+      </div>
+    </div>
+  );
+};
