@@ -22,9 +22,7 @@ export const LegalLayout: React.FC<LegalLayoutProps> = ({ title, updated, childr
             <ArrowLeft size={18} />
           </button>
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center">
-              <span className="text-white font-bold text-xs">M</span>
-            </div>
+            <img src="/icon-192.png" alt="Memory Drop" className="w-7 h-7 rounded-lg flex-shrink-0" />
             <span className="font-bold text-gray-900 dark:text-gray-100">Memory Drop</span>
           </Link>
         </div>
