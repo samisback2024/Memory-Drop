@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useMessages } from '../hooks/useMessages';
 import { useSocial } from '../hooks/useSocial';
 import { useToast } from '../hooks/useToast';
+import { useConfirm } from '../hooks/useConfirm';
 import { supabase } from '../lib/supabase';
 import { Avatar } from '../components/ui/Avatar';
 import { PresenceDot, formatLastSeen } from '../components/messages/PresenceDot';
@@ -43,6 +44,7 @@ export const ConversationPage: React.FC = () => {
   const { user } = useAuth();
   const { blockUser } = useSocial();
   const { showToast } = useToast();
+  const { confirm } = useConfirm();
   const {
     getMessages, getConversationHeader, markConversationRead, markMessagesDelivered, setConversationActive,
     setMessagePinned, starMessage, unstarMessage, reactToMessage, removeMessageReaction, deleteMessageForMe,
@@ -175,8 +177,15 @@ export const ConversationPage: React.FC = () => {
     else await reactToMessage(m.id, emoji);
     void refreshRecent();
   };
-  const handleUnsend = async (m: Message) => { const { error } = await unsendMessage(m.id); if (error) showToast(error, 'error'); else void refreshRecent(); };
+  const handleUnsend = async (m: Message) => {
+    const ok = await confirm({ title: 'Unsend this message?', description: 'It will be removed for everyone in this conversation.', confirmLabel: 'Unsend' });
+    if (!ok) return;
+    const { error } = await unsendMessage(m.id);
+    if (error) showToast(error, 'error'); else void refreshRecent();
+  };
   const handleDeleteForMe = async (m: Message) => {
+    const ok = await confirm({ title: 'Delete this message?', description: 'It stays visible to everyone else — only your copy is removed.', confirmLabel: 'Delete' });
+    if (!ok) return;
     await deleteMessageForMe(m.id);
     setMessages(prev => prev.filter(x => x.id !== m.id));
     showToast('Deleted for you.', 'success');

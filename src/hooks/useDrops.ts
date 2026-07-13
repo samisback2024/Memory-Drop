@@ -1,13 +1,13 @@
 import { useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
-import { uploadFile, deleteFile, generateStoragePath, extractStoragePath } from '../utils/storage';
+import { uploadFile, generateStoragePath } from '../utils/storage';
 import { compressImageFile } from '../lib/image';
 import { track } from '../lib/analytics';
 import { logger } from '../lib/logger';
 import { withAbortTimeout } from '../lib/timeout';
 import type { AuthResult } from '../types/auth';
-import type { Drop, DropTab, InterestType, MemoryType, Mood, ReportReason, Visibility } from '../types/feed';
+import type { DeletedDrop, Drop, DropTab, InterestType, MemoryType, Mood, ReportReason, Visibility } from '../types/feed';
 
 interface CreateDropParams {
   caption: string;
@@ -158,21 +158,28 @@ export const useDrops = () => {
     return { error: null, drop };
   }, [user, profile]);
 
+  // Soft delete — moves the drop into Settings -> Deleted for 30 days
+  // (restorable any time in that window) rather than removing it
+  // immediately. Storage files are deliberately left alone here: a
+  // restore needs the original media still in place, and the eventual
+  // hard delete happens server-side (purge_expired_deleted_drops, see
+  // supabase/phase14s_soft_delete_drops.sql) once the 30 days are up.
   const deleteDrop = useCallback(async (drop: Drop): Promise<AuthResult> => {
     if (!user) return { error: 'Not authenticated' };
-    const { error } = await supabase.from('posts').delete().eq('id', drop.id);
-    if (error) return { error: error.message };
+    const { error } = await supabase.from('posts').update({ deleted_at: new Date().toISOString() }).eq('id', drop.id);
+    return { error: error?.message ?? null };
+  }, [user]);
 
-    // Best-effort storage cleanup — the DB rows are already gone (cascade),
-    // this just stops the files themselves from lingering in the bucket.
-    const paths = [
-      ...drop.images.map(img => extractStoragePath(img.url, 'post-media')),
-      drop.video_url ? extractStoragePath(drop.video_url, 'post-media') : null,
-      drop.audio_url ? extractStoragePath(drop.audio_url, 'post-media') : null,
-    ].filter((p): p is string => Boolean(p));
-    await Promise.all(paths.map(p => deleteFile('post-media', p)));
+  const getDeletedDrops = useCallback(async (): Promise<DeletedDrop[]> => {
+    const { data, error } = await supabase.rpc('get_deleted_drops');
+    if (error || !data) return [];
+    return data as DeletedDrop[];
+  }, []);
 
-    return { error: null };
+  const restoreDrop = useCallback(async (dropId: string): Promise<AuthResult> => {
+    if (!user) return { error: 'Not authenticated' };
+    const { error } = await supabase.from('posts').update({ deleted_at: null }).eq('id', dropId);
+    return { error: error?.message ?? null };
   }, [user]);
 
   const saveDrop = useCallback(async (dropId: string): Promise<AuthResult> => {
@@ -265,6 +272,8 @@ export const useDrops = () => {
     getDrop,
     createDrop,
     deleteDrop,
+    getDeletedDrops,
+    restoreDrop,
     saveDrop,
     unsaveDrop,
     likeDrop,

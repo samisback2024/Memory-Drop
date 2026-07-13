@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useComments } from '../../hooks/useComments';
 import { useToast } from '../../hooks/useToast';
+import { useConfirm } from '../../hooks/useConfirm';
 import { Skeleton } from '../ui/Skeleton';
 import { CommentItem } from './CommentItem';
 import { CommentComposer } from './CommentComposer';
@@ -25,6 +26,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ contentType, con
   const { user, profile } = useAuth();
   const { getComments, addComment, updateComment, deleteComment, setCommentPinned, reactToComment, unreactToComment } = useComments();
   const { showToast } = useToast();
+  const { confirm } = useConfirm();
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
@@ -63,6 +65,8 @@ export const CommentSection: React.FC<CommentSectionProps> = ({ contentType, con
   };
 
   const handleDelete = async (commentId: string) => {
+    const ok = await confirm({ title: 'Delete this comment?', confirmLabel: 'Delete' });
+    if (!ok) return;
     const { error } = await deleteComment(contentType, commentId);
     if (!error) {
       setComments(prev => {

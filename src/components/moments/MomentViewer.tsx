@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { X, Trash2, Eye, MapPin, AtSign } from 'lucide-react';
 import { useMoments } from '../../hooks/useMoments';
+import { useConfirm } from '../../hooks/useConfirm';
 import { Avatar } from '../ui/Avatar';
 import { MomentProgressBar } from './MomentProgressBar';
 import { MomentReactionBar } from './MomentReactionBar';
@@ -36,6 +37,7 @@ interface MomentViewerProps {
 // pause.
 export const MomentViewer: React.FC<MomentViewerProps> = ({ authorUserId, includeExpired, startAtMomentId, onClose }) => {
   const { getUserMoments, deleteMoment, recordMomentView } = useMoments();
+  const { confirm } = useConfirm();
   const [moments, setMoments] = useState<Moment[]>([]);
   const [index, setIndex] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -123,6 +125,9 @@ export const MomentViewer: React.FC<MomentViewerProps> = ({ authorUserId, includ
 
   const handleDelete = async () => {
     if (!current) return;
+    setPaused(true);
+    const ok = await confirm({ title: 'Delete this moment?', confirmLabel: 'Delete' });
+    if (!ok) { setPaused(false); return; }
     setDeleting(true);
     const { error } = await deleteMoment(current);
     setDeleting(false);

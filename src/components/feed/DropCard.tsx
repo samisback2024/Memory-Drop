@@ -4,6 +4,7 @@ import { Lock, Globe2, Users, MoreHorizontal, Flag, EyeOff, User, Trash2 } from 
 import { useAuth } from '../../hooks/useAuth';
 import { useDrops } from '../../hooks/useDrops';
 import { useToast } from '../../hooks/useToast';
+import { useConfirm } from '../../hooks/useConfirm';
 import { useDismissableMenu } from '../../hooks/useDismissableMenu';
 import { Avatar } from '../ui/Avatar';
 import { ImageGrid } from './ImageGrid';
@@ -28,6 +29,7 @@ const DropCardImpl: React.FC<DropCardProps> = ({ drop, onDeleted, onHidden, onUn
   const { user } = useAuth();
   const { deleteDrop, hideDrop, getDrop, recordUnlockView, promoteUnlockedSaves } = useDrops();
   const { showToast } = useToast();
+  const { confirm } = useConfirm();
   const navigate = useNavigate();
   const isOwn = drop.user_id === user?.id;
   const displayName = drop.display_name || drop.username;
@@ -58,10 +60,16 @@ const DropCardImpl: React.FC<DropCardProps> = ({ drop, onDeleted, onHidden, onUn
 
   const handleDelete = async () => {
     setMenuOpen(false);
+    const ok = await confirm({
+      title: 'Delete this drop?',
+      description: "It'll move to Deleted in Settings, where you can restore it for 30 days before it's gone for good.",
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
     setDeleting(true);
     const { error } = await deleteDrop(content);
     if (!error) onDeleted?.(content.id);
-    else setDeleting(false);
+    else { setDeleting(false); showToast(error, 'error'); }
   };
 
   const handleHide = async () => {

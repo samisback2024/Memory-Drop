@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './hooks/useAuth';
 import { ThemeProvider } from './hooks/useTheme';
 import { ToastProvider, useToast } from './hooks/useToast';
 import { NotificationsProvider } from './hooks/useNotifications';
+import { ConfirmProvider } from './hooks/useConfirm';
 import { usePresence } from './hooks/usePresence';
 import { AppShell } from './components/layout/AppShell';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
@@ -94,6 +95,7 @@ function App() {
         <ThemeProvider>
         <NotificationsProvider>
         <ToastProvider>
+        <ConfirmProvider>
           <PresenceMount />
           <SessionExpiryToast />
           {/* A second boundary, above AppShell's own — AppShell's only
@@ -172,6 +174,7 @@ function App() {
           </Routes>
           </Suspense>
           </ErrorBoundary>
+        </ConfirmProvider>
         </ToastProvider>
         </NotificationsProvider>
         </ThemeProvider>

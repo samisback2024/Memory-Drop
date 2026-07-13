@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
-  User, UserCircle, Lock, ShieldCheck, Bell, Palette, Accessibility, HardDrive, LifeBuoy, Info, ChevronRight,
+  User, UserCircle, Lock, ShieldCheck, Bell, Palette, Accessibility, HardDrive, Trash2, LifeBuoy, Info, ChevronRight,
 } from 'lucide-react';
 import { AccountSettings } from '../components/settings/AccountSettings';
 import { ProfileSettings } from '../components/settings/ProfileSettings';
@@ -11,6 +11,7 @@ import { NotificationSettings } from '../components/settings/NotificationSetting
 import { AppearanceSettings } from '../components/settings/AppearanceSettings';
 import { AccessibilitySettings } from '../components/settings/AccessibilitySettings';
 import { StorageSettings } from '../components/settings/StorageSettings';
+import { DeletedSettings } from '../components/settings/DeletedSettings';
 import { HelpSettings } from '../components/settings/HelpSettings';
 import { AboutSettings } from '../components/settings/AboutSettings';
 
@@ -23,6 +24,7 @@ const SECTIONS: { id: string; label: string; description: string; icon: typeof U
   { id: 'appearance', label: 'Appearance', description: 'Light, dark, or system theme', icon: Palette },
   { id: 'accessibility', label: 'Accessibility', description: 'Font size, contrast, motion, touch targets', icon: Accessibility },
   { id: 'storage', label: 'Storage', description: 'What you’re using, and how to manage it', icon: HardDrive },
+  { id: 'deleted', label: 'Deleted', description: 'Deleted drops, restorable for 30 days', icon: Trash2 },
   { id: 'help', label: 'Help & Support', description: 'FAQ, bug reports, feedback', icon: LifeBuoy },
   { id: 'about', label: 'About', description: 'Version, legal, credits', icon: Info },
 ];
@@ -36,6 +38,7 @@ const SECTION_COMPONENTS: Record<string, React.FC> = {
   appearance: AppearanceSettings,
   accessibility: AccessibilitySettings,
   storage: StorageSettings,
+  deleted: DeletedSettings,
   help: HelpSettings,
   about: AboutSettings,
 };

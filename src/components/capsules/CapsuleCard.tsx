@@ -4,6 +4,7 @@ import { Heart, MessageCircle, Feather, Bookmark, Share2, MoreHorizontal, Trash2
 import { useAuth } from '../../hooks/useAuth';
 import { useCapsules } from '../../hooks/useCapsules';
 import { useDismissableMenu } from '../../hooks/useDismissableMenu';
+import { useConfirm } from '../../hooks/useConfirm';
 import { Avatar } from '../ui/Avatar';
 import { Modal } from '../ui/Modal';
 import { CapsuleLockedCard } from './CapsuleLockedCard';
@@ -29,6 +30,7 @@ const CapsuleCardImpl: React.FC<CapsuleCardProps> = ({ capsule, onDeleted }) => 
   const { user } = useAuth();
   const { getCapsule, unlockCapsule, deleteCapsule, likeCapsule, unlikeCapsule, saveCapsule, unsaveCapsule,
     getCapsuleReflections, addReflection } = useCapsules();
+  const { confirm } = useConfirm();
 
   const isOwn = capsule.user_id === user?.id;
   const displayName = capsule.display_name || capsule.username;
@@ -68,6 +70,12 @@ const CapsuleCardImpl: React.FC<CapsuleCardProps> = ({ capsule, onDeleted }) => 
 
   const handleDelete = async () => {
     setMenuOpen(false);
+    const ok = await confirm({
+      title: 'Delete this capsule?',
+      description: 'This permanently deletes the capsule and everything in it. This cannot be undone.',
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
     setDeleting(true);
     const { error } = await deleteCapsule(content);
     if (!error) onDeleted?.(content.id);

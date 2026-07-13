@@ -53,16 +53,25 @@ export interface Drop {
   created_at: string;
 }
 
-// Regular comments now live in types/comment.ts (Comment) — shared with
-// Capsules since Phase 10d unified both comment UIs into one component.
-
-// A private note-to-self on a drop — never shown to anyone but the person
-// who wrote it, and never counted as a comment.
-export interface Reflection {
+// A soft-deleted drop, as returned by get_deleted_drops() — see
+// supabase/phase14s_soft_delete_drops.sql. Only reachable from Settings
+// -> Deleted; days_remaining counts down to the automatic purge.
+export interface DeletedDrop {
   id: string;
-  content: string;
+  caption: string | null;
+  post_type: MemoryType;
+  video_url: string | null;
+  audio_url: string | null;
+  images: DropImage[];
+  mood: Mood | null;
+  visibility: Visibility;
+  deleted_at: string;
+  days_remaining: number;
   created_at: string;
 }
+
+// Regular comments now live in types/comment.ts (Comment) — shared with
+// Capsules since Phase 10d unified both comment UIs into one component.
 
 export const REPORT_REASON_LABELS: Record<ReportReason, string> = {
   spam: 'Spam',
