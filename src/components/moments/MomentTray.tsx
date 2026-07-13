@@ -74,8 +74,11 @@ export const MomentTray: React.FC<MomentTrayProps> = ({ onCreate, onOpenAuthor, 
         aria-label="Add Moment"
         className="flex flex-col items-center gap-1.5 w-11 flex-shrink-0 focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none rounded-2xl py-1"
       >
-        <span className="w-8 h-32 rounded-2xl border-2 border-dashed border-purple-300 dark:border-purple-700 bg-purple-50/60 dark:bg-purple-950/30 flex items-center justify-center">
-          <Plus size={20} className="text-purple-500" aria-hidden="true" />
+        <span className="w-8 h-32 rounded-2xl border-2 border-dashed border-purple-300 dark:border-purple-700 flex flex-col overflow-hidden">
+          <span className="h-11 w-full flex-shrink-0 border-b-2 border-dashed border-purple-300 dark:border-purple-700 bg-purple-50/60 dark:bg-purple-950/30" />
+          <span className="flex-1 w-full flex items-center justify-center bg-purple-50/60 dark:bg-purple-950/30">
+            <Plus size={16} className="text-purple-500" aria-hidden="true" />
+          </span>
         </span>
         <span className="text-xs text-gray-600 dark:text-gray-300 truncate w-full text-center">Add Moment</span>
       </button>
