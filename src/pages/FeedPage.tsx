@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Loader2, Sparkles, LayoutGrid } from 'lucide-react';
+import { Loader2, Sparkles, LayoutGrid, ArrowUp } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useDrops } from '../hooks/useDrops';
+import { supabase } from '../lib/supabase';
 import { usePullToRefresh } from '../hooks/usePullToRefresh';
 import { DropTabs } from '../components/feed/DropTabs';
 import { Feed } from '../components/feed/Feed';
@@ -39,17 +40,26 @@ const emptyTabState = (): TabState => ({ drops: [], offset: 0, hasMore: true, lo
 // trending." See DropCard for how a locked drop renders — no content is
 // ever sent to the client early, so there's nothing to blur, just a
 // sealed capsule and a countdown.
+const isDropTab = (value: string | null): value is DropTab => value !== null && (ALL_TABS as string[]).includes(value);
+
 export const FeedPage: React.FC = () => {
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
   const { getDropsFeed } = useDrops();
-  const [activeTab, setActiveTab] = useState<DropTab>('my_drops');
+  const [searchParams, setSearchParams] = useSearchParams();
+  // Persisted in the URL (?tab=) rather than plain useState — a hard
+  // refresh on, say, the Following tab used to always land back on My
+  // Drops since nothing remembered which tab you'd been on.
+  const [activeTab, setActiveTab] = useState<DropTab>(() => {
+    const requested = searchParams.get('tab');
+    return isDropTab(requested) ? requested : 'my_drops';
+  });
   const [tabStates, setTabStates] = useState<Record<DropTab, TabState>>({
     my_drops: emptyTabState(), following: emptyTabState(), public_drops: emptyTabState(),
     saved_to_unlock: emptyTabState(),
   });
-  const [searchParams, setSearchParams] = useSearchParams();
   const [composerOpen, setComposerOpen] = useState(false);
   const [mediaFilter, setMediaFilter] = useState<MemoryType | null>(null);
+  const [newDropsAvailable, setNewDropsAvailable] = useState(false);
 
   // Backs the "New Drop" PWA manifest shortcut (public/site.webmanifest)
   // — a shortcut that lands on a plain /feed with no visible effect
@@ -116,6 +126,38 @@ export const FeedPage: React.FC = () => {
     if (tab === activeTab) return;
     scrollPositions.current[activeTab] = window.scrollY;
     setActiveTab(tab);
+    setNewDropsAvailable(false);
+    setSearchParams(params => {
+      if (tab === 'my_drops') params.delete('tab'); // default tab, keep the URL clean
+      else params.set('tab', tab);
+      return params;
+    }, { replace: true });
+  };
+
+  // A new Drop from someone else used to only ever appear after a manual
+  // refresh — posts was never in the realtime publication (see
+  // supabase/phase14q_feed_realtime.sql). Rather than splicing a raw
+  // postgres_changes payload straight into the list (it doesn't tell us
+  // which tab it actually belongs in — RLS only guarantees the row is
+  // visible to us *somehow*, not specifically that we follow its author),
+  // this surfaces a lightweight "new drops" pill and lets tapping it
+  // trigger the real, correct getDropsFeed refetch for the active tab.
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`feed-drops:${user.id}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'posts' }, payload => {
+        const newPost = payload.new as { user_id: string };
+        if (newPost.user_id === user.id) return; // own drop already handled by handleDropped
+        if (activeTab === 'following' || activeTab === 'public_drops') setNewDropsAvailable(true);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user, activeTab]);
+
+  const handleRefreshNewDrops = () => {
+    setNewDropsAvailable(false);
+    loadTab(activeTab);
   };
 
   const loadMore = useCallback(async () => {
@@ -228,6 +270,18 @@ export const FeedPage: React.FC = () => {
           );
         })}
       </div>
+
+      {newDropsAvailable && (
+        <div className="flex justify-center -mt-1 sticky top-[4.5rem] z-10">
+          <button
+            type="button"
+            onClick={handleRefreshNewDrops}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-to-r from-purple-600 to-blue-500 text-white text-xs font-semibold shadow-lg hover:shadow-xl transition-shadow animate-fade-in"
+          >
+            <ArrowUp size={13} aria-hidden="true" /> New drops — tap to refresh
+          </button>
+        </div>
+      )}
 
       <Feed
         drops={current.drops}
