@@ -52,6 +52,17 @@ export const useDrops = () => {
     return data as Drop[];
   }, []);
 
+  // Moves any of the caller's own "Saved to Unlock" reactions whose drop
+  // has since unlocked into a real Saved Memories bookmark — see
+  // supabase/phase14o_save_to_unlock_promotion.sql. Returns the drop ids
+  // just promoted this call, so a caller watching one specific drop (its
+  // live countdown just hit zero) can tell whether to show a toast for it.
+  const promoteUnlockedSaves = useCallback(async (): Promise<string[]> => {
+    const { data, error } = await supabase.rpc('promote_unlocked_saves');
+    if (error || !data) return [];
+    return (data as { drop_id: string }[]).map(row => row.drop_id);
+  }, []);
+
   const getDrop = useCallback(async (dropId: string): Promise<Drop | null> => {
     const { data, error } = await supabase.rpc('get_drop', { p_post_id: dropId });
     if (error || !data || data.length === 0) return null;
@@ -242,6 +253,7 @@ export const useDrops = () => {
   return {
     getDropsFeed,
     getSavedDrops,
+    promoteUnlockedSaves,
     getDrop,
     createDrop,
     deleteDrop,

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Search, X, Bookmark, Heart, FolderHeart, Clock } from 'lucide-react';
 import { useSaved } from '../hooks/useSaved';
 import { useDrops } from '../hooks/useDrops';
@@ -34,13 +35,19 @@ const TABS: { id: SavedTab; label: string; icon: typeof Bookmark }[] = [
 // Memories' own mechanisms unchanged — this page is a second, saved-
 // content-focused entry point onto the same underlying data, not a
 // competing system.
+const VALID_TABS: SavedTab[] = ['waiting', 'memories', 'favorites', 'collections'];
+
 export const SavedPage: React.FC = () => {
   const { getSavedMemories } = useSaved();
-  const { getDropsFeed, unsaveDrop } = useDrops();
+  const { getDropsFeed, promoteUnlockedSaves, unsaveDrop } = useDrops();
   const { unsaveCapsule } = useCapsules();
   const { getCollections, getMemories } = useMemories();
+  const [searchParams] = useSearchParams();
 
-  const [tab, setTab] = useState<SavedTab>('waiting');
+  const requestedTab = searchParams.get('tab');
+  const [tab, setTab] = useState<SavedTab>(
+    (requestedTab && VALID_TABS.includes(requestedTab as SavedTab) ? requestedTab as SavedTab : 'waiting')
+  );
 
   // Waiting to Unlock
   const [waiting, setWaiting] = useState<Drop[]>([]);
@@ -66,15 +73,22 @@ export const SavedPage: React.FC = () => {
 
   useEffect(() => { getCollections().then(setCollections); }, [getCollections]);
 
+  // Catches up anything that unlocked while this tab wasn't open live to
+  // watch its countdown (DropCard promotes on the spot when it is) —
+  // otherwise a drop could sit unlocked-but-still-"waiting" until this
+  // page happened to be revisited. Quiet, no toast: this is a background
+  // catch-up pass, not the live "it just unlocked" moment.
   const loadWaiting = useCallback(() => {
     setWaitingLoading(true);
-    getDropsFeed('saved_to_unlock', PAGE_SIZE, 0).then(data => {
-      setWaiting(data);
-      setWaitingOffset(data.length);
-      setWaitingHasMore(data.length === PAGE_SIZE);
-      setWaitingLoading(false);
+    promoteUnlockedSaves().finally(() => {
+      getDropsFeed('saved_to_unlock', PAGE_SIZE, 0).then(data => {
+        setWaiting(data);
+        setWaitingOffset(data.length);
+        setWaitingHasMore(data.length === PAGE_SIZE);
+        setWaitingLoading(false);
+      });
     });
-  }, [getDropsFeed]);
+  }, [getDropsFeed, promoteUnlockedSaves]);
 
   useEffect(() => { if (tab === 'waiting') loadWaiting(); }, [tab, loadWaiting]);
 

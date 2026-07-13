@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Lock, Globe2, Users, MoreHorizontal, Flag, EyeOff, User, Trash2 } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useDrops } from '../../hooks/useDrops';
+import { useToast } from '../../hooks/useToast';
 import { useDismissableMenu } from '../../hooks/useDismissableMenu';
 import { Avatar } from '../ui/Avatar';
 import { ImageGrid } from './ImageGrid';
@@ -25,7 +26,9 @@ interface DropCardProps {
 
 const DropCardImpl: React.FC<DropCardProps> = ({ drop, onDeleted, onHidden, onUnsaved }) => {
   const { user } = useAuth();
-  const { deleteDrop, hideDrop, getDrop, recordUnlockView } = useDrops();
+  const { deleteDrop, hideDrop, getDrop, recordUnlockView, promoteUnlockedSaves } = useDrops();
+  const { showToast } = useToast();
+  const navigate = useNavigate();
   const isOwn = drop.user_id === user?.id;
   const displayName = drop.display_name || drop.username;
   const MemoryIcon = MEMORY_TYPE_ICONS[drop.post_type];
@@ -76,6 +79,18 @@ const DropCardImpl: React.FC<DropCardProps> = ({ drop, onDeleted, onHidden, onUn
     if (fresh) {
       setContent(fresh);
       setJustUnlocked(true);
+    }
+    // A drop you'd tapped "Save to Unlock" on while it was still locked
+    // now moves into the real Saved Memories bookmark — see
+    // supabase/phase14o_save_to_unlock_promotion.sql.
+    if (content.is_saved_to_unlock) {
+      const promoted = await promoteUnlockedSaves();
+      if (promoted.includes(content.id)) {
+        showToast('Moved to My Memory in your Dashboard', 'success', {
+          label: 'View',
+          onClick: () => navigate('/saved?tab=memories'),
+        });
+      }
     }
   };
 
