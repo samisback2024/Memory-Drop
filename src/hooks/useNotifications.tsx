@@ -1,19 +1,37 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
 import type { Notification, NotificationFilter } from '../types/notification';
 
-// Reads go through get_notifications()/get_unread_notification_count()
-// (SECURITY DEFINER — the actor's username/avatar needs joining across
-// profiles RLS, same reasoning as every other cross-user read in this
-// app). Writes (mark read, archive, delete) are direct table calls —
-// notifications' own RLS + the enforce_notification_update_rules()
-// trigger are the real enforcement, same "direct write, RLS decides"
-// pattern favorites/saves/pins already use.
-export const useNotifications = () => {
+interface NotificationsContextType {
+  unreadCount: number;
+  getNotifications: (filter?: NotificationFilter, limit?: number, offset?: number) => Promise<Notification[]>;
+  refreshUnreadCount: () => Promise<void>;
+  markRead: (id: string) => Promise<void>;
+  markUnread: (id: string) => Promise<void>;
+  markAllRead: () => Promise<void>;
+  archive: (id: string, wasUnread: boolean) => Promise<void>;
+  unarchive: (id: string) => Promise<void>;
+  deleteNotification: (id: string) => Promise<void>;
+}
+
+const NotificationsContext = createContext<NotificationsContextType | undefined>(undefined);
+
+// One realtime channel per session, not one per component. NotificationBell
+// (always mounted in Navbar) and NotificationsPage both need unreadCount —
+// each previously called this as a plain hook, so each independently ran
+// `supabase.channel('notifications:${user.id}').on(...).subscribe()`.
+// Supabase's client keys channels by topic name and returns the same
+// object for a repeat topic, so the second `.on()` call landed on a
+// channel that had already been subscribed — which throws ("cannot add
+// postgres_changes callbacks... after subscribe()") and crashed
+// NotificationsPage into its error boundary on every visit, found via
+// live testing. Provider-scoped state (same pattern as AuthProvider/
+// ThemeProvider) means exactly one subscription exists regardless of how
+// many components read unreadCount.
+export const NotificationsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   const getNotifications = useCallback(async (filter: NotificationFilter = 'all', limit = 30, offset = 0): Promise<Notification[]> => {
     const { data, error } = await supabase.rpc('get_notifications', { p_filter: filter, p_limit: limit, p_offset: offset });
@@ -26,11 +44,6 @@ export const useNotifications = () => {
     if (!error && typeof data === 'number') setUnreadCount(data);
   }, []);
 
-  // Realtime-ready: a live channel on INSERT keeps the bell's unread
-  // count current without polling, filtered server-side to the
-  // signed-in user's own notifications (Realtime respects RLS the same
-  // way a normal read would). Subscribed once per session, torn down
-  // on sign-out/unmount.
   useEffect(() => {
     if (!user) {
       setUnreadCount(0);
@@ -43,8 +56,7 @@ export const useNotifications = () => {
         setUnreadCount(prev => prev + 1);
       })
       .subscribe();
-    channelRef.current = channel;
-    return () => { supabase.removeChannel(channel); channelRef.current = null; };
+    return () => { supabase.removeChannel(channel); };
   }, [user, refreshUnreadCount]);
 
   const markRead = useCallback(async (id: string): Promise<void> => {
@@ -77,7 +89,7 @@ export const useNotifications = () => {
     await supabase.from('notifications').delete().eq('id', id);
   }, []);
 
-  return {
+  const value: NotificationsContextType = {
     unreadCount,
     getNotifications,
     refreshUnreadCount,
@@ -88,4 +100,19 @@ export const useNotifications = () => {
     unarchive,
     deleteNotification,
   };
+
+  return <NotificationsContext.Provider value={value}>{children}</NotificationsContext.Provider>;
+};
+
+// Reads go through get_notifications()/get_unread_notification_count()
+// (SECURITY DEFINER — the actor's username/avatar needs joining across
+// profiles RLS, same reasoning as every other cross-user read in this
+// app). Writes (mark read, archive, delete) are direct table calls —
+// notifications' own RLS + the enforce_notification_update_rules()
+// trigger are the real enforcement, same "direct write, RLS decides"
+// pattern favorites/saves/pins already use.
+export const useNotifications = (): NotificationsContextType => {
+  const ctx = useContext(NotificationsContext);
+  if (!ctx) throw new Error('useNotifications must be used within NotificationsProvider');
+  return ctx;
 };

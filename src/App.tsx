@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider, useAuth } from './hooks/useAuth';
 import { ThemeProvider } from './hooks/useTheme';
 import { ToastProvider, useToast } from './hooks/useToast';
+import { NotificationsProvider } from './hooks/useNotifications';
 import { usePresence } from './hooks/usePresence';
 import { AppShell } from './components/layout/AppShell';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
@@ -90,6 +91,7 @@ function App() {
     <BrowserRouter>
       <AuthProvider>
         <ThemeProvider>
+        <NotificationsProvider>
         <ToastProvider>
           <PresenceMount />
           <SessionExpiryToast />
@@ -169,6 +171,7 @@ function App() {
           </Suspense>
           </ErrorBoundary>
         </ToastProvider>
+        </NotificationsProvider>
         </ThemeProvider>
       </AuthProvider>
     </BrowserRouter>
