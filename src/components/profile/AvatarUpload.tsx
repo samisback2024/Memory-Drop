@@ -1,7 +1,8 @@
-import React, { useRef } from 'react';
-import { Camera, Loader2 } from 'lucide-react';
+import React, { useRef, useState } from 'react';
+import { Camera, Loader2, Sparkles } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
 import { ImageCropModal } from './ImageCropModal';
+import { AvatarPickerModal } from './AvatarPickerModal';
 import { useImageUpload } from '../../hooks/useImageUpload';
 import { MAX_AVATAR_BYTES } from '../../lib/validators';
 
@@ -15,6 +16,7 @@ const AVATAR_OUTPUT_SIZE = 512;
 
 export const AvatarUpload: React.FC<AvatarUploadProps> = ({ src, name, onUpload }) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const { pendingFile, uploading, error, dragActive, selectFile, cancelCrop, confirmCrop, dragHandlers } =
     useImageUpload({ maxBytes: MAX_AVATAR_BYTES, onUpload });
 
@@ -44,6 +46,15 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({ src, name, onUpload 
             <Camera size={14} className="text-white" aria-hidden="true" />
           )}
         </button>
+        <button
+          type="button"
+          onClick={() => setPickerOpen(true)}
+          disabled={uploading}
+          className="absolute bottom-0 left-0 w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center hover:opacity-90 transition-opacity border-2 border-white disabled:opacity-60 focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none"
+          aria-label="Choose a generated avatar"
+        >
+          <Sparkles size={14} className="text-white" aria-hidden="true" />
+        </button>
         <input
           ref={inputRef}
           type="file"
@@ -53,7 +64,7 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({ src, name, onUpload 
           aria-label="Upload profile photo"
         />
       </div>
-      <p className="text-xs text-gray-400 dark:text-gray-500">Drag a photo onto your avatar, or tap the camera icon</p>
+      <p className="text-xs text-gray-400 dark:text-gray-500">Drag a photo, tap the camera icon, or pick a generated avatar</p>
       {error && (
         <p className="text-xs text-red-500 dark:text-red-400">
           {error}{' '}
@@ -75,6 +86,8 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({ src, name, onUpload 
           onConfirm={confirmCrop}
         />
       )}
+
+      <AvatarPickerModal isOpen={pickerOpen} onClose={() => setPickerOpen(false)} onUpload={onUpload} />
     </div>
   );
 };
