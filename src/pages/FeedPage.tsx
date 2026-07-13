@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Loader2, Sparkles } from 'lucide-react';
+import { Loader2, Sparkles, LayoutGrid } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useDrops } from '../hooks/useDrops';
 import { usePullToRefresh } from '../hooks/usePullToRefresh';
@@ -11,10 +11,13 @@ import { MomentTray } from '../components/moments/MomentTray';
 import { CreateMomentModal } from '../components/moments/CreateMomentModal';
 import { MomentViewer } from '../components/moments/MomentViewer';
 import { Avatar } from '../components/ui/Avatar';
-import type { Drop, DropTab } from '../types/feed';
+import { MEMORY_TYPE_ICONS } from '../components/feed/LockedDropPlaceholder';
+import type { Drop, DropTab, MemoryType } from '../types/feed';
 
 const PAGE_SIZE = 10;
 const ALL_TABS: DropTab[] = ['my_drops', 'following', 'public_drops', 'saved_to_unlock'];
+const MEDIA_FILTER_LABELS: Record<MemoryType, string> = { photo: 'Photo', video: 'Video', text: 'Text', audio: 'Voice' };
+const MEDIA_FILTERS: MemoryType[] = ['photo', 'video', 'text', 'audio'];
 
 interface TabState {
   drops: Drop[];
@@ -43,6 +46,7 @@ export const FeedPage: React.FC = () => {
   });
   const [searchParams, setSearchParams] = useSearchParams();
   const [composerOpen, setComposerOpen] = useState(false);
+  const [mediaFilter, setMediaFilter] = useState<MemoryType | null>(null);
 
   // Backs the "New Drop" PWA manifest shortcut (public/site.webmanifest)
   // — a shortcut that lands on a plain /feed with no visible effect
@@ -64,20 +68,37 @@ export const FeedPage: React.FC = () => {
 
   const loadTab = useCallback(async (tab: DropTab) => {
     setTabStates(prev => ({ ...prev, [tab]: { ...prev[tab], loading: true } }));
-    const data = await getDropsFeed(tab, PAGE_SIZE, 0);
+    const data = await getDropsFeed(tab, PAGE_SIZE, 0, mediaFilter);
     setTabStates(prev => ({
       ...prev,
       [tab]: { drops: data, offset: data.length, hasMore: data.length === PAGE_SIZE, loading: false, loadingMore: false, loaded: true },
     }));
-  }, [getDropsFeed]);
+  }, [getDropsFeed, mediaFilter]);
 
   useEffect(() => {
     if (!tabStates[activeTab].loaded) loadTab(activeTab);
-    // Only re-run when the tab itself changes — loadTab is stable, and
-    // tabStates is intentionally excluded so this doesn't refire on every
+    // Re-runs on either the tab or the media filter changing — loadTab
+    // is recreated with the current mediaFilter closure whenever the
+    // filter changes, and handleMediaFilterChange below resets the
+    // active tab's `loaded` flag, so this picks the refetch up. tabStates
+    // is intentionally excluded so this doesn't refire on every
     // load/loadMore update.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab]);
+  }, [activeTab, mediaFilter]);
+
+  // Changing the media filter invalidates every tab's cached results
+  // (they were fetched under the old filter) — refetch the one visible
+  // now, mark the rest to refetch next time they're opened, same
+  // pattern handleDropped already uses for a new drop landing.
+  const handleMediaFilterChange = (next: MemoryType | null) => {
+    if (next === mediaFilter) return;
+    setMediaFilter(next);
+    setTabStates(prev => {
+      const result: Record<DropTab, TabState> = { ...prev };
+      for (const tab of ALL_TABS) result[tab] = tab === activeTab ? emptyTabState() : { ...prev[tab], loaded: false };
+      return result;
+    });
+  };
 
   // Restores the previously-visited tab's scroll offset after its (already
   // cached) drops have painted, rather than resetting to the top every
@@ -98,7 +119,7 @@ export const FeedPage: React.FC = () => {
     const state = tabStates[activeTab];
     if (state.loadingMore || !state.hasMore || state.loading) return;
     setTabStates(prev => ({ ...prev, [activeTab]: { ...prev[activeTab], loadingMore: true } }));
-    const data = await getDropsFeed(activeTab, PAGE_SIZE, state.offset);
+    const data = await getDropsFeed(activeTab, PAGE_SIZE, state.offset, mediaFilter);
     setTabStates(prev => ({
       ...prev,
       [activeTab]: {
@@ -109,7 +130,7 @@ export const FeedPage: React.FC = () => {
         loadingMore: false,
       },
     }));
-  }, [activeTab, tabStates, getDropsFeed]);
+  }, [activeTab, tabStates, getDropsFeed, mediaFilter]);
 
   const refresh = useCallback(() => loadTab(activeTab), [activeTab, loadTab]);
   const { pulling, distance, refreshing } = usePullToRefresh(refresh, true);
@@ -170,6 +191,40 @@ export const FeedPage: React.FC = () => {
       </button>
 
       <DropTabs active={activeTab} onChange={handleTabChange} />
+
+      <div role="radiogroup" aria-label="Filter by media type" className="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+        <button
+          type="button"
+          role="radio"
+          aria-checked={mediaFilter === null}
+          onClick={() => handleMediaFilterChange(null)}
+          className={[
+            'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap flex-shrink-0 transition-colors',
+            mediaFilter === null ? 'bg-purple-600 text-white' : 'bg-white/70 dark:bg-gray-900/70 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 border border-white/60 dark:border-gray-800/60',
+          ].join(' ')}
+        >
+          <LayoutGrid size={12} aria-hidden="true" /> All
+        </button>
+        {MEDIA_FILTERS.map(type => {
+          const Icon = MEMORY_TYPE_ICONS[type];
+          const active = mediaFilter === type;
+          return (
+            <button
+              key={type}
+              type="button"
+              role="radio"
+              aria-checked={active}
+              onClick={() => handleMediaFilterChange(type)}
+              className={[
+                'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap flex-shrink-0 transition-colors',
+                active ? 'bg-purple-600 text-white' : 'bg-white/70 dark:bg-gray-900/70 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 border border-white/60 dark:border-gray-800/60',
+              ].join(' ')}
+            >
+              <Icon size={12} aria-hidden="true" /> {MEDIA_FILTER_LABELS[type]}
+            </button>
+          );
+        })}
+      </div>
 
       <Feed
         drops={current.drops}
