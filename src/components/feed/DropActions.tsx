@@ -57,7 +57,7 @@ export const DropActions: React.FC<DropActionsProps> = ({ drop, onUpdate, onComm
   }
 
   return (
-    <div className="flex items-center gap-4 px-4 py-3 border-t border-gray-50 dark:border-gray-800">
+    <div className="flex items-center gap-2 px-4 py-3 border-t border-gray-50 dark:border-gray-800">
       <LikeButton
         dropId={drop.id}
         isLiked={drop.is_liked}
@@ -68,10 +68,11 @@ export const DropActions: React.FC<DropActionsProps> = ({ drop, onUpdate, onComm
       <button
         type="button"
         onClick={onCommentToggle}
-        className="flex items-center gap-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-colors focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none rounded-lg px-1.5 py-1 -mx-1.5"
+        aria-label="Comments"
+        className="inline-flex items-center gap-1.5 rounded-full pl-2.5 pr-3 py-1.5 text-xs font-semibold bg-gray-50 dark:bg-gray-800/70 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/70 transition-all focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none"
       >
-        <MessageCircle size={17} aria-hidden="true" />
-        {drop.comment_count > 0 ? drop.comment_count : ''}
+        <MessageCircle size={14} aria-hidden="true" />
+        {drop.comment_count > 0 && drop.comment_count}
       </button>
 
       <SaveButton dropId={drop.id} isSaved={drop.is_saved} onChange={isSaved => onUpdate({ is_saved: isSaved })} />
@@ -80,9 +81,9 @@ export const DropActions: React.FC<DropActionsProps> = ({ drop, onUpdate, onComm
         type="button"
         onClick={onShare}
         aria-label="Share this memory"
-        className="ml-auto flex items-center gap-1.5 text-sm font-medium text-gray-600 hover:text-purple-600 transition-colors focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none rounded-lg px-1.5 py-1 -mx-1.5"
+        className="ml-auto inline-flex items-center gap-1.5 rounded-full p-2 text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/70 hover:bg-gray-100 dark:hover:bg-gray-700/70 transition-all focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none"
       >
-        <Share2 size={16} aria-hidden="true" />
+        <Share2 size={14} aria-hidden="true" />
       </button>
     </div>
   );
