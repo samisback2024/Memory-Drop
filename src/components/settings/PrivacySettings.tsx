@@ -135,7 +135,7 @@ export const PrivacySettings: React.FC = () => {
       <SettingsCard>
         <ToggleRow
           label="Private account"
-          description="Only accepted followers can see your public-visibility content."
+          description="Only accepted Orbit members can see your public-visibility content."
           checked={isPrivate}
           onChange={togglePrivate}
         />
@@ -194,7 +194,7 @@ export const PrivacySettings: React.FC = () => {
       <SettingsCard title="Analytics" description="Helps us understand what's working — never shared with a third party.">
         <ToggleRow
           label="Share usage analytics"
-          description="Signups, Drops/Capsules/Moments created, unlocks, follows, searches, and shares — stored only in Memory Drop's own database, never sold or sent to an outside analytics company."
+          description="Signups, Drops/Capsules/Moments created, unlocks, orbits, searches, and shares — stored only in Memory Drop's own database, never sold or sent to an outside analytics company."
           checked={analyticsEnabled}
           onChange={handleAnalyticsChange}
         />

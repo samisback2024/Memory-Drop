@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { useSocial } from '../hooks/useSocial';
 import { PublicPageHeader } from '../components/layout/PublicPageHeader';
-import { FollowersList } from '../components/social/FollowersList';
+import { InOrbitList } from '../components/social/InOrbitList';
 import { UserListSkeleton } from '../components/social/UserList';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
@@ -20,18 +20,16 @@ interface TargetProfile {
 
 type FetchState = 'loading' | 'ready' | 'not_found' | 'error';
 
-// Mounted at both /followers (own list) and /u/:username/followers (anyone
-// else's) — see App.tsx. Resolving through get_profile_by_username either
-// way means "my own" isn't a special case: is_own_profile just comes back
-// true, same RPC either route.
-export const FollowersPage: React.FC = () => {
+// Mounted at both /in-orbit (own list) and /u/:username/in-orbit — see
+// OrbitingYouPage for the reasoning, identical shape here.
+export const InOrbitPage: React.FC = () => {
   const { username: paramUsername } = useParams<{ username?: string }>();
   const { profile: myProfile, user } = useAuth();
   const { getRelationship } = useSocial();
   const username = paramUsername ?? myProfile?.username ?? null;
 
   const [target, setTarget] = useState<TargetProfile | null>(null);
-  const [isAcceptedFollower, setIsAcceptedFollower] = useState(false);
+  const [isInOrbit, setIsInOrbit] = useState(false);
   const [state, setState] = useState<FetchState>('loading');
 
   const load = useCallback(async () => {
@@ -44,15 +42,15 @@ export const FollowersPage: React.FC = () => {
     setTarget(profile);
     if (user && !profile.is_own_profile && profile.is_private) {
       const rel = await getRelationship(profile.id);
-      setIsAcceptedFollower(Boolean(rel?.is_following));
+      setIsInOrbit(Boolean(rel?.is_in_orbit));
     }
     setState('ready');
   }, [username, user, getRelationship]);
 
   useEffect(() => { load(); }, [load]);
 
-  const canView = Boolean(target && (target.is_own_profile || !target.is_private || isAcceptedFollower));
-  const title = target ? `${target.display_name || target.username}'s followers` : 'Followers';
+  const canView = Boolean(target && (target.is_own_profile || !target.is_private || isInOrbit));
+  const title = target ? `${target.display_name || target.username}'s Orbit` : 'In Orbit';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -70,12 +68,12 @@ export const FollowersPage: React.FC = () => {
         )}
         {state === 'error' && (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
-            <ErrorState title="Couldn't load followers" description="Check your connection and try again." onRetry={load} />
+            <ErrorState title="Couldn't load Orbit" description="Check your connection and try again." onRetry={load} />
           </div>
         )}
         {state === 'ready' && target && (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-            <FollowersList profileId={target.id} isOwnProfile={target.is_own_profile} canView={canView} />
+            <InOrbitList profileId={target.id} isOwnProfile={target.is_own_profile} canView={canView} />
           </div>
         )}
       </main>

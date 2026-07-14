@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Mic, Square, Trash2, Play, Pause, Send } from 'lucide-react';
 import { useVoiceRecorder, type VoiceRecording } from '../../hooks/useVoiceRecorder';
+import { MAX_VOICE_RECORDING_BYTES } from '../../lib/validators';
 
 interface VoiceRecorderBarProps {
   onSend: (recording: VoiceRecording) => void;
@@ -81,30 +82,35 @@ export const VoiceRecorderBar: React.FC<VoiceRecorderBarProps> = ({ onSend, onCa
   }
 
   return (
-    <div className="flex items-center gap-3 px-3 py-2 bg-red-50 dark:bg-red-950/30 rounded-2xl">
-      <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse flex-shrink-0" aria-hidden="true" />
-      <div className="flex-1 flex items-center gap-0.5 h-8" aria-hidden="true">
-        {waveform.length === 0 ? (
-          <span className="text-xs text-red-500">Listening…</span>
-        ) : (
-          waveform.map((v, i) => (
-            <span key={i} className="flex-1 bg-red-400 dark:bg-red-500 rounded-full" style={{ height: `${Math.max(15, v * 100)}%` }} />
-          ))
-        )}
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-3 px-3 py-2 bg-red-50 dark:bg-red-950/30 rounded-2xl">
+        <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse flex-shrink-0" aria-hidden="true" />
+        <div className="flex-1 flex items-center gap-0.5 h-8" aria-hidden="true">
+          {waveform.length === 0 ? (
+            <span className="text-xs text-red-500">Listening…</span>
+          ) : (
+            waveform.map((v, i) => (
+              <span key={i} className="flex-1 bg-red-400 dark:bg-red-500 rounded-full" style={{ height: `${Math.max(15, v * 100)}%` }} />
+            ))
+          )}
+        </div>
+        <span className="text-xs text-red-700 dark:text-red-300 font-medium flex-shrink-0">{formatDuration(duration)}</span>
+        <button type="button" onClick={cancel} aria-label="Cancel recording" className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-100 dark:hover:bg-red-950/50 transition-colors flex-shrink-0">
+          <Trash2 size={16} aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          onClick={handleStop}
+          disabled={!recording}
+          aria-label="Stop recording"
+          className="w-9 h-9 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center flex-shrink-0 disabled:opacity-50"
+        >
+          <Square size={13} className="fill-current" aria-hidden="true" />
+        </button>
       </div>
-      <span className="text-xs text-red-700 dark:text-red-300 font-medium flex-shrink-0">{formatDuration(duration)}</span>
-      <button type="button" onClick={cancel} aria-label="Cancel recording" className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-100 dark:hover:bg-red-950/50 transition-colors flex-shrink-0">
-        <Trash2 size={16} aria-hidden="true" />
-      </button>
-      <button
-        type="button"
-        onClick={handleStop}
-        disabled={!recording}
-        aria-label="Stop recording"
-        className="w-9 h-9 rounded-full bg-red-600 hover:bg-red-700 text-white flex items-center justify-center flex-shrink-0 disabled:opacity-50"
-      >
-        <Square size={13} className="fill-current" aria-hidden="true" />
-      </button>
+      <p className="text-[11px] text-gray-400 dark:text-gray-500 px-1">
+        Voice notes can be up to {Math.round(MAX_VOICE_RECORDING_BYTES / (1024 * 1024))}MB — stop and send before then.
+      </p>
     </div>
   );
 };

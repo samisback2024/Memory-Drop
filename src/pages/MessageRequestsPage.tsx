@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ChevronLeft, Check, X, ShieldOff } from 'lucide-react';
 import { useMessages } from '../hooks/useMessages';
 import { useSocial } from '../hooks/useSocial';
+import { useToast } from '../hooks/useToast';
 import { EmptyState } from '../components/ui/EmptyState';
 import { Avatar } from '../components/ui/Avatar';
 import { Inbox } from 'lucide-react';
@@ -18,6 +19,7 @@ export const MessageRequestsPage: React.FC = () => {
   const navigate = useNavigate();
   const { getMessageRequests, acceptMessageRequest, declineMessageRequest } = useMessages();
   const { blockUser } = useSocial();
+  const { showToast } = useToast();
   const [requests, setRequests] = useState<MessageRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -33,21 +35,24 @@ export const MessageRequestsPage: React.FC = () => {
     const { error } = await acceptMessageRequest(r.id);
     setBusyId(null);
     if (!error) navigate(`/messages/${r.id}`);
+    else showToast(error, 'error');
   };
 
   const handleDecline = async (r: MessageRequest) => {
     setBusyId(r.id);
-    await declineMessageRequest(r.id);
+    const { error } = await declineMessageRequest(r.id);
     setBusyId(null);
-    removeRow(r.id);
+    if (!error) removeRow(r.id);
+    else showToast(error, 'error');
   };
 
   const handleBlock = async (r: MessageRequest) => {
     setBusyId(r.id);
     await blockUser(r.other_user_id);
-    await declineMessageRequest(r.id);
+    const { error } = await declineMessageRequest(r.id);
     setBusyId(null);
-    removeRow(r.id);
+    if (!error) removeRow(r.id);
+    else showToast(error, 'error');
   };
 
   return (
@@ -56,7 +61,7 @@ export const MessageRequestsPage: React.FC = () => {
         <Link to="/messages" aria-label="Back to messages" className="p-1.5 -ml-1.5 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
           <ChevronLeft size={20} aria-hidden="true" />
         </Link>
-        <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">Message Requests</h1>
+        <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">Message requests</h1>
       </div>
 
       <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
@@ -65,7 +70,7 @@ export const MessageRequestsPage: React.FC = () => {
             {[0, 1].map(i => <div key={i} className="h-20 animate-pulse bg-gray-50 dark:bg-gray-800" />)}
           </div>
         ) : requests.length === 0 ? (
-          <EmptyState icon={Inbox} title="No requests" description="Messages from people outside your circle land here first." />
+          <EmptyState icon={Inbox} title="No message requests" description="Messages from people outside your circle land here first." />
         ) : (
           <div className="flex flex-col divide-y divide-gray-50 dark:divide-gray-800">
             {requests.map(r => (

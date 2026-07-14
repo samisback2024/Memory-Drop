@@ -75,7 +75,7 @@ export const MEMORY_TYPE_OPTIONS: { type: CapsuleMemoryType; label: string }[] =
 
 export const CAPSULE_VISIBILITY_META: Record<CapsuleVisibility, { label: string; description: string }> = {
   only_me: { label: 'Only Me', description: 'A private vault — nobody else will ever open this one.' },
-  followers: { label: 'Followers', description: 'Your followers can open this once it unlocks.' },
+  followers: { label: 'Orbit', description: 'People in your Orbit can open this once it unlocks.' },
   public: { label: 'Public', description: 'Anyone who can see your posts can open this once it unlocks.' },
 };
 

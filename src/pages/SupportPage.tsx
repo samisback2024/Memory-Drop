@@ -36,7 +36,7 @@ export const SupportPage: React.FC = () => {
       <LegalSection heading="Common questions">
         <p><strong className="text-gray-800 dark:text-gray-200">When can I see a locked Time Capsule?</strong><br />Exactly when its unlock date arrives — not before, not even for you.</p>
         <p><strong className="text-gray-800 dark:text-gray-200">What happens to a Moment after it expires?</strong><br />It disappears from the tray and everyone else's view, but stays in your own Memories archive forever.</p>
-        <p><strong className="text-gray-800 dark:text-gray-200">Who can see my private account's content?</strong><br />Only accepted followers, unless a specific Drop, Moment, or Capsule is set to Only Me or Followers.</p>
+        <p><strong className="text-gray-800 dark:text-gray-200">Who can see my private account's content?</strong><br />Only accepted Orbit members, unless a specific Drop, Moment, or Capsule is set to Only Me or Orbit.</p>
       </LegalSection>
 
       <LegalSection heading="Get the app">

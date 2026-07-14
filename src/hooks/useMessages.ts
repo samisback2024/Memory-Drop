@@ -195,6 +195,17 @@ export const useMessages = () => {
     return { error: error?.message ?? null };
   }, [user]);
 
+  // "Delete for me" at the conversation level — same discipline as a
+  // single message's delete-for-me, just scoped to the whole thread.
+  // Only hides it from the caller's own inbox/history; the other member
+  // keeps theirs untouched. Reappears on the other person's next new
+  // message (see supabase/phase14v_delete_conversation.sql).
+  const deleteConversation = useCallback(async (conversationId: string): Promise<AuthResult> => {
+    if (!user) return { error: 'Not authenticated' };
+    const { error } = await supabase.from('conversation_members').update({ deleted_at: new Date().toISOString() }).eq('conversation_id', conversationId).eq('user_id', user.id);
+    return { error: error?.message ?? null };
+  }, [user]);
+
   const searchConversations = useCallback(async (query: string): Promise<ConversationSearchResult[]> => {
     if (!query.trim()) return [];
     const { data, error } = await supabase.rpc('search_conversations', { p_query: query.trim() });
@@ -240,6 +251,7 @@ export const useMessages = () => {
     setConversationPinned,
     setConversationMuted,
     setConversationArchived,
+    deleteConversation,
     searchConversations,
     searchMessages,
     getConversationMedia,

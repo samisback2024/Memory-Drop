@@ -9,7 +9,7 @@ export type MemorySort = 'newest' | 'oldest';
 // Drop, a Capsule, and an expired Moment all normalized into one row
 // (Phase 9 widened this from Capsule+Moment only). visibility is
 // collapsed to the same 3-value space Capsules already use (a Moment's
-// `close_friends` maps to `followers`, a Drop's `private` maps to
+// `close_friends` maps to the Orbit tier, a Drop's `private` maps to
 // `only_me` — both approximations, noted in the README). A Drop's
 // `title` is always null (Drops never had a title field); `tags`/
 // `location_text` are always empty/null for Drops — those two only
@@ -88,8 +88,8 @@ export interface MemoryStats {
   expired_moments: number;
   saved_to_unlock: number;
   public_drops: number;
-  followers_count: number;
-  following_count: number;
+  orbiting_count: number;
+  in_orbit_count: number;
   total_views: number;
   total_unlocks: number;
   total_reactions: number;
@@ -97,16 +97,16 @@ export interface MemoryStats {
 }
 
 // get_public_stats(user_id) — what anyone is allowed to know about
-// someone else. Never leaks locked content, private/only-me/followers
+// someone else. Never leaks locked content, private/only-me/Orbit
 // visibility, saved-to-unlock, views, reactions, or comments.
-// The 10 fields beyond public_memories_count/followers_count/
-// following_count are only ever non-null if the profile owner opted
+// The 10 fields beyond public_memories_count/orbiting_count/
+// in_orbit_count are only ever non-null if the profile owner opted
 // that specific stat into public visibility (Settings → Privacy) —
 // null means "hidden," not "zero."
 export interface PublicStats {
   public_memories_count: number;
-  followers_count: number;
-  following_count: number;
+  orbiting_count: number;
+  in_orbit_count: number;
   total_drops: number | null;
   locked_items: number | null;
   unlocked_items: number | null;

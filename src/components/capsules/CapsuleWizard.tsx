@@ -12,7 +12,7 @@ import { MoodPicker } from '../feed/MoodPicker';
 import { EmojiPicker } from '../feed/EmojiPicker';
 import { CapsuleCountdown } from './CapsuleCountdown';
 import { MEMORY_TYPE_ICONS } from './CapsuleLockedCard';
-import { validateCapsuleTitle, validateCapsuleMemoryText, validateImageFile, validateVideoFile, MAX_POST_IMAGE_BYTES } from '../../lib/validators';
+import { validateCapsuleTitle, validateCapsuleMemoryText, validateImageFile, validateVideoFile, MAX_POST_IMAGE_BYTES, MAX_POST_VIDEO_BYTES } from '../../lib/validators';
 import { formatDate } from '../../utils/date';
 import {
   MEMORY_TYPE_OPTIONS, CAPSULE_VISIBILITY_META, UNLOCK_PRESETS, computePresetDate,
@@ -107,13 +107,19 @@ export const CapsuleWizard: React.FC<CapsuleWizardProps> = ({ isOpen, onClose, o
     if (!files || files.length === 0) return;
     setError(null);
     const cap = MEDIA_CAPS[type] ?? 0;
-    const remaining = cap - mediaCount(type);
-    const selected = Array.from(files).slice(0, Math.max(remaining, 0));
+    const remaining = Math.max(cap - mediaCount(type), 0);
+    const selected = Array.from(files).slice(0, remaining);
     const next: PendingMedia[] = [];
+    let firstInvalidError: string | null = null;
     for (const file of selected) {
       const validationError = type === 'photo' ? validateImageFile(file, MAX_POST_IMAGE_BYTES) : validateVideoFile(file);
-      if (validationError) { setError(validationError); continue; }
+      if (validationError) { firstInvalidError ??= validationError; continue; }
       next.push({ type, file, previewUrl: URL.createObjectURL(file) });
+    }
+    if (firstInvalidError) {
+      setError(firstInvalidError);
+    } else if (files.length > remaining) {
+      setError(`Only added ${remaining} more ${type}${remaining === 1 ? '' : 's'} — a capsule can have up to ${cap}.`);
     }
     setMedia(prev => [...prev, ...next]);
   };
@@ -270,7 +276,10 @@ export const CapsuleWizard: React.FC<CapsuleWizardProps> = ({ isOpen, onClose, o
 
             {nonTextTypes.includes('photo') && (
               <div className="flex flex-col gap-2">
-                <p className="text-sm font-medium text-gray-700 flex items-center gap-1.5"><ImageIcon size={15} className="text-gray-400" aria-hidden="true" /> Photos</p>
+                <p className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
+                  <ImageIcon size={15} className="text-gray-400" aria-hidden="true" /> Photos
+                  <span className="text-xs font-normal text-gray-400">{mediaCount('photo')}/{CAPSULE_MAX_PHOTOS} · JPG, PNG, WebP, GIF · {MAX_POST_IMAGE_BYTES / (1024 * 1024)}MB each</span>
+                </p>
                 <div className="grid grid-cols-4 gap-2">
                   {media.filter(m => m.type === 'photo').map((m) => {
                     const index = media.indexOf(m);
@@ -295,7 +304,10 @@ export const CapsuleWizard: React.FC<CapsuleWizardProps> = ({ isOpen, onClose, o
 
             {nonTextTypes.includes('video') && (
               <div className="flex flex-col gap-2">
-                <p className="text-sm font-medium text-gray-700 flex items-center gap-1.5"><Video size={15} className="text-gray-400" aria-hidden="true" /> Videos</p>
+                <p className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
+                  <Video size={15} className="text-gray-400" aria-hidden="true" /> Videos
+                  <span className="text-xs font-normal text-gray-400">{mediaCount('video')}/{CAPSULE_MAX_VIDEOS} · MP4, WebM, MOV · {MAX_POST_VIDEO_BYTES / (1024 * 1024)}MB each</span>
+                </p>
                 {media.filter(m => m.type === 'video').map(m => {
                   const index = media.indexOf(m);
                   return (

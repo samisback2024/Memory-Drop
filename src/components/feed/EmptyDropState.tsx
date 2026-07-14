@@ -7,7 +7,7 @@ type EmptyDropVariant = DropTab | 'saved';
 
 const VARIANTS: Record<EmptyDropVariant, { icon: typeof Sparkles; title: string; description: string }> = {
   my_drops: { icon: Sparkles, title: 'No memories dropped yet', description: 'Capture your first moment — write, snap, or record something for later.' },
-  following: { icon: Users, title: 'No drops from people you follow', description: "Memories from people you follow — sealed or opened — will show up here." },
+  in_orbit: { icon: Users, title: 'No drops from your Orbit', description: "Memories from people in your Orbit — sealed or opened — will show up here." },
   public_drops: { icon: Compass, title: 'No public drops yet', description: 'Public memories from the community, sealed or opened, will show up here.' },
   saved_to_unlock: { icon: Star, title: 'Nothing saved to unlock', description: "Tap “Save to Unlock” on a sealed drop and it'll wait for you here." },
   saved: { icon: Bookmark, title: 'No saved memories', description: 'Drops you save will show up here.' },

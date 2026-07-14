@@ -75,7 +75,7 @@ export const MessagesPage: React.FC = () => {
       case 'pinned': return { title: 'Nothing pinned', description: 'Pin a conversation to keep it at the top.' };
       case 'muted': return { title: 'Nothing muted', description: 'Muted conversations show up here.' };
       case 'archived': return { title: 'Nothing archived', description: 'Archived conversations show up here.' };
-      default: return { title: 'No messages yet', description: 'Start a conversation with someone you follow or know.' };
+      default: return { title: 'No messages yet', description: 'Start a conversation with someone in your Orbit, or someone you know.' };
     }
   }, [filter]);
 

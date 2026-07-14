@@ -141,7 +141,7 @@ export const AccountSettings: React.FC = () => {
 
       <DangerZone
         title="Delete account"
-        description="Permanently deletes your account and everything in it — drops, moments, capsules, memories, followers, all of it. This cannot be undone."
+        description="Permanently deletes your account and everything in it — drops, moments, capsules, memories, your Orbit, all of it. This cannot be undone."
         actionLabel="Delete my account"
         onConfirm={handleDeleteAccount}
       />

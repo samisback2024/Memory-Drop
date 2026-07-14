@@ -6,16 +6,16 @@ export interface SocialUser {
   is_private: boolean;
 }
 
-// The shape returned by every list RPC (search, suggested, followers,
-// following) — each row already carries the viewer's relationship to that
+// The shape returned by every list RPC (search, suggested, orbiters,
+// orbiting) — each row already carries the viewer's relationship to that
 // user, computed server-side, so lists never need a per-row follow-up call.
-// is_muted/is_restricted/i_blocked are only populated by get_followers and
-// get_following (the two lists RelationshipMenu appears on) — search and
+// is_muted/is_restricted/i_blocked are only populated by get_orbiters and
+// get_orbiting (the two lists RelationshipMenu appears on) — search and
 // suggestions omit them since that menu isn't shown there.
 export interface SocialUserWithRelationship extends SocialUser {
-  is_following: boolean;
-  is_pending: boolean;
-  is_followed_by: boolean;
+  is_in_orbit: boolean;
+  is_orbit_pending: boolean;
+  is_orbiting_you: boolean;
   is_muted?: boolean;
   is_restricted?: boolean;
   i_blocked?: boolean;
@@ -30,9 +30,9 @@ export interface PendingRequest extends SocialUser {
 }
 
 export interface Relationship {
-  is_following: boolean;
-  is_pending: boolean;
-  is_followed_by: boolean;
+  is_in_orbit: boolean;
+  is_orbit_pending: boolean;
+  is_orbiting_you: boolean;
   i_blocked: boolean;
   blocked_me: boolean;
   i_muted: boolean;
@@ -40,14 +40,14 @@ export interface Relationship {
 }
 
 export interface SocialCounts {
-  followers_count: number;
-  following_count: number;
+  orbiting_count: number;
+  in_orbit_count: number;
 }
 
-export type FollowButtonState =
-  | 'follow'
+export type OrbitButtonState =
+  | 'orbit'
   | 'requested'
-  | 'following'
-  | 'follow_back'
+  | 'in_orbit'
+  | 'orbit_back'
   | 'blocked'
   | 'unavailable';

@@ -9,7 +9,7 @@ import { Avatar } from '../ui/Avatar';
 import { EmojiPicker } from '../feed/EmojiPicker';
 import { MomentDurationSelector } from './MomentDurationSelector';
 import { MomentPrivacySelector } from './MomentPrivacySelector';
-import { validateMomentText, validateImageFile, validateVideoFile, MAX_POST_IMAGE_BYTES } from '../../lib/validators';
+import { validateMomentText, validateImageFile, validateVideoFile, MAX_POST_IMAGE_BYTES, MAX_POST_VIDEO_BYTES } from '../../lib/validators';
 import type { Moment, MomentDurationHours, MomentMediaType, MomentPrivacy } from '../../types/moment';
 
 interface CreateMomentModalProps {
@@ -138,6 +138,14 @@ export const CreateMomentModal: React.FC<CreateMomentModalProps> = ({ isOpen, on
             onChange={e => { handleFileSelect(e.target.files); e.target.value = ''; }}
           />
         </div>
+
+        {!media && mediaType !== 'text' && (
+          <p className="-mt-3 text-[11px] text-gray-400 dark:text-gray-500">
+            {mediaType === 'photo'
+              ? `One photo — JPG, PNG, WebP, or GIF, up to ${MAX_POST_IMAGE_BYTES / (1024 * 1024)}MB.`
+              : `One video — MP4, WebM, or MOV, up to ${MAX_POST_VIDEO_BYTES / (1024 * 1024)}MB.`}
+          </p>
+        )}
 
         {media && mediaType === 'photo' && (
           <div className="relative rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800">

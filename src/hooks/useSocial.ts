@@ -7,19 +7,19 @@ import type {
   Relationship, SocialCounts, SocialUser, SocialUserWithRelationship, SuggestedUser, PendingRequest,
 } from '../types/social';
 
-interface FollowResult extends AuthResult {
+interface OrbitResult extends AuthResult {
   status: 'accepted' | 'pending' | null;
 }
 
-// Every read here (search, suggestions, followers/following, mutual
+// Every read here (search, suggestions, orbiters/orbiting, mutual
 // friends, relationship state) goes through a SECURITY DEFINER RPC — same
 // reason as get_profile_by_username in Phase 2: profiles RLS only lets a
 // user read their own row, so any screen that shows *someone else's*
 // profile info has to go through a function that's allowed to bypass that
-// and apply the real privacy rule itself. Writes (follow, block, mute,
-// restrict, accept, decline, unfollow, remove-follower) are direct table
-// calls — RLS and triggers on those tables are the actual enforcement
-// (see supabase/phase3_social_graph.sql).
+// and apply the real privacy rule itself. Writes (orbit, block, mute,
+// restrict, accept, decline, leave orbit, remove from orbit) are direct
+// table calls — RLS and triggers on those tables are the actual
+// enforcement (see supabase/phase15_orbit_system.sql).
 export const useSocial = () => {
   const { user } = useAuth();
 
@@ -31,59 +31,59 @@ export const useSocial = () => {
 
   const getSocialCounts = useCallback(async (profileId: string): Promise<SocialCounts> => {
     const { data, error } = await supabase.rpc('get_social_counts', { p_profile_id: profileId });
-    if (error || !data || data.length === 0) return { followers_count: 0, following_count: 0 };
+    if (error || !data || data.length === 0) return { orbiting_count: 0, in_orbit_count: 0 };
     return data[0] as SocialCounts;
   }, []);
 
-  const followUser = useCallback(async (targetId: string): Promise<FollowResult> => {
+  const orbitUser = useCallback(async (targetId: string): Promise<OrbitResult> => {
     if (!user) return { error: 'Not authenticated', status: null };
     const { data, error } = await supabase
-      .from('follows')
-      .insert({ follower_id: user.id, following_id: targetId })
+      .from('orbits')
+      .insert({ orbiter_id: user.id, orbiting_id: targetId })
       .select('status')
       .single();
     if (error) {
-      if (/unique/i.test(error.message)) return { error: 'You already follow this user.', status: null };
+      if (/unique/i.test(error.message)) return { error: 'You already orbit this user.', status: null };
       return { error: error.message, status: null };
     }
-    void track('follow', { status: data.status });
+    void track('orbit', { status: data.status });
     return { error: null, status: data.status as 'accepted' | 'pending' };
   }, [user]);
 
-  // Deletes a specific (follower, following) pair. Backs unfollow, cancel
-  // request, decline request, and remove-follower — all four are "delete
+  // Deletes a specific (orbiter, orbiting) pair. Backs leave orbit, cancel
+  // request, decline request, and remove-from-orbit — all four are "delete
   // the row for this pair," just from different sides of it (see the
   // wrappers below and the DELETE RLS policy, which allows either party).
-  const deleteFollowPair = useCallback(async (followerId: string, followingId: string): Promise<AuthResult> => {
+  const deleteOrbitPair = useCallback(async (orbiterId: string, orbitingId: string): Promise<AuthResult> => {
     const { error } = await supabase
-      .from('follows')
+      .from('orbits')
       .delete()
-      .eq('follower_id', followerId)
-      .eq('following_id', followingId);
+      .eq('orbiter_id', orbiterId)
+      .eq('orbiting_id', orbitingId);
     return { error: error?.message ?? null };
   }, []);
 
-  const unfollowUser = useCallback((targetId: string) => {
+  const leaveOrbit = useCallback((targetId: string) => {
     if (!user) return Promise.resolve<AuthResult>({ error: 'Not authenticated' });
-    return deleteFollowPair(user.id, targetId);
-  }, [user, deleteFollowPair]);
+    return deleteOrbitPair(user.id, targetId);
+  }, [user, deleteOrbitPair]);
 
-  const cancelRequest = unfollowUser; // same delete, sent-side
+  const cancelRequest = leaveOrbit; // same delete, sent-side
 
-  const declineRequest = useCallback((requesterId: string) => {
+  const declineOrbitRequest = useCallback((requesterId: string) => {
     if (!user) return Promise.resolve<AuthResult>({ error: 'Not authenticated' });
-    return deleteFollowPair(requesterId, user.id);
-  }, [user, deleteFollowPair]);
+    return deleteOrbitPair(requesterId, user.id);
+  }, [user, deleteOrbitPair]);
 
-  const removeFollower = declineRequest; // same delete, received-side
+  const removeFromOrbit = declineOrbitRequest; // same delete, received-side
 
-  const acceptRequest = useCallback(async (requesterId: string): Promise<AuthResult> => {
+  const acceptOrbitRequest = useCallback(async (requesterId: string): Promise<AuthResult> => {
     if (!user) return { error: 'Not authenticated' };
     const { error } = await supabase
-      .from('follows')
+      .from('orbits')
       .update({ status: 'accepted' })
-      .eq('follower_id', requesterId)
-      .eq('following_id', user.id);
+      .eq('orbiter_id', requesterId)
+      .eq('orbiting_id', user.id);
     return { error: error?.message ?? null };
   }, [user]);
 
@@ -138,26 +138,26 @@ export const useSocial = () => {
     return data as SocialUser[];
   }, []);
 
-  const getFollowers = useCallback(async (profileId: string): Promise<SocialUserWithRelationship[]> => {
-    const { data, error } = await supabase.rpc('get_followers', { p_profile_id: profileId });
+  const getOrbiters = useCallback(async (profileId: string): Promise<SocialUserWithRelationship[]> => {
+    const { data, error } = await supabase.rpc('get_orbiters', { p_profile_id: profileId });
     if (error || !data) return [];
     return data as SocialUserWithRelationship[];
   }, []);
 
-  const getFollowing = useCallback(async (profileId: string): Promise<SocialUserWithRelationship[]> => {
-    const { data, error } = await supabase.rpc('get_following', { p_profile_id: profileId });
+  const getOrbiting = useCallback(async (profileId: string): Promise<SocialUserWithRelationship[]> => {
+    const { data, error } = await supabase.rpc('get_orbiting', { p_profile_id: profileId });
     if (error || !data) return [];
     return data as SocialUserWithRelationship[];
   }, []);
 
-  const getPendingRequestsReceived = useCallback(async (): Promise<PendingRequest[]> => {
-    const { data, error } = await supabase.rpc('get_pending_requests_received');
+  const getOrbitRequestsReceived = useCallback(async (): Promise<PendingRequest[]> => {
+    const { data, error } = await supabase.rpc('get_orbit_requests_received');
     if (error || !data) return [];
     return data as PendingRequest[];
   }, []);
 
-  const getPendingRequestsSent = useCallback(async (): Promise<PendingRequest[]> => {
-    const { data, error } = await supabase.rpc('get_pending_requests_sent');
+  const getOrbitRequestsSent = useCallback(async (): Promise<PendingRequest[]> => {
+    const { data, error } = await supabase.rpc('get_orbit_requests_sent');
     if (error || !data) return [];
     return data as PendingRequest[];
   }, []);
@@ -165,12 +165,12 @@ export const useSocial = () => {
   return {
     getRelationship,
     getSocialCounts,
-    followUser,
-    unfollowUser,
+    orbitUser,
+    leaveOrbit,
     cancelRequest,
-    acceptRequest,
-    declineRequest,
-    removeFollower,
+    acceptOrbitRequest,
+    declineOrbitRequest,
+    removeFromOrbit,
     blockUser: blocks.add,
     unblockUser: blocks.remove,
     muteUser: mutes.add,
@@ -182,9 +182,9 @@ export const useSocial = () => {
     getNewCreators,
     getMutualFriendsCount,
     getMutualFriends,
-    getFollowers,
-    getFollowing,
-    getPendingRequestsReceived,
-    getPendingRequestsSent,
+    getOrbiters,
+    getOrbiting,
+    getOrbitRequestsReceived,
+    getOrbitRequestsSent,
   };
 };

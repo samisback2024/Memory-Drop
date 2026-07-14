@@ -8,7 +8,7 @@ interface StatsRowProps {
   createdAt: string;
 }
 
-// Followers/Following are real now (Phase 3) — rendered by SocialStats.
+// Orbiting You/In Orbit are real now (Phase 3) — rendered by SocialStats.
 // Capsules/Stories/Memory Streak still don't have tables behind them, so
 // they stay honest zeros here until later phases. Years Active is derived
 // straight from created_at, no placeholder needed.

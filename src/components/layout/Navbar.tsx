@@ -25,7 +25,7 @@ const NAV_LINKS = [
 
 export const Navbar: React.FC = () => {
   const { profile, signOut } = useAuth();
-  const { getPendingRequestsReceived } = useSocial();
+  const { getOrbitRequestsReceived } = useSocial();
   const navigate = useNavigate();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
@@ -33,8 +33,8 @@ export const Navbar: React.FC = () => {
   const dropdownRef = useDismissableMenu<HTMLDivElement>(dropdownOpen, closeDropdown);
 
   useEffect(() => {
-    getPendingRequestsReceived().then(rows => setPendingCount(rows.length));
-  }, [getPendingRequestsReceived]);
+    getOrbitRequestsReceived().then(rows => setPendingCount(rows.length));
+  }, [getOrbitRequestsReceived]);
 
   const handleSignOut = async () => {
     await signOut();

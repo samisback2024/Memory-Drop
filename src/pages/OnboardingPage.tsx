@@ -22,7 +22,7 @@ const SLIDES: Slide[] = [
   {
     art: 'drop',
     title: 'Drop a memory',
-    body: 'Share a photo, video, or note right now — or seal it to unlock later. You choose who sees it: everyone, followers, or just you.',
+    body: 'Share a photo, video, or note right now — or seal it to unlock later. You choose who sees it: everyone, your Orbit, or just you.',
   },
   {
     art: 'capsule',

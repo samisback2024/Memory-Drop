@@ -17,7 +17,7 @@ import { ActivityTimeline } from '../components/profile/ActivityTimeline';
 import { MomentViewer } from '../components/moments/MomentViewer';
 import { CapsuleArchive } from '../components/capsules/CapsuleArchive';
 import { GridView } from '../components/memories/GridView';
-import { FollowButton } from '../components/social/FollowButton';
+import { OrbitButton } from '../components/social/OrbitButton';
 import { RelationshipMenu } from '../components/social/RelationshipMenu';
 import { MutualFriends } from '../components/social/MutualFriends';
 import { ShareProfileModal } from '../components/social/ShareProfileModal';
@@ -113,7 +113,7 @@ export const PublicProfilePage: React.FC = () => {
   const pinnedMemories = pinned.filter(m => m.memory_type !== 'drop');
   const pinnedDrops = pinned.filter(m => m.memory_type === 'drop');
 
-  const bioHidden = Boolean(data?.is_private && !data.is_own_profile && !relationship?.is_following);
+  const bioHidden = Boolean(data?.is_private && !data.is_own_profile && !relationship?.is_in_orbit);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -152,15 +152,15 @@ export const PublicProfilePage: React.FC = () => {
               <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 flex items-center justify-between gap-3">
                 <MutualFriends targetId={data.id} />
                 <div className="flex items-center gap-2 ml-auto">
-                  <FollowButton
+                  <OrbitButton
                     targetId={data.id}
                     isPrivate={data.is_private}
-                    isFollowing={relationship.is_following}
-                    isPending={relationship.is_pending}
-                    isFollowedBy={relationship.is_followed_by}
+                    isInOrbit={relationship.is_in_orbit}
+                    isPending={relationship.is_orbit_pending}
+                    isOrbitingYou={relationship.is_orbiting_you}
                     iBlocked={relationship.i_blocked}
                     blockedMe={relationship.blocked_me}
-                    onChange={patch => setRelationship(r => (r ? { ...r, is_following: patch.isFollowing ?? r.is_following, is_pending: patch.isPending ?? r.is_pending, i_blocked: patch.iBlocked ?? r.i_blocked } : r))}
+                    onChange={patch => setRelationship(r => (r ? { ...r, is_in_orbit: patch.isInOrbit ?? r.is_in_orbit, is_orbit_pending: patch.isPending ?? r.is_orbit_pending, i_blocked: patch.iBlocked ?? r.i_blocked } : r))}
                   />
                   {!relationship.blocked_me && (
                     <button
@@ -195,13 +195,13 @@ export const PublicProfilePage: React.FC = () => {
                   </div>
                   <div className="flex flex-col items-center gap-1 rounded-xl bg-gray-50 dark:bg-gray-800 py-3 px-1 text-center">
                     <Users size={14} className="text-purple-500" aria-hidden="true" />
-                    <span className="text-base font-bold text-gray-900 dark:text-gray-100">{publicStats.followers_count}</span>
-                    <span className="text-[10px] text-gray-400 dark:text-gray-500 leading-tight">Followers</span>
+                    <span className="text-base font-bold text-gray-900 dark:text-gray-100">{publicStats.orbiting_count}</span>
+                    <span className="text-[10px] text-gray-400 dark:text-gray-500 leading-tight">Orbiting You</span>
                   </div>
                   <div className="flex flex-col items-center gap-1 rounded-xl bg-gray-50 dark:bg-gray-800 py-3 px-1 text-center">
                     <UserPlus size={14} className="text-purple-500" aria-hidden="true" />
-                    <span className="text-base font-bold text-gray-900 dark:text-gray-100">{publicStats.following_count}</span>
-                    <span className="text-[10px] text-gray-400 dark:text-gray-500 leading-tight">Following</span>
+                    <span className="text-base font-bold text-gray-900 dark:text-gray-100">{publicStats.in_orbit_count}</span>
+                    <span className="text-[10px] text-gray-400 dark:text-gray-500 leading-tight">In Orbit</span>
                   </div>
                   {(Object.keys(PROFILE_STAT_META) as ProfileStatKey[])
                     .filter(key => publicStats[key] !== null)

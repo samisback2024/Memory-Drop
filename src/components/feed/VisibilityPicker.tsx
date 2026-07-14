@@ -14,7 +14,7 @@ const OPTIONS: { value: Visibility; icon: typeof Globe2 }[] = [
 ];
 
 // Three real, mutually-exclusive tiers rather than a public/private toggle
-// — "Everyone" and "Followers" are meaningfully different audiences, and
+// — "Everyone" and "Orbit" are meaningfully different audiences, and
 // "Only me" needs to read as a genuine private capsule, not just "private."
 export const VisibilityPicker: React.FC<VisibilityPickerProps> = ({ value, onChange }) => (
   <div role="radiogroup" aria-label="Who can see this drop" className="flex flex-col gap-2">

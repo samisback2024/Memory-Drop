@@ -20,7 +20,7 @@ export const NewCreators: React.FC = () => {
 
   return (
     <UserList
-      users={users.map(u => ({ ...u, is_following: false, is_pending: false, is_followed_by: false }))}
+      users={users.map(u => ({ ...u, is_in_orbit: false, is_orbit_pending: false, is_orbiting_you: false }))}
       loading={loading}
       emptyVariant="suggestions"
       renderSubtitle={user => <p className="text-xs text-gray-500 dark:text-gray-400 truncate">@{user.username}</p>}

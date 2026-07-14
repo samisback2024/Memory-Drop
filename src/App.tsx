@@ -21,9 +21,9 @@ import { ProfilePage } from './pages/ProfilePage';
 import { EditProfilePage } from './pages/EditProfilePage';
 import { PublicProfilePage } from './pages/PublicProfilePage';
 import { FriendsPage } from './pages/FriendsPage';
-import { FriendRequestsPage } from './pages/FriendRequestsPage';
-import { FollowersPage } from './pages/FollowersPage';
-import { FollowingPage } from './pages/FollowingPage';
+import { OrbitRequestsPage } from './pages/OrbitRequestsPage';
+import { OrbitingYouPage } from './pages/OrbitingYouPage';
+import { InOrbitPage } from './pages/InOrbitPage';
 import { FeedPage } from './pages/FeedPage';
 import { SavedPage } from './pages/SavedPage';
 import { DropPage } from './pages/DropPage';
@@ -122,12 +122,12 @@ function App() {
 
             {/* Public — reachable logged out, own chrome (PublicPageHeader) */}
             <Route path="/u/:username" element={<PublicProfilePage />} />
-            <Route path="/u/:username/followers" element={<FollowersPage />} />
-            <Route path="/u/:username/following" element={<FollowingPage />} />
+            <Route path="/u/:username/orbiting-you" element={<OrbitingYouPage />} />
+            <Route path="/u/:username/in-orbit" element={<InOrbitPage />} />
 
             {/* Same two pages, resolved to the signed-in user's own username */}
-            <Route path="/followers" element={<AuthProtectedRoute><FollowersPage /></AuthProtectedRoute>} />
-            <Route path="/following" element={<AuthProtectedRoute><FollowingPage /></AuthProtectedRoute>} />
+            <Route path="/orbiting-you" element={<AuthProtectedRoute><OrbitingYouPage /></AuthProtectedRoute>} />
+            <Route path="/in-orbit" element={<AuthProtectedRoute><InOrbitPage /></AuthProtectedRoute>} />
 
             {/* Own chrome (PublicPageHeader) but requires login — get_drop is
                 only granted to `authenticated`, not `anon` */}
@@ -162,7 +162,7 @@ function App() {
               <Route path="/messages" element={<MessagesPage />} />
               <Route path="/messages/requests" element={<MessageRequestsPage />} />
               <Route path="/friends" element={<FriendsPage />} />
-              <Route path="/friends/requests" element={<FriendRequestsPage />} />
+              <Route path="/friends/orbit-requests" element={<OrbitRequestsPage />} />
             </Route>
 
             {/* The real catch-all — any genuinely-unmatched URL gets an

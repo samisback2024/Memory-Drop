@@ -5,14 +5,14 @@ import { EmptySocialState } from './EmptySocialState';
 import { RelationshipMenu } from './RelationshipMenu';
 import type { SocialUserWithRelationship } from '../../types/social';
 
-interface FollowersListProps {
+interface InOrbitListProps {
   profileId: string;
   isOwnProfile: boolean;
   canView: boolean;
 }
 
-export const FollowersList: React.FC<FollowersListProps> = ({ profileId, isOwnProfile, canView }) => {
-  const { getFollowers, removeFollower } = useSocial();
+export const InOrbitList: React.FC<InOrbitListProps> = ({ profileId, isOwnProfile, canView }) => {
+  const { getOrbiting } = useSocial();
   const [users, setUsers] = useState<SocialUserWithRelationship[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -20,9 +20,9 @@ export const FollowersList: React.FC<FollowersListProps> = ({ profileId, isOwnPr
     if (!canView) { setLoading(false); return; }
     let cancelled = false;
     setLoading(true);
-    getFollowers(profileId).then(data => { if (!cancelled) { setUsers(data); setLoading(false); } });
+    getOrbiting(profileId).then(data => { if (!cancelled) { setUsers(data); setLoading(false); } });
     return () => { cancelled = true; };
-  }, [profileId, canView, getFollowers]);
+  }, [profileId, canView, getOrbiting]);
 
   if (!canView) return <EmptySocialState variant="private" />;
 
@@ -30,18 +30,13 @@ export const FollowersList: React.FC<FollowersListProps> = ({ profileId, isOwnPr
     <UserList
       users={users}
       loading={loading}
-      emptyVariant="followers"
+      emptyVariant="following"
       renderActions={isOwnProfile ? (user, _update, remove) => (
         <RelationshipMenu
           targetId={user.id}
           isMuted={user.is_muted ?? false}
           isRestricted={user.is_restricted ?? false}
           isBlocked={user.i_blocked ?? false}
-          showRemoveFollower
-          onRemoveFollower={async () => {
-            const { error } = await removeFollower(user.id);
-            if (!error) remove();
-          }}
           onChange={patch => { if (patch.isBlocked) remove(); }}
         />
       ) : undefined}

@@ -10,13 +10,13 @@ import type { MomentPrivacy } from '../../types/moment';
 
 const DROP_VISIBILITY_OPTIONS: { value: Visibility; label: string; icon: typeof Globe2 }[] = [
   { value: 'public', label: 'Public', icon: Globe2 },
-  { value: 'followers', label: 'Followers', icon: Users },
+  { value: 'followers', label: 'Orbit', icon: Users },
   { value: 'private', label: 'Only me', icon: Lock },
 ];
 
 const MOMENT_VISIBILITY_OPTIONS: { value: MomentPrivacy; label: string; icon: typeof Globe2 }[] = [
   { value: 'everyone', label: 'Everyone', icon: Globe2 },
-  { value: 'followers', label: 'Followers', icon: Users },
+  { value: 'followers', label: 'Orbit', icon: Users },
   { value: 'only_me', label: 'Only me', icon: Lock },
 ];
 

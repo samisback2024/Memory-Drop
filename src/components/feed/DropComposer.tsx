@@ -11,7 +11,7 @@ import { VisibilityPicker } from './VisibilityPicker';
 import { EmojiPicker } from './EmojiPicker';
 import {
   validateCaption, validateImageFile, validateVideoFile,
-  CAPTION_MAX, MAX_POST_IMAGES, MAX_POST_IMAGE_BYTES,
+  CAPTION_MAX, MAX_POST_IMAGES, MAX_POST_IMAGE_BYTES, MAX_POST_VIDEO_BYTES,
 } from '../../lib/validators';
 import { CAPTURE_PROMPTS, type Drop, type MemoryType, type Mood, type Visibility } from '../../types/feed';
 
@@ -96,10 +96,16 @@ export const DropComposer: React.FC<DropComposerProps> = ({ isOpen, onClose, onD
     const remaining = MAX_POST_IMAGES - images.length;
     const selected = Array.from(files).slice(0, remaining);
     const next: PendingFile[] = [];
+    let firstInvalidError: string | null = null;
     for (const file of selected) {
       const validationError = validateImageFile(file, MAX_POST_IMAGE_BYTES);
-      if (validationError) { setError(validationError); continue; }
+      if (validationError) { firstInvalidError ??= validationError; continue; }
       next.push({ file, previewUrl: URL.createObjectURL(file) });
+    }
+    if (firstInvalidError) {
+      setError(firstInvalidError);
+    } else if (files.length > remaining) {
+      setError(`Only added ${remaining} more photo${remaining === 1 ? '' : 's'} — a drop can have up to ${MAX_POST_IMAGES}.`);
     }
     if (next.length > 0) {
       clearOtherMedia('images');
@@ -194,17 +200,26 @@ export const DropComposer: React.FC<DropComposerProps> = ({ isOpen, onClose, onD
           </div>
         )}
 
-        <div className="flex items-center gap-1 border-t border-gray-100 pt-3">
-          <button type="button" onClick={() => imageInputRef.current?.click()} disabled={Boolean(video) || images.length >= MAX_POST_IMAGES} aria-label="Add photos" className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-            <ImageIcon size={19} aria-hidden="true" />
-          </button>
-          <button type="button" onClick={() => videoInputRef.current?.click()} disabled={images.length > 0} aria-label="Add video" className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
-            <Video size={19} aria-hidden="true" />
-          </button>
-          <EmojiPicker onSelect={emoji => setCaption(c => c + emoji)} />
-          <span className="ml-auto text-xs text-gray-400">{caption.length}/{CAPTION_MAX}</span>
-          <input ref={imageInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple className="hidden" onChange={e => { handleImageSelect(e.target.files); e.target.value = ''; }} />
-          <input ref={videoInputRef} type="file" accept="video/mp4,video/webm,video/quicktime" className="hidden" onChange={e => { handleVideoSelect(e.target.files); e.target.value = ''; }} />
+        <div className="flex flex-col gap-1 border-t border-gray-100 pt-3">
+          <div className="flex items-center gap-1">
+            <button type="button" onClick={() => imageInputRef.current?.click()} disabled={Boolean(video) || images.length >= MAX_POST_IMAGES} aria-label="Add photos" className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+              <ImageIcon size={19} aria-hidden="true" />
+              <span className="text-xs font-medium">Photo</span>
+            </button>
+            <button type="button" onClick={() => videoInputRef.current?.click()} disabled={images.length > 0} aria-label="Add video" className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+              <Video size={19} aria-hidden="true" />
+              <span className="text-xs font-medium">Video</span>
+            </button>
+            <EmojiPicker onSelect={emoji => setCaption(c => c + emoji)} />
+            <span className="ml-auto text-xs text-gray-400">{caption.length}/{CAPTION_MAX}</span>
+            <input ref={imageInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple className="hidden" onChange={e => { handleImageSelect(e.target.files); e.target.value = ''; }} />
+            <input ref={videoInputRef} type="file" accept="video/mp4,video/webm,video/quicktime" className="hidden" onChange={e => { handleVideoSelect(e.target.files); e.target.value = ''; }} />
+          </div>
+          {images.length === 0 && !video && (
+            <p className="text-[11px] text-gray-400 px-2.5">
+              Up to {MAX_POST_IMAGES} photos (JPG, PNG, WebP, GIF · {MAX_POST_IMAGE_BYTES / (1024 * 1024)}MB each) or 1 video (MP4, WebM, MOV · {MAX_POST_VIDEO_BYTES / (1024 * 1024)}MB)
+            </p>
+          )}
         </div>
 
         <div className="flex flex-col gap-1.5">

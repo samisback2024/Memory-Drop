@@ -162,8 +162,8 @@ export const CONVERSATION_FILTERS: { id: ConversationFilter; label: string }[] =
 
 export const MESSAGING_PRIVACY_META: Record<MessagingPrivacy, { label: string; description: string }> = {
   everyone: { label: 'Everyone', description: 'Anyone can message you directly.' },
-  followers: { label: 'Followers', description: 'Only people who follow you can message you directly.' },
-  mutual_followers: { label: 'Mutual followers', description: 'Only people you follow back can message you directly.' },
+  followers: { label: 'Orbit', description: 'Only people in your Orbit can message you directly.' },
+  mutual_followers: { label: 'Mutual Orbit', description: 'Only people you orbit back can message you directly.' },
   nobody: { label: 'Nobody', description: 'No one can message you directly.' },
 };
 

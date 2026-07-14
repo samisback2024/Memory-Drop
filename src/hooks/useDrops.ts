@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './useAuth';
-import { uploadFile, generateStoragePath } from '../utils/storage';
+import { uploadFile, generateStoragePath, deleteFile, extractStoragePath } from '../utils/storage';
 import { compressImageFile } from '../lib/image';
 import { track } from '../lib/analytics';
 import { logger } from '../lib/logger';
@@ -182,6 +182,23 @@ export const useDrops = () => {
     return { error: error?.message ?? null };
   }, [user]);
 
+  // Skips the rest of the 30-day grace window — the same hard delete
+  // purge_expired_deleted_drops() would eventually do on its own, just
+  // triggered now instead of on a schedule. Only reachable from the
+  // Deleted tab, i.e. only ever called on an already-soft-deleted drop.
+  const permanentlyDeleteDrop = useCallback(async (drop: DeletedDrop): Promise<AuthResult> => {
+    if (!user) return { error: 'Not authenticated' };
+    const { error } = await supabase.from('posts').delete().eq('id', drop.id);
+    if (error) return { error: error.message };
+    const paths = [
+      ...drop.images.map(img => extractStoragePath(img.url, 'post-media')),
+      drop.video_url ? extractStoragePath(drop.video_url, 'post-media') : null,
+      drop.audio_url ? extractStoragePath(drop.audio_url, 'post-media') : null,
+    ].filter((p): p is string => Boolean(p));
+    await Promise.all(paths.map(p => deleteFile('post-media', p)));
+    return { error: null };
+  }, [user]);
+
   const saveDrop = useCallback(async (dropId: string): Promise<AuthResult> => {
     if (!user) return { error: 'Not authenticated' };
     const { error } = await supabase.from('saved_posts').insert({ post_id: dropId, user_id: user.id });
@@ -274,6 +291,7 @@ export const useDrops = () => {
     deleteDrop,
     getDeletedDrops,
     restoreDrop,
+    permanentlyDeleteDrop,
     saveDrop,
     unsaveDrop,
     likeDrop,

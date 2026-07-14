@@ -65,7 +65,7 @@ export interface UserSettings {
 }
 
 // The 10 Memory Stats tiles a profile owner can opt into showing on
-// their public profile — followers/following stay unconditionally
+// their public profile — Orbiting You/In Orbit stay unconditionally
 // public (a separate, already-existing display) and aren't part of
 // this list.
 export type ProfileStatKey =
@@ -88,8 +88,8 @@ export const PROFILE_STAT_META: Record<ProfileStatKey, { label: string; descript
 export interface NotificationPreferences {
   user_id: string;
   unlock_reminders: boolean;
-  new_followers: boolean;
-  follow_requests: boolean;
+  new_orbiters: boolean;
+  orbit_requests: boolean;
   comments: boolean;
   reactions: boolean;
   replies: boolean;
@@ -129,8 +129,8 @@ export const FONT_SIZE_META: Record<FontSize, { label: string; scale: number }> 
 
 export const NOTIFICATION_PREFERENCE_META: Record<keyof Omit<NotificationPreferences, 'user_id' | 'created_at' | 'updated_at'>, { label: string; description: string }> = {
   unlock_reminders: { label: 'Unlock reminders', description: 'When a capsule or moment you can see is about to unlock.' },
-  new_followers: { label: 'New followers', description: 'When someone starts following you.' },
-  follow_requests: { label: 'Follow requests', description: 'When someone requests to follow your private account.' },
+  new_orbiters: { label: 'New orbiters', description: 'When someone enters your Orbit.' },
+  orbit_requests: { label: 'Orbit requests', description: 'When someone requests to join your private account\'s Orbit.' },
   comments: { label: 'Comments', description: 'When someone comments on your drop or capsule.' },
   reactions: { label: 'Reactions', description: 'When someone reacts to your moment or likes your capsule.' },
   replies: { label: 'Replies', description: 'When someone replies to your moment.' },

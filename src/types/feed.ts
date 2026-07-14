@@ -1,5 +1,5 @@
 export type MemoryType = 'photo' | 'video' | 'audio' | 'text';
-export type DropTab = 'my_drops' | 'following' | 'public_drops' | 'saved_to_unlock';
+export type DropTab = 'my_drops' | 'in_orbit' | 'public_drops' | 'saved_to_unlock';
 export type Visibility = 'public' | 'followers' | 'private';
 export type Mood = 'joyful' | 'grateful' | 'nostalgic' | 'hopeful' | 'reflective' | 'peaceful' | 'bittersweet' | 'excited';
 export type ReportReason = 'spam' | 'harassment' | 'violence' | 'nudity' | 'fake_account' | 'other';
@@ -95,7 +95,7 @@ export const MOOD_META: Record<Mood, { emoji: string; label: string }> = {
 
 export const VISIBILITY_META: Record<Visibility, { label: string; description: string }> = {
   public: { label: 'Everyone', description: 'Anyone can find it once unlocked — appears in Public Drops.' },
-  followers: { label: 'Followers', description: 'Only people who follow you can see it once unlocked.' },
+  followers: { label: 'Orbit', description: 'Only people in your Orbit can see it once unlocked.' },
   private: { label: 'Only me', description: "Just for you — nobody else will ever see it, unlocked or not." },
 };
 

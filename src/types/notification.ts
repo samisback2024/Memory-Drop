@@ -3,15 +3,16 @@
 // notification with the actor's profile info already joined in, since
 // profiles RLS never lets the client join that itself.
 export type NotificationType =
-  | 'new_follower' | 'follow_request' | 'follow_accepted' | 'mention'
+  | 'new_orbiter' | 'orbit_request' | 'orbit_accepted' | 'mention'
   | 'drop_save_to_unlock' | 'drop_good_vibes' | 'drop_cant_wait' | 'drop_interested'
   | 'drop_unlock_viewed' | 'drop_liked' | 'drop_commented' | 'drop_replied' | 'drop_reflected'
   | 'moment_viewed' | 'moment_replied' | 'moment_reacted'
   | 'capsule_unlock_reminder' | 'capsule_unlocked' | 'capsule_viewed' | 'capsule_liked'
   | 'capsule_commented' | 'capsule_replied' | 'capsule_reflected'
+  | 'message_request' | 'new_message' | 'message_reaction'
   | 'weekly_recap' | 'security_alert' | 'password_changed' | 'new_login' | 'product_announcement';
 
-export type NotificationEntityType = 'drop' | 'capsule' | 'moment' | 'comment' | 'user' | 'system';
+export type NotificationEntityType = 'drop' | 'capsule' | 'moment' | 'comment' | 'user' | 'system' | 'conversation';
 
 export interface Notification {
   id: string;
@@ -77,5 +78,6 @@ export const buildNotificationLink = (n: Pick<Notification, 'type' | 'entity_typ
   if (n.entity_type === 'drop') return `/drop/${n.entity_id}`;
   if (n.entity_type === 'capsule') return `/capsules/${n.entity_id}`;
   if (n.entity_type === 'moment') return `/moments/${n.entity_id}`;
+  if (n.entity_type === 'conversation') return `/messages/${n.entity_id}`;
   return null;
 };

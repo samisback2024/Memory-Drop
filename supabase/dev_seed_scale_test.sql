@@ -4,7 +4,7 @@
 -- run. This creates 100 fake accounts (10 of them private, plus a
 -- couple of block relationships) and thousands of fake content rows for
 -- load/consistency testing: 1000 Drops, 300 Capsules, 300 Moments,
--- ~1500 follows, ~4500 comments, ~6000 likes/reactions, ~600 bookmarks,
+-- ~1500 orbits, ~4500 comments, ~6000 likes/reactions, ~600 bookmarks,
 -- ~100 collections with ~300 items, ~500 favorites — matching the
 -- revised Phase 10 spec's "1,000 Drops, 300 Capsules, 300 Moments, 100
 -- users... Follow relationships, private accounts, blocks, comments,
@@ -19,7 +19,7 @@
 --   delete from auth.users where email like 'scaletest_%@memorydrop.test';
 --
 -- ...which cascades through every table (profiles → posts/capsules/
--- moments/follows/comments/likes/saves/collections/... all the way
+-- moments/orbits/comments/likes/saves/collections/... all the way
 -- down) via the same `on delete cascade` chain real account deletion
 -- already relies on (see delete_my_account() in phase8_settings.sql) —
 -- nothing extra to clean up by hand.
@@ -80,12 +80,12 @@ set is_private = true
 where id in (select id from _seed_users where rn % 10 = 0);
 
 -- ---------------------------------------------------------------------------
--- 2. Follows (~1500 rows) — each fake user follows ~15 random others.
---    status is left for the existing follow-request trigger to compute
---    (phase3_social_graph.sql) — accepted for public accounts, pending
---    for the 10 private ones, exactly like a real follow would resolve.
+-- 2. Orbits (~1500 rows) — each fake user orbits ~15 random others.
+--    status is left for the existing orbit-request trigger to compute
+--    (phase15_orbit_system.sql) — accepted for public accounts, pending
+--    for the 10 private ones, exactly like a real orbit would resolve.
 -- ---------------------------------------------------------------------------
-insert into public.follows (follower_id, following_id)
+insert into public.orbits (orbiter_id, orbiting_id)
 select u1.id, u2.id
 from _seed_users u1
 cross join lateral (
@@ -95,7 +95,7 @@ on conflict do nothing;
 
 -- A couple of block relationships, so the "blocked relationship" manual
 -- test has real fixture data too — mutually invisible regardless of any
--- follow/content relationship that exists between them.
+-- orbit/content relationship that exists between them.
 insert into public.user_blocks (blocker_id, blocked_id)
 select (select id from _seed_users where rn = 1), (select id from _seed_users where rn = 2)
 union all

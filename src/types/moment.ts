@@ -68,7 +68,7 @@ export interface MomentReply {
 
 export const MOMENT_PRIVACY_META: Record<MomentPrivacy, { label: string; description: string }> = {
   everyone: { label: 'Everyone', description: 'Anyone who can see your posts can see this moment.' },
-  followers: { label: 'Followers', description: 'Only people who follow you can see it.' },
+  followers: { label: 'Orbit', description: 'Only people in your Orbit can see it.' },
   close_friends: { label: 'Close Friends', description: "Only your Close Friends list can see it — nobody's on it yet, so this is just you for now." },
   only_me: { label: 'Only Me', description: "Just for you — a private moment nobody else will see." },
 };

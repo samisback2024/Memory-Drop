@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { RotateCcw, Trash2, Image as ImageIcon, Video, FileText } from 'lucide-react';
 import { useDrops } from '../../hooks/useDrops';
 import { useToast } from '../../hooks/useToast';
+import { useConfirm } from '../../hooks/useConfirm';
 import { SettingsSection } from './SettingsSection';
 import { SettingsCard } from './SettingsCard';
 import { EmptyState } from '../ui/EmptyState';
@@ -21,10 +22,12 @@ const TYPE_ICON: Record<DeletedDrop['post_type'], typeof ImageIcon> = {
 // in that window, then automatically purged. Drops only: Capsules and
 // Moments still delete immediately, this wasn't asked for there.
 export const DeletedSettings: React.FC = () => {
-  const { getDeletedDrops, restoreDrop } = useDrops();
+  const { getDeletedDrops, restoreDrop, permanentlyDeleteDrop } = useDrops();
   const { showToast } = useToast();
+  const { confirm } = useConfirm();
   const [drops, setDrops] = useState<DeletedDrop[] | null>(null);
   const [restoring, setRestoring] = useState<string | null>(null);
+  const [purging, setPurging] = useState<string | null>(null);
 
   useEffect(() => { getDeletedDrops().then(setDrops); }, [getDeletedDrops]);
 
@@ -35,6 +38,21 @@ export const DeletedSettings: React.FC = () => {
     if (error) { showToast(error, 'error'); return; }
     setDrops(prev => (prev ? prev.filter(d => d.id !== drop.id) : prev));
     showToast('Drop restored — back in your Feed.');
+  };
+
+  const handlePurge = async (drop: DeletedDrop) => {
+    const ok = await confirm({
+      title: 'Delete this drop permanently?',
+      description: "This can't be undone — it won't wait out the rest of the 30 days.",
+      confirmLabel: 'Delete permanently',
+    });
+    if (!ok) return;
+    setPurging(drop.id);
+    const { error } = await permanentlyDeleteDrop(drop);
+    setPurging(null);
+    if (error) { showToast(error, 'error'); return; }
+    setDrops(prev => (prev ? prev.filter(d => d.id !== drop.id) : prev));
+    showToast('Drop permanently deleted.');
   };
 
   return (
@@ -62,19 +80,32 @@ export const DeletedSettings: React.FC = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-gray-800 dark:text-gray-200 truncate">{drop.caption || 'Untitled drop'}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="text-xs text-gray-400 mt-0.5 whitespace-nowrap">
                       Deleted {formatRelativeTime(drop.deleted_at)} · {drop.days_remaining === 0 ? 'purging soon' : `${drop.days_remaining} day${drop.days_remaining === 1 ? '' : 's'} left`}
                     </p>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    loading={restoring === drop.id}
-                    onClick={() => handleRestore(drop)}
-                    className="flex-shrink-0"
-                  >
-                    <RotateCcw size={13} aria-hidden="true" /> Restore
-                  </Button>
+                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      loading={restoring === drop.id}
+                      disabled={purging === drop.id}
+                      onClick={() => handleRestore(drop)}
+                    >
+                      <RotateCcw size={13} aria-hidden="true" /> Restore
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      loading={purging === drop.id}
+                      disabled={restoring === drop.id}
+                      onClick={() => handlePurge(drop)}
+                      aria-label="Delete permanently"
+                      className="!px-2 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/30"
+                    >
+                      <Trash2 size={15} aria-hidden="true" />
+                    </Button>
+                  </div>
                 </div>
               );
             })}

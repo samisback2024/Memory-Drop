@@ -13,9 +13,9 @@ interface UserCardProps {
 }
 
 // The shared row layout behind every social list — search results,
-// followers/following, suggestions, and (via FriendRequestCard) requests.
+// orbiters/orbiting, suggestions, and (via OrbitRequestCard) requests.
 // `actions` is a slot so each context can drop in whatever's relevant
-// (FollowButton, Accept/Decline, RelationshipMenu) without UserCard needing
+// (OrbitButton, Accept/Decline, RelationshipMenu) without UserCard needing
 // to know about any of them.
 export const UserCard: React.FC<UserCardProps> = ({ user, actions, showMutuals = false, subtitle }) => {
   const displayName = user.display_name || user.username;

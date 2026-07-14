@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, MoreVertical, Pin, BellOff, Archive, ShieldOff, Images, Check, X } from 'lucide-react';
+import { ChevronLeft, MoreVertical, Pin, BellOff, Archive, Trash2, ShieldOff, Images, Check, X } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useMessages } from '../hooks/useMessages';
 import { useSocial } from '../hooks/useSocial';
@@ -48,7 +48,7 @@ export const ConversationPage: React.FC = () => {
   const {
     getMessages, getConversationHeader, markConversationRead, markMessagesDelivered, setConversationActive,
     setMessagePinned, starMessage, unstarMessage, reactToMessage, removeMessageReaction, deleteMessageForMe,
-    unsendMessage, setConversationPinned, setConversationMuted, setConversationArchived,
+    unsendMessage, setConversationPinned, setConversationMuted, setConversationArchived, deleteConversation,
     acceptMessageRequest, declineMessageRequest,
   } = useMessages();
 
@@ -201,6 +201,18 @@ export const ConversationPage: React.FC = () => {
     await declineMessageRequest(conversationId);
     navigate('/messages');
   };
+  const handleDeleteConversation = async () => {
+    if (!conversationId) return;
+    const ok = await confirm({
+      title: 'Delete this chat?',
+      description: `It'll be removed from your inbox. ${otherName} keeps their own copy, and it'll come back if they message you again.`,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
+    const { error } = await deleteConversation(conversationId);
+    if (error) { showToast(error, 'error'); return; }
+    navigate('/messages');
+  };
 
   const otherName = header?.other_display_name || header?.other_username || 'Unknown';
   const isPendingForMe = header?.request_status === 'pending' && header.request_initiator_id !== user?.id;
@@ -258,6 +270,9 @@ export const ConversationPage: React.FC = () => {
                 <Archive size={15} aria-hidden="true" /> Archive
               </button>
               <div className="border-t border-gray-100 dark:border-gray-800" />
+              <button type="button" onClick={() => { setMenuOpen(false); void handleDeleteConversation(); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30">
+                <Trash2 size={15} aria-hidden="true" /> Delete chat
+              </button>
               <button type="button" onClick={async () => { await blockUser(header.other_user_id); setMenuOpen(false); navigate('/messages'); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30">
                 <ShieldOff size={15} aria-hidden="true" /> Block
               </button>

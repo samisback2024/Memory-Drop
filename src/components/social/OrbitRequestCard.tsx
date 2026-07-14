@@ -4,7 +4,7 @@ import { UserCard } from './UserCard';
 import { Button } from '../ui/Button';
 import type { PendingRequest } from '../../types/social';
 
-interface FriendRequestCardProps {
+interface OrbitRequestCardProps {
   user: PendingRequest;
   direction: 'received' | 'sent';
   onAccept?: () => Promise<void> | void;
@@ -12,11 +12,11 @@ interface FriendRequestCardProps {
   onCancel?: () => Promise<void> | void;
 }
 
-// Requests get their own card rather than going through UserList/FollowButton:
-// there's no follow state to toggle here, just a decision (accept/decline)
+// Requests get their own card rather than going through UserList/OrbitButton:
+// there's no orbit state to toggle here, just a decision (accept/decline)
 // or a way to undo one you sent (cancel) — different enough from every
 // other social list to not force through the same shape.
-export const FriendRequestCard: React.FC<FriendRequestCardProps> = ({ user, direction, onAccept, onDecline, onCancel }) => {
+export const OrbitRequestCard: React.FC<OrbitRequestCardProps> = ({ user, direction, onAccept, onDecline, onCancel }) => {
   const [busy, setBusy] = useState<'accept' | 'decline' | 'cancel' | null>(null);
 
   const run = async (action: 'accept' | 'decline' | 'cancel', fn?: () => Promise<void> | void) => {
@@ -35,11 +35,11 @@ export const FriendRequestCard: React.FC<FriendRequestCardProps> = ({ user, dire
           <>
             <Button size="sm" variant="primary" onClick={() => run('accept', onAccept)} loading={busy === 'accept'} disabled={busy !== null && busy !== 'accept'}>
               <Check size={14} aria-hidden="true" />
-              Accept
+              Accept Orbit
             </Button>
             <Button size="sm" variant="outline" onClick={() => run('decline', onDecline)} loading={busy === 'decline'} disabled={busy !== null && busy !== 'decline'}>
               <X size={14} aria-hidden="true" />
-              Decline
+              Decline Orbit
             </Button>
           </>
         ) : (

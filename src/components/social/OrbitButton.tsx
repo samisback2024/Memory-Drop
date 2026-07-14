@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { Lock, Loader2 } from 'lucide-react';
 import { useSocial } from '../../hooks/useSocial';
+import { useToast } from '../../hooks/useToast';
 import { Button } from '../ui/Button';
 
-interface FollowButtonProps {
+interface OrbitButtonProps {
   targetId: string;
   isPrivate: boolean;
-  isFollowing: boolean;
+  isInOrbit: boolean;
   isPending: boolean;
-  isFollowedBy: boolean;
+  isOrbitingYou: boolean;
   iBlocked?: boolean;
   blockedMe?: boolean;
-  onChange?: (next: { isFollowing?: boolean; isPending?: boolean; iBlocked?: boolean }) => void;
+  onChange?: (next: { isInOrbit?: boolean; isPending?: boolean; iBlocked?: boolean }) => void;
   size?: 'sm' | 'md';
 }
 
@@ -21,18 +22,19 @@ interface FollowButtonProps {
 // request-in-flight + hover state locally, and applies an optimistic
 // update on success — it never fetches on its own, so a list of 20 of
 // these doesn't mean 20 relationship queries.
-export const FollowButton: React.FC<FollowButtonProps> = ({
-  targetId, isPrivate, isFollowing, isPending, isFollowedBy, iBlocked = false, blockedMe = false,
+export const OrbitButton: React.FC<OrbitButtonProps> = ({
+  targetId, isPrivate, isInOrbit, isPending, isOrbitingYou, iBlocked = false, blockedMe = false,
   onChange, size = 'md',
 }) => {
-  const { followUser, unfollowUser, cancelRequest, unblockUser } = useSocial();
-  const [following, setFollowing] = useState(isFollowing);
+  const { orbitUser, leaveOrbit, cancelRequest, unblockUser } = useSocial();
+  const { showToast } = useToast();
+  const [inOrbit, setInOrbit] = useState(isInOrbit);
   const [pending, setPending] = useState(isPending);
   const [blocked, setBlocked] = useState(iBlocked);
   const [loading, setLoading] = useState(false);
   const [hovering, setHovering] = useState(false);
 
-  useEffect(() => { setFollowing(isFollowing); }, [isFollowing]);
+  useEffect(() => { setInOrbit(isInOrbit); }, [isInOrbit]);
   useEffect(() => { setPending(isPending); }, [isPending]);
   useEffect(() => { setBlocked(iBlocked); }, [iBlocked]);
 
@@ -45,18 +47,24 @@ export const FollowButton: React.FC<FollowButtonProps> = ({
     if (blocked) {
       const { error } = await unblockUser(targetId);
       if (!error) { setBlocked(false); onChange?.({ iBlocked: false }); }
-    } else if (following) {
-      const { error } = await unfollowUser(targetId);
-      if (!error) { setFollowing(false); onChange?.({ isFollowing: false }); }
+      else showToast(error, 'error');
+    } else if (inOrbit) {
+      const { error } = await leaveOrbit(targetId);
+      if (!error) { setInOrbit(false); onChange?.({ isInOrbit: false }); }
+      else showToast(error, 'error');
     } else if (pending) {
       const { error } = await cancelRequest(targetId);
-      if (!error) { setPending(false); onChange?.({ isPending: false }); }
+      if (!error) { setPending(false); onChange?.({ isPending: false }); showToast('Orbit request cancelled.'); }
+      else showToast(error, 'error');
     } else {
-      const { error, status } = await followUser(targetId);
+      const { error, status } = await orbitUser(targetId);
       if (!error) {
-        setFollowing(status === 'accepted');
+        setInOrbit(status === 'accepted');
         setPending(status === 'pending');
-        onChange?.({ isFollowing: status === 'accepted', isPending: status === 'pending' });
+        onChange?.({ isInOrbit: status === 'accepted', isPending: status === 'pending' });
+        if (status === 'pending') showToast('Orbit request sent — they need to accept it before you see their posts.');
+      } else {
+        showToast(error, 'error');
       }
     }
     setLoading(false);
@@ -70,7 +78,7 @@ export const FollowButton: React.FC<FollowButtonProps> = ({
     );
   }
 
-  if (following) {
+  if (inOrbit) {
     return (
       <Button
         variant={hovering ? 'outline' : 'secondary'}
@@ -81,7 +89,7 @@ export const FollowButton: React.FC<FollowButtonProps> = ({
         onMouseLeave={() => setHovering(false)}
         className={hovering ? 'text-red-600 dark:text-red-400 border-red-200 dark:border-red-900 hover:bg-red-50 dark:hover:bg-red-950/30' : ''}
       >
-        {loading ? <Loader2 size={14} className="animate-spin" /> : hovering ? 'Unfollow' : 'Following'}
+        {loading ? <Loader2 size={14} className="animate-spin" /> : hovering ? 'Leave Orbit' : 'In Orbit ✓'}
       </Button>
     );
   }
@@ -89,7 +97,7 @@ export const FollowButton: React.FC<FollowButtonProps> = ({
   if (pending) {
     return (
       <Button variant="outline" size={size} onClick={handleClick} loading={loading}>
-        Requested
+        Orbit Requested
       </Button>
     );
   }
@@ -97,7 +105,7 @@ export const FollowButton: React.FC<FollowButtonProps> = ({
   return (
     <Button variant="primary" size={size} onClick={handleClick} loading={loading}>
       {isPrivate && <Lock size={12} aria-hidden="true" />}
-      {isFollowedBy ? 'Follow Back' : 'Follow'}
+      {isPrivate ? 'Request Orbit' : isOrbitingYou ? 'Orbit Back' : 'Orbit'}
     </Button>
   );
 };

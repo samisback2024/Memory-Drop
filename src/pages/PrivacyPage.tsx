@@ -34,7 +34,7 @@ export const PrivacyPage: React.FC = () => (
     <LegalSection heading="5. Analytics">
       <p>
         We collect basic product-usage events (such as account creation, Drops/Capsules/Moments created,
-        unlocks, follows, searches, and shares) to understand how Memory Drop is used and improve it. This data
+        unlocks, orbits, searches, and shares) to understand how Memory Drop is used and improve it. This data
         is stored only in our own database — never shared with or sold to a third-party analytics company — and
         you can turn it off entirely at any time in Settings → Privacy → Analytics.
       </p>

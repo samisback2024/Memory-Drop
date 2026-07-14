@@ -8,7 +8,7 @@ interface DropTabsProps {
 
 const TABS: Array<{ key: DropTab; label: string }> = [
   { key: 'my_drops', label: 'My Drops' },
-  { key: 'following', label: 'Following' },
+  { key: 'in_orbit', label: 'In Orbit' },
   { key: 'public_drops', label: 'Public Drops' },
   { key: 'saved_to_unlock', label: 'Saved to Unlock' },
 ];

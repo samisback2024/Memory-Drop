@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { UserCard } from './UserCard';
-import { FollowButton } from './FollowButton';
+import { OrbitButton } from './OrbitButton';
 import { EmptySocialState } from './EmptySocialState';
 import { Skeleton } from '../ui/Skeleton';
 import type { SocialUserWithRelationship } from '../../types/social';
 
-type RelationshipPatch = { isFollowing?: boolean; isPending?: boolean; iBlocked?: boolean };
+type RelationshipPatch = { isInOrbit?: boolean; isPending?: boolean; iBlocked?: boolean };
 
 interface UserListProps {
   users: SocialUserWithRelationship[];
   loading: boolean;
   emptyVariant: 'followers' | 'following' | 'requests' | 'sent-requests' | 'search' | 'suggestions' | 'private';
-  hideFollowButton?: boolean;
+  hideOrbitButton?: boolean;
   renderActions?: (user: SocialUserWithRelationship, update: (patch: RelationshipPatch) => void, remove: () => void) => React.ReactNode;
   renderSubtitle?: (user: SocialUserWithRelationship) => React.ReactNode;
 }
@@ -31,14 +31,14 @@ export const UserListSkeleton: React.FC = () => (
   </div>
 );
 
-// The shared list-rendering shape behind search results, followers,
-// following, and suggested friends — each of those is just "fetch a
+// The shared list-rendering shape behind search results, orbiters,
+// orbiting, and suggested friends — each of those is just "fetch a
 // SocialUserWithRelationship[] from a different RPC" wrapped around this.
-// Holds its own copy of the rows so a FollowButton's onChange (or a
-// remove-follower action) can update one row in place without the parent
+// Holds its own copy of the rows so an OrbitButton's onChange (or a
+// remove-from-orbit action) can update one row in place without the parent
 // re-fetching the whole list.
 export const UserList: React.FC<UserListProps> = ({
-  users, loading, emptyVariant, hideFollowButton = false, renderActions, renderSubtitle,
+  users, loading, emptyVariant, hideOrbitButton = false, renderActions, renderSubtitle,
 }) => {
   const [rows, setRows] = useState(users);
 
@@ -47,8 +47,8 @@ export const UserList: React.FC<UserListProps> = ({
   const updateRow = (id: string, patch: RelationshipPatch) => {
     setRows(prev => prev.map(u => (u.id === id ? {
       ...u,
-      is_following: patch.isFollowing ?? u.is_following,
-      is_pending: patch.isPending ?? u.is_pending,
+      is_in_orbit: patch.isInOrbit ?? u.is_in_orbit,
+      is_orbit_pending: patch.isPending ?? u.is_orbit_pending,
     } : u)));
   };
 
@@ -66,13 +66,13 @@ export const UserList: React.FC<UserListProps> = ({
           subtitle={renderSubtitle?.(u)}
           actions={
             <>
-              {!hideFollowButton && (
-                <FollowButton
+              {!hideOrbitButton && (
+                <OrbitButton
                   targetId={u.id}
                   isPrivate={u.is_private}
-                  isFollowing={u.is_following}
-                  isPending={u.is_pending}
-                  isFollowedBy={u.is_followed_by}
+                  isInOrbit={u.is_in_orbit}
+                  isPending={u.is_orbit_pending}
+                  isOrbitingYou={u.is_orbiting_you}
                   onChange={patch => updateRow(u.id, patch)}
                   size="sm"
                 />

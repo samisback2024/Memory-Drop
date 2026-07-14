@@ -16,7 +16,7 @@ import { MEMORY_TYPE_ICONS } from '../components/feed/LockedDropPlaceholder';
 import type { Drop, DropTab, MemoryType } from '../types/feed';
 
 const PAGE_SIZE = 10;
-const ALL_TABS: DropTab[] = ['my_drops', 'following', 'public_drops', 'saved_to_unlock'];
+const ALL_TABS: DropTab[] = ['my_drops', 'in_orbit', 'public_drops', 'saved_to_unlock'];
 // 'audio' stays a valid MemoryType (existing audio drops still need to
 // render), it's just not offered as a filter option anymore — Drops no
 // longer support creating one, see DropComposer.tsx.
@@ -36,7 +36,7 @@ const emptyTabState = (): TabState => ({ drops: [], offset: 0, hasMore: true, lo
 
 // The feed as Memory Drop's actual identity, not a generic social wall:
 // four tabs built around the lifecycle of a memory (dropped, sealed,
-// opening today, out in the world) rather than "following/discover/
+// opening today, out in the world) rather than "in orbit/discover/
 // trending." See DropCard for how a locked drop renders — no content is
 // ever sent to the client early, so there's nothing to blur, just a
 // sealed capsule and a countdown.
@@ -47,14 +47,14 @@ export const FeedPage: React.FC = () => {
   const { getDropsFeed } = useDrops();
   const [searchParams, setSearchParams] = useSearchParams();
   // Persisted in the URL (?tab=) rather than plain useState — a hard
-  // refresh on, say, the Following tab used to always land back on My
+  // refresh on, say, the In Orbit tab used to always land back on My
   // Drops since nothing remembered which tab you'd been on.
   const [activeTab, setActiveTab] = useState<DropTab>(() => {
     const requested = searchParams.get('tab');
     return isDropTab(requested) ? requested : 'my_drops';
   });
   const [tabStates, setTabStates] = useState<Record<DropTab, TabState>>({
-    my_drops: emptyTabState(), following: emptyTabState(), public_drops: emptyTabState(),
+    my_drops: emptyTabState(), in_orbit: emptyTabState(), public_drops: emptyTabState(),
     saved_to_unlock: emptyTabState(),
   });
   const [composerOpen, setComposerOpen] = useState(false);
@@ -76,7 +76,7 @@ export const FeedPage: React.FC = () => {
   const [viewingMomentsFor, setViewingMomentsFor] = useState<string | null>(null);
   const [momentTrayKey, setMomentTrayKey] = useState(0);
   const scrollPositions = useRef<Record<DropTab, number>>({
-    my_drops: 0, following: 0, public_drops: 0, saved_to_unlock: 0,
+    my_drops: 0, in_orbit: 0, public_drops: 0, saved_to_unlock: 0,
   });
 
   const loadTab = useCallback(async (tab: DropTab) => {
@@ -139,7 +139,7 @@ export const FeedPage: React.FC = () => {
   // supabase/phase14q_feed_realtime.sql). Rather than splicing a raw
   // postgres_changes payload straight into the list (it doesn't tell us
   // which tab it actually belongs in — RLS only guarantees the row is
-  // visible to us *somehow*, not specifically that we follow its author),
+  // visible to us *somehow*, not specifically that its author is in our orbit),
   // this surfaces a lightweight "new drops" pill and lets tapping it
   // trigger the real, correct getDropsFeed refetch for the active tab.
   useEffect(() => {
@@ -149,7 +149,7 @@ export const FeedPage: React.FC = () => {
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'posts' }, payload => {
         const newPost = payload.new as { user_id: string };
         if (newPost.user_id === user.id) return; // own drop already handled by handleDropped
-        if (activeTab === 'following' || activeTab === 'public_drops') setNewDropsAvailable(true);
+        if (activeTab === 'in_orbit' || activeTab === 'public_drops') setNewDropsAvailable(true);
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };

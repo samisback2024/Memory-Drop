@@ -8,7 +8,7 @@ interface PublicPageHeaderProps {
 }
 
 // Shared by every page reachable while logged out (PublicProfilePage,
-// FollowersPage, FollowingPage at /u/:username/...) — a back button, the
+// OrbitingYouPage, InOrbitPage at /u/:username/...) — a back button, the
 // logo (or a page title in its place), and a sign-in prompt for anon
 // visitors.
 export const PublicPageHeader: React.FC<PublicPageHeaderProps> = ({ title }) => {

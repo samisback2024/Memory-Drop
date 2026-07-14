@@ -8,8 +8,8 @@ interface RelationshipMenuProps {
   isMuted: boolean;
   isRestricted: boolean;
   isBlocked: boolean;
-  showRemoveFollower?: boolean;
-  onRemoveFollower?: () => void;
+  showRemoveFromOrbit?: boolean;
+  onRemoveFromOrbit?: () => void;
   onChange?: (next: { isMuted?: boolean; isRestricted?: boolean; isBlocked?: boolean }) => void;
 }
 
@@ -18,7 +18,7 @@ interface RelationshipMenuProps {
 // primitive yet; noted as a follow-up rather than risking a refactor of
 // already-working, already-tested nav code in the same change as this.
 export const RelationshipMenu: React.FC<RelationshipMenuProps> = ({
-  targetId, isMuted, isRestricted, isBlocked, showRemoveFollower = false, onRemoveFollower, onChange,
+  targetId, isMuted, isRestricted, isBlocked, showRemoveFromOrbit = false, onRemoveFromOrbit, onChange,
 }) => {
   const { muteUser, unmuteUser, restrictUser, unrestrictUser, blockUser, unblockUser } = useSocial();
   const [open, setOpen] = useState(false);
@@ -64,13 +64,13 @@ export const RelationshipMenu: React.FC<RelationshipMenuProps> = ({
       </button>
       {open && (
         <div role="menu" className="absolute right-0 top-11 w-52 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl z-50 overflow-hidden py-1 animate-fade-in">
-          {showRemoveFollower && (
+          {showRemoveFromOrbit && (
             <button
               role="menuitem"
-              onClick={() => { setOpen(false); onRemoveFollower?.(); }}
+              onClick={() => { setOpen(false); onRemoveFromOrbit?.(); }}
               className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
             >
-              <UserMinus size={15} aria-hidden="true" /> Remove follower
+              <UserMinus size={15} aria-hidden="true" /> Remove From Orbit
             </button>
           )}
           <button role="menuitem" onClick={toggleMute} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">

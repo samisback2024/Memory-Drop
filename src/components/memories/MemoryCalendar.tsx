@@ -14,7 +14,7 @@ const ACTIVITY_META: Record<MemoryActivityType, { icon: typeof Sparkles; label: 
 };
 
 // A month grid with a dot on any day with activity — dropping something,
-// something unlocking (yours, a follow's, or a public account's — past
+// something unlocking (yours, an orbit's, or a public account's — past
 // or still-upcoming), or saving a Drop to unlock later. Tapping a day
 // fetches just that day's activity and groups it by type underneath,
 // rather than pre-loading the whole month client-side.

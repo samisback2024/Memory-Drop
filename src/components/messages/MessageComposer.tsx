@@ -237,8 +237,9 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
               <button type="button" onClick={() => videoInputRef.current?.click()} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
                 <Video size={16} aria-hidden="true" /> Video
               </button>
-              <button type="button" onClick={() => fileInputRef.current?.click()} className="w-full flex items-center gap-2.5 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
-                <FileText size={16} aria-hidden="true" /> File
+              <button type="button" onClick={() => fileInputRef.current?.click()} className="w-full flex flex-col items-start gap-0.5 px-3 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
+                <span className="flex items-center gap-2.5"><FileText size={16} aria-hidden="true" /> File</span>
+                <span className="pl-[26px] text-[10px] text-gray-400 dark:text-gray-500">PDF, Word, or plain text</span>
               </button>
             </div>
           )}
