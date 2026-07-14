@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Download } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Download, Eye } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useSocial } from '../../hooks/useSocial';
 import { useSettings } from '../../hooks/useSettings';
@@ -139,6 +140,14 @@ export const PrivacySettings: React.FC = () => {
           checked={isPrivate}
           onChange={togglePrivate}
         />
+      </SettingsCard>
+
+      <SettingsCard title="Preview your profile" description="See exactly what your profile looks like to someone who isn't in your Orbit — as a public account, and as a private one.">
+        <Link to="/settings/preview-profile">
+          <Button variant="outline" size="sm" className="self-start">
+            <Eye size={13} aria-hidden="true" /> Preview my profile
+          </Button>
+        </Link>
       </SettingsCard>
 
       <SettingsCard title="Who can message you" description="People outside this circle land in Message Requests instead of your main inbox.">

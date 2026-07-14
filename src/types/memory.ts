@@ -94,6 +94,7 @@ export interface MemoryStats {
   total_unlocks: number;
   total_reactions: number;
   total_comments: number;
+  total_moments: number;
 }
 
 // get_public_stats(user_id) — what anyone is allowed to know about
@@ -117,6 +118,7 @@ export interface PublicStats {
   total_unlocks: number | null;
   total_reactions: number | null;
   total_comments: number | null;
+  total_moments: number | null;
 }
 
 export const MONTH_NAMES = [

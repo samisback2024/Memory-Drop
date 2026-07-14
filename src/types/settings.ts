@@ -64,13 +64,13 @@ export interface UserSettings {
   updated_at: string;
 }
 
-// The 10 Memory Stats tiles a profile owner can opt into showing on
+// The 11 Memory Stats tiles a profile owner can opt into showing on
 // their public profile — Orbiting You/In Orbit stay unconditionally
 // public (a separate, already-existing display) and aren't part of
 // this list.
 export type ProfileStatKey =
   | 'total_drops' | 'locked_items' | 'unlocked_items' | 'expired_moments' | 'saved_to_unlock'
-  | 'public_drops' | 'total_views' | 'total_unlocks' | 'total_reactions' | 'total_comments';
+  | 'public_drops' | 'total_views' | 'total_unlocks' | 'total_reactions' | 'total_comments' | 'total_moments';
 
 export const PROFILE_STAT_META: Record<ProfileStatKey, { label: string; description: string }> = {
   total_drops: { label: 'Drops', description: 'Total number of Drops you\'ve made.' },
@@ -83,6 +83,7 @@ export const PROFILE_STAT_META: Record<ProfileStatKey, { label: string; descript
   total_unlocks: { label: 'Unlocks received', description: 'How many times your content has been unlocked by others.' },
   total_reactions: { label: 'Reactions received', description: 'Likes and reactions across all your content.' },
   total_comments: { label: 'Comments received', description: 'Comments and replies across all your content.' },
+  total_moments: { label: 'Moments', description: 'Total number of Moments you\'ve posted.' },
 };
 
 export interface NotificationPreferences {

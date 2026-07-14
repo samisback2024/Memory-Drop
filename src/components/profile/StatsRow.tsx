@@ -1,34 +1,46 @@
-import React from 'react';
-import { getYearsActive } from '../../lib/profile';
+import React, { useEffect, useState } from 'react';
+import { useMemories } from '../../hooks/useMemories';
 import { SocialStats } from '../social/SocialStats';
 
 interface StatsRowProps {
   profileId: string;
   username: string;
-  createdAt: string;
+  isOwnProfile: boolean;
 }
 
-// Orbiting You/In Orbit are real now (Phase 3) — rendered by SocialStats.
-// Capsules/Stories/Memory Streak still don't have tables behind them, so
-// they stay honest zeros here until later phases. Years Active is derived
-// straight from created_at, no placeholder needed.
-export const StatsRow: React.FC<StatsRowProps> = React.memo(({ profileId, username, createdAt }) => {
-  const placeholders = [
-    { key: 'capsules', label: 'Capsules', value: 0 },
-    { key: 'stories', label: 'Stories', value: 0 },
-    { key: 'streak', label: 'Memory Streak', value: 0 },
-    { key: 'years', label: 'Years Active', value: getYearsActive(createdAt) },
-  ];
+// Orbiting You/In Orbit are real (Phase 3), rendered by SocialStats.
+// Moments is real too (Phase 17) — the caller's own true count via
+// get_memory_stats, or, for someone else's profile, get_public_stats'
+// privacy-gated total_moments (null, and hidden here, unless that person
+// opted it into their public stats in Settings → Privacy). Capsules is
+// still a placeholder — no table wired up for it yet. Memory Streak and
+// Years Active were removed outright, not just unwired: neither ever
+// mapped to a real, meaningful count.
+export const StatsRow: React.FC<StatsRowProps> = React.memo(({ profileId, username, isOwnProfile }) => {
+  const { getMemoryStats, getPublicStats } = useMemories();
+  const [moments, setMoments] = useState<number | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (isOwnProfile ? getMemoryStats() : getPublicStats(profileId)).then(stats => {
+      if (!cancelled) setMoments(stats?.total_moments ?? null);
+    });
+    return () => { cancelled = true; };
+  }, [profileId, isOwnProfile, getMemoryStats, getPublicStats]);
 
   return (
     <div className="grid grid-cols-3 sm:grid-cols-6 gap-y-3 gap-x-2 py-3 border-t border-b border-gray-100 dark:border-gray-800">
       <SocialStats profileId={profileId} username={username} />
-      {placeholders.map(({ key, label, value }) => (
-        <div key={key} className="text-center">
-          <p className="font-bold text-gray-900 dark:text-gray-100">{value}</p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{label}</p>
+      <div className="text-center">
+        <p className="font-bold text-gray-900 dark:text-gray-100">0</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Capsules</p>
+      </div>
+      {moments !== null && (
+        <div className="text-center">
+          <p className="font-bold text-gray-900 dark:text-gray-100">{moments}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Moments</p>
         </div>
-      ))}
+      )}
     </div>
   );
 });

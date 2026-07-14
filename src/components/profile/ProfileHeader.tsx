@@ -148,7 +148,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = React.memo(({ profile
           <p className="text-sm text-gray-400 dark:text-gray-500 italic mb-1">Add a bio to tell people about yourself.</p>
         ) : null}
 
-        {profile.username && <StatsRow profileId={profile.id} username={profile.username} createdAt={profile.created_at} />}
+        {profile.username && <StatsRow profileId={profile.id} username={profile.username} isOwnProfile={isOwnProfile} />}
       </div>
     </div>
   );

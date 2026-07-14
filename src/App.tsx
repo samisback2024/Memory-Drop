@@ -19,6 +19,7 @@ import { CompleteProfilePage } from './pages/CompleteProfilePage';
 import { OnboardingPage } from './pages/OnboardingPage';
 import { ProfilePage } from './pages/ProfilePage';
 import { EditProfilePage } from './pages/EditProfilePage';
+import { ProfilePreviewPage } from './pages/ProfilePreviewPage';
 import { PublicProfilePage } from './pages/PublicProfilePage';
 import { FriendsPage } from './pages/FriendsPage';
 import { OrbitRequestsPage } from './pages/OrbitRequestsPage';
@@ -156,6 +157,7 @@ function App() {
               <Route path="/settings/:section" element={<SettingsPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/profile/edit" element={<EditProfilePage />} />
+              <Route path="/settings/preview-profile" element={<ProfilePreviewPage />} />
               <Route path="/search" element={<SearchPage />} />
               <Route path="/explore" element={<ExplorePage />} />
               <Route path="/notifications" element={<NotificationsPage />} />
