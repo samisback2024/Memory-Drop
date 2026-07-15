@@ -6,12 +6,12 @@ interface MomentPileButtonProps {
 }
 
 // A small floating capsule, always resting in the bottom-right corner —
-// a second, more playful entry point into Moments alongside the left
-// MomentSidebar rail. Tapping it opens MomentPileGround, a full-screen
-// "ground" where every open moment (yours to post more, everyone
-// else's to view) is piled up as its own glossy capsule. Positioned
-// above MobileNav's bottom bar (which only exists below `sm`) with a
-// bottom offset rather than a z-index fight.
+// the one entry point into Moments now that the old left sidebar rail
+// is gone. Tapping it opens MomentPileGround, a full-screen "ground"
+// where every open moment (yours to post more, everyone else's to
+// view) is piled up as its own glossy capsule. Positioned above
+// MobileNav's bottom bar (which only exists below `sm`) with a bottom
+// offset rather than a z-index fight.
 export const MomentPileButton: React.FC<MomentPileButtonProps> = ({ onClick }) => (
   <button
     type="button"

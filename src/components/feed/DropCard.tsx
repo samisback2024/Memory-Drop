@@ -94,7 +94,7 @@ const DropCardImpl: React.FC<DropCardProps> = ({ drop, onDeleted, onHidden, onUn
     if (content.is_saved_to_unlock) {
       const promoted = await promoteUnlockedSaves();
       if (promoted.includes(content.id)) {
-        showToast('Moved to My Memory in your Dashboard', 'success', {
+        showToast('Moved to Saved Memories', 'success', {
           label: 'View',
           onClick: () => navigate('/saved?tab=memories'),
         });

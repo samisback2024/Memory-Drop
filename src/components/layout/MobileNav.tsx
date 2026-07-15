@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Rss, Clock, Plus, Archive, User, Sparkles, PackageOpen, X } from 'lucide-react';
+import { Rss, Clock, Plus, Archive, Search, Sparkles, PackageOpen, X } from 'lucide-react';
 import { DropComposer } from '../feed/DropComposer';
 import { useDismissableMenu } from '../../hooks/useDismissableMenu';
 
@@ -10,22 +10,24 @@ const NAV_LINKS = [
 ];
 const NAV_LINKS_RIGHT = [
   { to: '/memories', label: 'Memories', icon: Archive },
-  { to: '/profile', label: 'Dashboard', icon: User },
+  { to: '/search', label: 'Search', icon: Search },
 ];
 
 // A fixed bottom bar shown only below the `sm` breakpoint — additive to
 // the existing top Navbar (unchanged, still renders at every width),
-// not a replacement. Feed/Capsules/Memories/Profile are the same
-// primary destinations Navbar already links to; Create is new here —
-// it opens a small action sheet rather than navigating directly, since
-// "create" isn't a single destination (Drop/Moment/Capsule each have
-// their own composer). Moment and Capsule creation reuse the existing
-// /moments/create and /capsules/create routes; Drop creation has no
-// dedicated route (DropComposer is normally opened from a button on
-// FeedPage), so this mounts its own DropComposer instance and, on
-// success, navigates to /feed — remounting FeedPage there refetches
-// fresh data, so the new Drop shows up without any shared state needed
-// between this component and FeedPage.
+// not a replacement. Feed/Capsules/Memories/Search are the same
+// primary destinations Navbar already links to; Profile is reachable
+// from the avatar in that top bar instead of a duplicate entry down
+// here. Create is new here — it opens a small action sheet rather than
+// navigating directly, since "create" isn't a single destination
+// (Drop/Moment/Capsule each have their own composer). Moment and
+// Capsule creation reuse the existing /moments/create and
+// /capsules/create routes; Drop creation has no dedicated route
+// (DropComposer is normally opened from a button on FeedPage), so this
+// mounts its own DropComposer instance and, on success, navigates to
+// /feed — remounting FeedPage there refetches fresh data, so the new
+// Drop shows up without any shared state needed between this component
+// and FeedPage.
 export const MobileNav: React.FC = () => {
   const navigate = useNavigate();
   const [createOpen, setCreateOpen] = useState(false);

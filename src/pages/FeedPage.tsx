@@ -8,11 +8,9 @@ import { usePullToRefresh } from '../hooks/usePullToRefresh';
 import { DropTabs } from '../components/feed/DropTabs';
 import { Feed } from '../components/feed/Feed';
 import { DropComposer } from '../components/feed/DropComposer';
-import { MomentSidebar } from '../components/moments/MomentSidebar';
 import { MomentPileButton } from '../components/moments/MomentPileButton';
 import { MomentPileGround } from '../components/moments/MomentPileGround';
 import { CreateMomentModal } from '../components/moments/CreateMomentModal';
-import { MomentViewer } from '../components/moments/MomentViewer';
 import { Avatar } from '../components/ui/Avatar';
 import { MEMORY_TYPE_ICONS } from '../components/feed/LockedDropPlaceholder';
 import type { Drop, DropTab, MemoryType } from '../types/feed';
@@ -75,7 +73,6 @@ export const FeedPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const [momentComposerOpen, setMomentComposerOpen] = useState(false);
-  const [viewingMomentsFor, setViewingMomentsFor] = useState<string | null>(null);
   const [momentTrayKey, setMomentTrayKey] = useState(0);
   const [pileOpen, setPileOpen] = useState(false);
   const scrollPositions = useRef<Record<DropTab, number>>({
@@ -207,14 +204,7 @@ export const FeedPage: React.FC = () => {
   const displayName = profile?.display_name || profile?.username || 'there';
 
   return (
-    <div className="flex gap-3 -mx-4 px-4 -mt-6 pt-6 pb-6 bg-gradient-to-b from-purple-50/60 via-transparent to-transparent min-h-[calc(100vh-4rem)]">
-      <MomentSidebar
-        onCreate={() => setMomentComposerOpen(true)}
-        onOpenAuthor={setViewingMomentsFor}
-        refreshKey={momentTrayKey}
-      />
-
-      <div className="flex-1 min-w-0 flex flex-col gap-4">
+    <div className="flex flex-col gap-4 -mx-4 px-4 -mt-6 pt-6 pb-6 bg-gradient-to-b from-purple-50/60 via-transparent to-transparent min-h-[calc(100vh-4rem)]">
       {(pulling || refreshing) && (
         <div className="flex justify-center items-center overflow-hidden transition-[height]" style={{ height: refreshing ? 36 : distance }}>
           <Loader2
@@ -298,7 +288,6 @@ export const FeedPage: React.FC = () => {
         onRetry={() => loadTab(activeTab)}
         emptyVariant={activeTab}
       />
-      </div>
 
       <DropComposer isOpen={composerOpen} onClose={() => setComposerOpen(false)} onDropped={handleDropped} />
 
@@ -309,13 +298,6 @@ export const FeedPage: React.FC = () => {
         onClose={() => setMomentComposerOpen(false)}
         onCreated={() => setMomentTrayKey(k => k + 1)}
       />
-
-      {viewingMomentsFor && (
-        <MomentViewer
-          authorUserId={viewingMomentsFor}
-          onClose={() => { setViewingMomentsFor(null); setMomentTrayKey(k => k + 1); }}
-        />
-      )}
 
       {pileOpen && (
         <MomentPileGround

@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Rss, Clock, Archive, Search, Compass, Users, User, Menu } from 'lucide-react';
+import { Rss, Clock, Archive, Search, Compass, Users, Menu } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useSocial } from '../../hooks/useSocial';
 import { Avatar } from '../ui/Avatar';
 import { NotificationBell } from '../notifications/NotificationBell';
 import { MessagesNavButton } from '../messages/MessagesNavButton';
 
-// Feed is the primary destination now (Phase 4) — Dashboard moved into the
-// account sidebar rather than crowding the top bar. Time Capsules
-// (Phase 6) and Memories (Phase 7) both get primary slots too, not just
-// the sidebar — the signature feature and the emotional-heart archive
-// it feeds into, not secondary utility pages.
+// Feed is the primary destination now (Phase 4). Time Capsules (Phase 6)
+// and Memories (Phase 7) both get primary slots too — the signature
+// feature and the emotional-heart archive it feeds into, not secondary
+// utility pages. Profile has no entry of its own here — the avatar
+// button at the end of this bar already goes straight there, so a
+// second labeled "Dashboard" link next to it was pure duplication.
 const NAV_LINKS = [
   { to: '/feed', label: 'Feed', icon: Rss },
   { to: '/capsules', label: 'Capsules', icon: Clock },
@@ -19,7 +20,6 @@ const NAV_LINKS = [
   { to: '/search', label: 'Search', icon: Search },
   { to: '/explore', label: 'Explore', icon: Compass },
   { to: '/friends', label: 'Friends', icon: Users },
-  { to: '/profile', label: 'Dashboard', icon: User },
 ];
 
 interface NavbarProps {
@@ -44,8 +44,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenMenu }) => {
         <div className="flex items-center gap-2">
           {/* Opens the AccountSidebar drawer below lg: — that width no
               longer has the persistent sidebar AppShell renders beside
-              the content, so this is the only way to reach Dashboard/
-              Edit profile/Saved/Moments/Settings/Sign out there. */}
+              the content, so this is the only way to reach Edit profile/
+              Saved/Moments/Settings/Sign out there. */}
           <button
             type="button"
             onClick={onOpenMenu}
@@ -64,11 +64,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenMenu }) => {
 
         <nav className="flex items-center gap-1">
           {/* Below `sm`, MobileNav's bottom bar owns primary navigation
-              (Feed/Capsules/Memories/Profile) — showing the same
+              (Feed/Capsules/Memories/Search) — showing the same
               destinations again as icons up here too would be a
-              redundant, cluttered second nav row. Search/Explore/
-              Friends remain reachable from the menu button above at
-              that width. */}
+              redundant, cluttered second nav row. Explore/Friends
+              remain reachable from the menu button above at that
+              width. */}
           <div className="hidden sm:flex items-center gap-1">
             {NAV_LINKS.map(({ to, label, icon: Icon }) => (
               <NavLink
@@ -96,27 +96,16 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenMenu }) => {
             ))}
           </div>
 
-          {/* Icon-only, mobile-only — on desktop, Search is already a
-              full labeled link in the NAV_LINKS row above. */}
-          <button
-            type="button"
-            onClick={() => navigate('/search')}
-            aria-label="Search"
-            className="sm:hidden p-2 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100 transition-colors focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none"
-          >
-            <Search size={18} aria-hidden="true" />
-          </button>
-
           <MessagesNavButton />
           <NotificationBell />
 
-          {/* Avatar is a direct link to Dashboard now — the account
+          {/* Avatar is a direct link to your Profile — the account
               dropdown it used to open is gone, replaced by the
               persistent/drawer AccountSidebar. */}
           <button
             type="button"
             onClick={() => navigate('/profile')}
-            aria-label="Go to Dashboard"
+            aria-label="Go to your Profile"
             className="ml-1 p-1.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none"
           >
             <Avatar src={profile?.profile_photo_url} name={displayName} size="sm" />

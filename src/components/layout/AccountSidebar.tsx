@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutGrid, Edit3, Bookmark, Sparkles, Settings, LogOut, Compass, Users, X } from 'lucide-react';
+import { Edit3, Bookmark, Sparkles, Settings, LogOut, Compass, Users, X } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useSocial } from '../../hooks/useSocial';
 import { Avatar } from '../ui/Avatar';
 
 const ACCOUNT_LINKS = [
-  { to: '/profile', label: 'Dashboard', icon: LayoutGrid },
   { to: '/profile/edit', label: 'Edit profile', icon: Edit3 },
   { to: '/saved', label: 'Saved memories', icon: Bookmark },
   { to: '/moments', label: 'Your moments', icon: Sparkles },
@@ -57,11 +56,15 @@ export const AccountSidebar: React.FC<AccountSidebarProps> = ({ showPrimaryLinks
   return (
     <div className={`flex flex-col bg-white dark:bg-gray-900 ${className}`}>
       <div className="flex items-center gap-3 px-3.5 py-4">
-        <Avatar src={profile?.profile_photo_url} name={displayName} size="md" />
-        <div className="min-w-0 flex-1">
-          <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm truncate">{displayName}</p>
-          {profile?.username && <p className="text-xs text-gray-500 dark:text-gray-400 truncate">@{profile.username}</p>}
-        </div>
+        {/* The header itself is the way to your Profile now — no separate
+            "Dashboard" list item duplicating it below. */}
+        <NavLink to="/profile" end onClick={onNavigate} className="flex items-center gap-3 min-w-0 flex-1 rounded-xl focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none">
+          <Avatar src={profile?.profile_photo_url} name={displayName} size="md" />
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm truncate">{displayName}</p>
+            {profile?.username && <p className="text-xs text-gray-500 dark:text-gray-400 truncate">@{profile.username}</p>}
+          </div>
+        </NavLink>
         {onClose && (
           <button type="button" onClick={onClose} aria-label="Close menu" className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 flex-shrink-0">
             <X size={16} aria-hidden="true" />
@@ -89,7 +92,7 @@ export const AccountSidebar: React.FC<AccountSidebarProps> = ({ showPrimaryLinks
         )}
 
         {ACCOUNT_LINKS.map(({ to, label, icon: Icon }) => (
-          <NavLink key={to} to={to} end={to === '/profile'} className={linkClasses} onClick={onNavigate}>
+          <NavLink key={to} to={to} className={linkClasses} onClick={onNavigate}>
             <Icon size={17} aria-hidden="true" /> {label}
           </NavLink>
         ))}
