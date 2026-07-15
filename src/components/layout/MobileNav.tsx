@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Rss, Clock, Plus, BookHeart, User, Sparkles, PackageOpen, X } from 'lucide-react';
+import { Rss, Clock, Plus, Archive, User, Sparkles, PackageOpen, X } from 'lucide-react';
 import { DropComposer } from '../feed/DropComposer';
 import { useDismissableMenu } from '../../hooks/useDismissableMenu';
 
@@ -9,7 +9,7 @@ const NAV_LINKS = [
   { to: '/capsules', label: 'Capsules', icon: Clock },
 ];
 const NAV_LINKS_RIGHT = [
-  { to: '/memories', label: 'Memories', icon: BookHeart },
+  { to: '/memories', label: 'Memories', icon: Archive },
   { to: '/profile', label: 'Dashboard', icon: User },
 ];
 

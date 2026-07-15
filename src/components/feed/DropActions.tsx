@@ -1,7 +1,7 @@
 import React from 'react';
 import { MessageCircle, Share2 } from 'lucide-react';
 import { SaveButton } from './SaveButton';
-import { LikeButton } from './LikeButton';
+import { SparkleDropButton } from './SparkleDropButton';
 import { InterestActions } from './InterestActions';
 import type { Drop, InterestType } from '../../types/feed';
 
@@ -14,7 +14,7 @@ interface DropActionsProps {
 
 // Two entirely different action rows depending on lock state — not one
 // row with buttons disabled. Locked: four positive anticipation reactions.
-// Unlocked: Like, Comment, Save, Share — the only point Like/Comment/Share
+// Unlocked: Sparkle Drop, Comment, Save, Share — the only point these
 // ever appear at all.
 export const DropActions: React.FC<DropActionsProps> = ({ drop, onUpdate, onCommentToggle, onShare }) => {
   if (!drop.is_unlocked) {
@@ -58,11 +58,11 @@ export const DropActions: React.FC<DropActionsProps> = ({ drop, onUpdate, onComm
 
   return (
     <div className="flex items-center gap-2 px-4 py-3 border-t border-gray-50 dark:border-gray-800">
-      <LikeButton
+      <SparkleDropButton
         dropId={drop.id}
-        isLiked={drop.is_liked}
-        likeCount={drop.like_count}
-        onChange={(isLiked, likeCount) => onUpdate({ is_liked: isLiked, like_count: likeCount })}
+        isSparkled={drop.is_liked}
+        sparkleCount={drop.like_count}
+        onChange={(isSparkled, sparkleCount) => onUpdate({ is_liked: isSparkled, like_count: sparkleCount })}
       />
 
       <button

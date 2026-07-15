@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Heart } from 'lucide-react';
+import { Gem } from 'lucide-react';
 import { useMemories } from '../../hooks/useMemories';
 import type { MemorySourceType } from '../../types/memory';
 
@@ -37,7 +37,7 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = ({ memoryType, memo
       aria-label={favorited ? 'Remove from favorites' : 'Add to favorites'}
       className="p-1.5 rounded-full bg-black/30 backdrop-blur-sm hover:bg-black/50 transition-colors focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none"
     >
-      <Heart size={size} className={favorited ? 'fill-pink-500 text-pink-500' : 'text-white'} aria-hidden="true" />
+      <Gem size={size} className={favorited ? 'fill-purple-400 text-purple-300' : 'text-white'} aria-hidden="true" />
     </button>
   );
 };

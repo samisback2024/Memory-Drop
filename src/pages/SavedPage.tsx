@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Search, X, Bookmark, Heart, FolderHeart, Clock } from 'lucide-react';
+import { Search, X, Bookmark, Gem, Layers, Clock } from 'lucide-react';
 import { useSaved } from '../hooks/useSaved';
 import { useDrops } from '../hooks/useDrops';
 import { useCapsules } from '../hooks/useCapsules';
@@ -22,8 +22,8 @@ const PAGE_SIZE = 20;
 const TABS: { id: SavedTab; label: string; icon: typeof Bookmark }[] = [
   { id: 'waiting', label: 'Waiting to Unlock', icon: Clock },
   { id: 'memories', label: 'Saved Memories', icon: Bookmark },
-  { id: 'favorites', label: 'Favorites', icon: Heart },
-  { id: 'collections', label: 'Collections', icon: FolderHeart },
+  { id: 'favorites', label: 'Favorites', icon: Gem },
+  { id: 'collections', label: 'Collections', icon: Layers },
 ];
 
 // Two distinct concepts, kept visibly separate rather than merged into
@@ -259,7 +259,7 @@ export const SavedPage: React.FC = () => {
           <div className="grid grid-cols-3 gap-1.5">{[0, 1, 2].map(i => <div key={i} className="aspect-square rounded-xl bg-gray-50 dark:bg-gray-800 animate-pulse" />)}</div>
         ) : favorites.length === 0 ? (
           <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm">
-            <EmptyState icon={Heart} title="No favorites yet" description="Tap the heart on any memory to keep it close." />
+            <EmptyState icon={Gem} title="No favorites yet" description="Tap the gem on any memory to keep it close." />
           </div>
         ) : (
           <GridView memories={favorites} />

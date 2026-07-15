@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bookmark, Star, Zap, HeartHandshake } from 'lucide-react';
+import { Bookmark, Star, Zap, Wand2 } from 'lucide-react';
 import { useDrops } from '../../hooks/useDrops';
 import { INTEREST_META, type InterestType } from '../../types/feed';
 
@@ -14,7 +14,7 @@ const ICONS: Record<InterestType, typeof Bookmark> = {
   save_to_unlock: Bookmark,
   interested: Star,
   cant_wait: Zap,
-  good_vibes: HeartHandshake,
+  good_vibes: Wand2,
 };
 
 const ORDER: InterestType[] = ['save_to_unlock', 'interested', 'cant_wait', 'good_vibes'];

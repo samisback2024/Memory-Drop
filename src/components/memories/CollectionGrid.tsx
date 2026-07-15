@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Plus, X, FolderHeart } from 'lucide-react';
+import { Plus, X, Layers } from 'lucide-react';
 import { useMemories } from '../../hooks/useMemories';
 import { TimelineView } from './TimelineView';
 import { EmptyState } from '../ui/EmptyState';
@@ -115,7 +115,7 @@ export const CollectionGrid: React.FC<CollectionGridProps> = ({ collections, onC
           <div className="h-32 rounded-2xl bg-white/60 animate-pulse" />
         ) : openMemories.length === 0 ? (
           <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm">
-            <EmptyState icon={FolderHeart} title="Nothing here yet" description="Add memories to this collection from their Memory Details page." />
+            <EmptyState icon={Layers} title="Nothing here yet" description="Add memories to this collection from their Memory Details page." />
           </div>
         ) : (
           <TimelineView memories={openMemories} />

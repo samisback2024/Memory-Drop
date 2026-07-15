@@ -1,12 +1,13 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, MessageCircle, Feather, Bookmark, Share2, MoreHorizontal, Trash2, User } from 'lucide-react';
+import { MessageCircle, Feather, Bookmark, Share2, MoreHorizontal, Trash2, User } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useCapsules } from '../../hooks/useCapsules';
 import { useDismissableMenu } from '../../hooks/useDismissableMenu';
 import { useConfirm } from '../../hooks/useConfirm';
 import { Avatar } from '../ui/Avatar';
 import { Modal } from '../ui/Modal';
+import { SparkleDrop } from '../icons/SparkleDrop';
 import { CapsuleLockedCard } from './CapsuleLockedCard';
 import { CapsuleUnlockedCard } from './CapsuleUnlockedCard';
 import { UnlockAnimation } from './UnlockAnimation';
@@ -169,10 +170,10 @@ const CapsuleCardImpl: React.FC<CapsuleCardProps> = ({ capsule, onDeleted }) => 
                   : 'bg-gray-50 dark:bg-gray-800/70 text-gray-500 dark:text-gray-400',
               ].join(' ')}
             >
-              <button type="button" onClick={toggleLike} aria-label={content.is_liked ? 'Unlike' : 'Like'} aria-pressed={content.is_liked} className="relative flex items-center focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none rounded-full">
-                <Heart key={likePopKey} size={14} className={`${content.is_liked ? 'fill-white' : ''} ${likePopKey > 0 ? 'animate-reaction-pop' : ''}`} aria-hidden="true" />
+              <button type="button" onClick={toggleLike} aria-label={content.is_liked ? 'Remove Sparkle Drop' : 'Sparkle Drop this memory'} aria-pressed={content.is_liked} className="relative flex items-center focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none rounded-full">
+                <SparkleDrop key={likePopKey} size={14} className={`${content.is_liked ? 'fill-white' : ''} ${likePopKey > 0 ? 'animate-reaction-pop' : ''}`} aria-hidden="true" />
                 {showLikeFloat && (
-                  <Heart size={14} className="absolute left-0 top-0 fill-fuchsia-500 text-fuchsia-500 pointer-events-none animate-reaction-float" aria-hidden="true" />
+                  <SparkleDrop size={14} className="absolute left-0 top-0 fill-fuchsia-500 text-fuchsia-500 pointer-events-none animate-reaction-float" aria-hidden="true" />
                 )}
               </button>
               <RecentLikersPopover contentType="capsule" contentId={content.id} count={content.like_count} />

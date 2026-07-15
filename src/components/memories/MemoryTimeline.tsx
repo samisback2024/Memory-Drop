@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { List, LayoutGrid, BookOpen, GitCommitVertical, ArrowDownUp, Loader2, BookHeart } from 'lucide-react';
+import { List, LayoutGrid, BookOpen, GitCommitVertical, ArrowDownUp, Loader2, Archive } from 'lucide-react';
 import { useMemories } from '../../hooks/useMemories';
 import { MemorySearch } from './MemorySearch';
 import { MemoryFilters } from './MemoryFilters';
@@ -89,7 +89,7 @@ export const MemoryTimeline: React.FC<MemoryTimelineProps> = ({ collections }) =
         </div>
       ) : memories.length === 0 ? (
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm">
-          <EmptyState icon={BookHeart} title="No memories here yet" description="Once a capsule unlocks or a moment expires, it'll live here forever." />
+          <EmptyState icon={Archive} title="No memories here yet" description="Once a capsule unlocks or a moment expires, it'll live here forever." />
         </div>
       ) : (
         <>

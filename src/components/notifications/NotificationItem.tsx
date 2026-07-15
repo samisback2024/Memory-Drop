@@ -1,19 +1,25 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import {
-  UserPlus, UserCheck, AtSign, Bookmark, Heart, Sparkles, Clock3, Unlock,
-  MessageCircle, MessageSquare, Reply, Feather, Eye, Gift, Bell, ShieldAlert, KeyRound, LogIn, Megaphone,
+  UserPlus, UserCheck, AtSign, Bookmark, Star, Sparkles, Clock3, Unlock,
+  MessageCircle, MessageSquare, Reply, Feather, Eye, Gift, ShieldAlert, KeyRound, LogIn, Megaphone,
 } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
+import { SparkleDrop } from '../icons/SparkleDrop';
 import { formatRelativeTime } from '../../utils/date';
 import { buildNotificationLink, type Notification, type NotificationType } from '../../types/notification';
 
-const TYPE_ICONS: Record<NotificationType, typeof Bell> = {
+// A Lucide icon's own type doesn't fit SparkleDrop (Memory Drop's own
+// custom icon, not from Lucide) — this shape is the actual common
+// surface every icon used below needs, Lucide or custom.
+type IconComponent = React.ComponentType<{ size?: number | string; className?: string; 'aria-hidden'?: boolean | 'true' | 'false' }>;
+
+const TYPE_ICONS: Record<NotificationType, IconComponent> = {
   new_orbiter: UserPlus, orbit_request: UserPlus, orbit_accepted: UserCheck, mention: AtSign,
-  drop_save_to_unlock: Bookmark, drop_good_vibes: Sparkles, drop_cant_wait: Clock3, drop_interested: Heart,
-  drop_unlock_viewed: Unlock, drop_liked: Heart, drop_commented: MessageCircle, drop_replied: Reply, drop_reflected: Feather,
+  drop_save_to_unlock: Bookmark, drop_good_vibes: Sparkles, drop_cant_wait: Clock3, drop_interested: Star,
+  drop_unlock_viewed: Unlock, drop_liked: SparkleDrop, drop_commented: MessageCircle, drop_replied: Reply, drop_reflected: Feather,
   moment_viewed: Eye, moment_replied: Reply, moment_reacted: Sparkles,
-  capsule_unlock_reminder: Clock3, capsule_unlocked: Gift, capsule_viewed: Eye, capsule_liked: Heart,
+  capsule_unlock_reminder: Clock3, capsule_unlocked: Gift, capsule_viewed: Eye, capsule_liked: SparkleDrop,
   capsule_commented: MessageCircle, capsule_replied: Reply, capsule_reflected: Feather,
   message_request: MessageSquare, new_message: MessageCircle, message_reaction: Sparkles,
   weekly_recap: Sparkles, security_alert: ShieldAlert, password_changed: KeyRound, new_login: LogIn, product_announcement: Megaphone,

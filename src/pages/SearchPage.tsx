@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Search, X, Clock, TrendingUp, FolderHeart } from 'lucide-react';
+import { Search, X, Clock, TrendingUp, Layers } from 'lucide-react';
 import { useSocial } from '../hooks/useSocial';
 import { useSearch } from '../hooks/useSearch';
 import { UserSearchResults } from '../components/social/UserSearchResults';
@@ -286,7 +286,7 @@ export const SearchPage: React.FC = () => {
           {showCollections && collections.length > 0 && (
             <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 flex flex-col gap-2">
               <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
-                <FolderHeart size={14} className="text-purple-500" aria-hidden="true" />
+                <Layers size={14} className="text-purple-500" aria-hidden="true" />
                 Your collections
               </h2>
               <div className="flex flex-col divide-y divide-gray-100">

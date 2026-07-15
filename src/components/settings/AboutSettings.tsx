@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FileText, Scale, Code2, Heart } from 'lucide-react';
+import { FileText, Scale, Code2, Sparkles } from 'lucide-react';
 import { SettingsSection } from './SettingsSection';
 import { SettingsCard } from './SettingsCard';
 
@@ -31,7 +31,7 @@ export const AboutSettings: React.FC = () => (
 
     <SettingsCard title="Credits">
       <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
-        <Heart size={13} className="text-pink-400" aria-hidden="true" /> Made for anyone with a memory worth saving for later.
+        <Sparkles size={13} className="text-purple-400" aria-hidden="true" /> Made for anyone with a memory worth saving for later.
       </p>
     </SettingsCard>
   </SettingsSection>
