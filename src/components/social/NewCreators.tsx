@@ -3,10 +3,9 @@ import { useSocial } from '../../hooks/useSocial';
 import { UserList } from './UserList';
 import type { SuggestedUser } from '../../types/social';
 
-// Explore's "New Creators" tab (Phase 10g) — mirrors SuggestedFriends'
-// exact shape-adaptation pattern (get_new_creators returns the same
-// SuggestedUser shape, no relationship fields, so UserList needs the
-// same false-filled patch).
+// Explore's "New Creators" tab (Phase 10g) — get_new_creators returns
+// the same SuggestedUser shape SuggestedFriends does, real relationship
+// fields included (Phase 20), so no client-side patching needed.
 export const NewCreators: React.FC = () => {
   const { getNewCreators } = useSocial();
   const [users, setUsers] = useState<SuggestedUser[]>([]);
@@ -20,7 +19,7 @@ export const NewCreators: React.FC = () => {
 
   return (
     <UserList
-      users={users.map(u => ({ ...u, is_in_orbit: false, is_orbit_pending: false, is_orbiting_you: false }))}
+      users={users}
       loading={loading}
       emptyVariant="suggestions"
       renderSubtitle={user => <p className="text-xs text-gray-500 dark:text-gray-400 truncate">@{user.username}</p>}

@@ -16,7 +16,7 @@ export const SuggestedFriends: React.FC = () => {
 
   return (
     <UserList
-      users={users.map(u => ({ ...u, is_in_orbit: false, is_orbit_pending: false, is_orbiting_you: false }))}
+      users={users}
       loading={loading}
       emptyVariant="suggestions"
       // mutual_count comes free with get_suggested_friends — showing it as

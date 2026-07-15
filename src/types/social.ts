@@ -23,6 +23,9 @@ export interface SocialUserWithRelationship extends SocialUser {
 
 export interface SuggestedUser extends SocialUser {
   mutual_count: number;
+  is_in_orbit: boolean;
+  is_orbit_pending: boolean;
+  is_orbiting_you: boolean;
 }
 
 export interface PendingRequest extends SocialUser {

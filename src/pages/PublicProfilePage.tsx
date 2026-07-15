@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
   UserX, Clock, Globe2, Users, UserPlus, Pin, Send, Activity as ActivityIcon,
-  Lock, Unlock, Archive, Bookmark, Eye, KeyRound, Heart, MessageCircle, Share2, Sparkles,
+  Lock, Unlock, Archive, Bookmark, Eye, KeyRound, MessageCircle, Share2, Sparkles, Star, Zap, Wand2,
 } from 'lucide-react';
 import { PROFILE_STAT_META, type ProfileStatKey } from '../types/settings';
 import { supabase } from '../lib/supabase';
@@ -10,6 +10,8 @@ import { useAuth } from '../hooks/useAuth';
 import { useSocial } from '../hooks/useSocial';
 import { useMoments } from '../hooks/useMoments';
 import { useMemories } from '../hooks/useMemories';
+import { useMessages } from '../hooks/useMessages';
+import { useToast } from '../hooks/useToast';
 import { PublicPageHeader } from '../components/layout/PublicPageHeader';
 import { ProfileHeader } from '../components/profile/ProfileHeader';
 import { ProfileHeaderSkeleton } from '../components/profile/ProfileHeaderSkeleton';
@@ -25,6 +27,7 @@ import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { EMPTY_MEMORY_FILTERS, type Memory, type PinnedMemory, type PublicStats } from '../types/memory';
 import type { Relationship } from '../types/social';
+import { SparkleDrop } from '../components/icons/SparkleDrop';
 
 interface PublicProfile {
   id: string;
@@ -45,7 +48,12 @@ interface PublicProfile {
 // Icons matching ProfileStatsCard's own choices, for the same stats
 // shown here only once their owner opts each one into public
 // visibility (Settings → Privacy → Profile stats visibility).
-const EXTRA_STAT_ICONS: Record<ProfileStatKey, typeof Lock> = {
+// A Lucide icon's own type doesn't fit SparkleDrop (Memory Drop's own
+// custom icon, not from Lucide) — this shape is the actual common
+// surface every icon used below needs, Lucide or custom.
+type IconComponent = React.ComponentType<{ size?: number | string; className?: string; 'aria-hidden'?: boolean | 'true' | 'false' }>;
+
+const EXTRA_STAT_ICONS: Record<ProfileStatKey, IconComponent> = {
   total_drops: Globe2,
   locked_items: Lock,
   unlocked_items: Unlock,
@@ -54,19 +62,25 @@ const EXTRA_STAT_ICONS: Record<ProfileStatKey, typeof Lock> = {
   public_drops: Globe2,
   total_views: Eye,
   total_unlocks: KeyRound,
-  total_reactions: Heart,
+  total_reactions: SparkleDrop,
   total_comments: MessageCircle,
   total_moments: Sparkles,
+  interested_received: Star,
+  cant_wait_received: Zap,
+  good_vibes_received: Wand2,
 };
 
 type FetchState = 'loading' | 'ready' | 'not_found' | 'error';
 
 export const PublicProfilePage: React.FC = () => {
   const { username } = useParams<{ username: string }>();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { getRelationship } = useSocial();
   const { getUserMoments } = useMoments();
   const { getPublicStats, getMemories, getPinnedMemories } = useMemories();
+  const { getOrCreateConversation } = useMessages();
+  const { showToast } = useToast();
   const [data, setData] = useState<PublicProfile | null>(null);
   const [relationship, setRelationship] = useState<Relationship | null>(null);
   const [state, setState] = useState<FetchState>('loading');
@@ -76,6 +90,16 @@ export const PublicProfilePage: React.FC = () => {
   const [publicPool, setPublicPool] = useState<Memory[]>([]);
   const [pinned, setPinned] = useState<PinnedMemory[]>([]);
   const [shareOpen, setShareOpen] = useState(false);
+  const [messaging, setMessaging] = useState(false);
+
+  const handleMessage = async () => {
+    if (!data || messaging) return;
+    setMessaging(true);
+    const { error, conversationId } = await getOrCreateConversation(data.id);
+    setMessaging(false);
+    if (error || !conversationId) { showToast(error || 'Could not start a conversation.', 'error'); return; }
+    navigate(`/messages/${conversationId}`);
+  };
 
   const load = useCallback(async () => {
     if (!username) return;
@@ -163,6 +187,17 @@ export const PublicProfilePage: React.FC = () => {
                     blockedMe={relationship.blocked_me}
                     onChange={patch => setRelationship(r => (r ? { ...r, is_in_orbit: patch.isInOrbit ?? r.is_in_orbit, is_orbit_pending: patch.isPending ?? r.is_orbit_pending, i_blocked: patch.iBlocked ?? r.i_blocked } : r))}
                   />
+                  {relationship.is_in_orbit && relationship.is_orbiting_you && !relationship.blocked_me && (
+                    <button
+                      type="button"
+                      onClick={handleMessage}
+                      disabled={messaging}
+                      aria-label={`Message ${data.display_name || data.username}`}
+                      className="p-2 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none disabled:opacity-50"
+                    >
+                      <MessageCircle size={16} aria-hidden="true" />
+                    </button>
+                  )}
                   {!relationship.blocked_me && (
                     <button
                       type="button"
