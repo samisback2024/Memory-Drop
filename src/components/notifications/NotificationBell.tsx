@@ -26,8 +26,16 @@ export const NotificationBell: React.FC = () => {
   useEffect(() => {
     if (!open) return;
     setLoading(true);
-    getNotifications('all', PREVIEW_SIZE, 0).then(data => { setItems(data); setLoading(false); });
-  }, [open, getNotifications]);
+    getNotifications('all', PREVIEW_SIZE, 0).then(data => {
+      setItems(data);
+      setLoading(false);
+      // Opening the dropdown *is* the read signal now — no more separate
+      // "Mark all read" tap required. `items` keeps the original is_read
+      // values though, so the unread highlight still shows for this one
+      // viewing (it only disappears once you close and reopen).
+      if (data.some(n => !n.is_read)) markAllRead();
+    });
+  }, [open, getNotifications, markAllRead]);
 
   const handleOpenItem = (id: string, wasUnread: boolean) => {
     if (wasUnread) {

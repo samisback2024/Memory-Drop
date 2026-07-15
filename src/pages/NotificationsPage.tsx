@@ -34,8 +34,12 @@ export const NotificationsPage: React.FC = () => {
       setItems(data);
       setHasMore(data.length === PAGE_SIZE);
       setLoading(false);
+      // Landing on this page is the read signal now — same reasoning as
+      // the bell dropdown. `items` still holds the original is_read
+      // values, so the unread highlight/dot survives for this one visit.
+      if (data.some(n => !n.is_read)) markAllRead();
     });
-  }, [filter, getNotifications]);
+  }, [filter, getNotifications, markAllRead]);
 
   useEffect(() => { load(); }, [load]);
 
