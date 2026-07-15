@@ -1,20 +1,24 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Search, X, Bookmark, Gem, Clock } from 'lucide-react';
+import { Search, X, Bookmark, Gem, Clock, GitCommitVertical, LayoutGrid, BookOpen, List } from 'lucide-react';
 import { useSaved } from '../hooks/useSaved';
 import { useDrops } from '../hooks/useDrops';
 import { useCapsules } from '../hooks/useCapsules';
 import { useMemories } from '../hooks/useMemories';
 import { SavedMemoryRow } from '../components/saved/SavedMemoryRow';
+import { WaitingGrid } from '../components/saved/WaitingGrid';
 import { Feed } from '../components/feed/Feed';
 import { GridView } from '../components/memories/GridView';
+import { TimelineView } from '../components/memories/TimelineView';
+import { JournalView } from '../components/memories/JournalView';
 import { EmptyState } from '../components/ui/EmptyState';
-import { EMPTY_MEMORY_FILTERS, type Memory, type SavedMemory } from '../types/memory';
+import { EMPTY_MEMORY_FILTERS, type Memory, type MemoryLayout, type SavedMemory } from '../types/memory';
 import type { Drop } from '../types/feed';
 
 type SavedTab = 'waiting' | 'memories' | 'favorites';
 type TypeFilter = 'all' | 'drop' | 'capsule';
 type SortOption = 'newest' | 'oldest';
+type WaitingLayout = 'feed' | 'grid';
 
 const PAGE_SIZE = 20;
 
@@ -22,6 +26,13 @@ const TABS: { id: SavedTab; label: string; icon: typeof Bookmark }[] = [
   { id: 'waiting', label: 'Waiting to Unlock', icon: Clock },
   { id: 'memories', label: 'Saved Memories', icon: Bookmark },
   { id: 'favorites', label: 'Favorites', icon: Gem },
+];
+
+const MEMORY_LAYOUTS: { id: MemoryLayout; icon: typeof List; label: string }[] = [
+  { id: 'timeline', icon: GitCommitVertical, label: 'Timeline' },
+  { id: 'journal', icon: BookOpen, label: 'Journal' },
+  { id: 'grid', icon: LayoutGrid, label: 'Grid' },
+  { id: 'list', icon: List, label: 'List' },
 ];
 
 // Two distinct concepts, kept visibly separate rather than merged into
@@ -53,9 +64,11 @@ export const SavedPage: React.FC = () => {
   const [waitingHasMore, setWaitingHasMore] = useState(true);
   const [waitingLoading, setWaitingLoading] = useState(true);
   const [waitingLoadingMore, setWaitingLoadingMore] = useState(false);
+  const [waitingLayout, setWaitingLayout] = useState<WaitingLayout>('feed');
 
   // Saved Memories
   const [items, setItems] = useState<SavedMemory[]>([]);
+  const [memoriesLayout, setMemoriesLayout] = useState<MemoryLayout>('list');
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
   const [sort, setSort] = useState<SortOption>('newest');
   const [query, setQuery] = useState('');
@@ -160,17 +173,57 @@ export const SavedPage: React.FC = () => {
       </div>
 
       {tab === 'waiting' && (
-        <Feed
-          drops={waiting}
-          loading={waitingLoading}
-          hasMore={waitingHasMore}
-          loadingMore={waitingLoadingMore}
-          onLoadMore={loadMoreWaiting}
-          onDeleted={id => setWaiting(prev => prev.filter(d => d.id !== id))}
-          onHidden={id => setWaiting(prev => prev.filter(d => d.id !== id))}
-          onRetry={loadWaiting}
-          emptyVariant="saved"
-        />
+        <div className="flex flex-col gap-3">
+          <div className="flex bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-xl p-1 gap-1 border border-white/60 dark:border-gray-800/60 shadow-sm w-fit">
+            <button
+              type="button"
+              onClick={() => setWaitingLayout('feed')}
+              aria-label="Timeline"
+              aria-pressed={waitingLayout === 'feed'}
+              className={`p-2 rounded-lg transition-colors ${waitingLayout === 'feed' ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'text-gray-500'}`}
+            >
+              <GitCommitVertical size={15} aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setWaitingLayout('grid')}
+              aria-label="Grid"
+              aria-pressed={waitingLayout === 'grid'}
+              className={`p-2 rounded-lg transition-colors ${waitingLayout === 'grid' ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'text-gray-500'}`}
+            >
+              <LayoutGrid size={15} aria-hidden="true" />
+            </button>
+          </div>
+
+          {waitingLayout === 'feed' ? (
+            <Feed
+              drops={waiting}
+              loading={waitingLoading}
+              hasMore={waitingHasMore}
+              loadingMore={waitingLoadingMore}
+              onLoadMore={loadMoreWaiting}
+              onDeleted={id => setWaiting(prev => prev.filter(d => d.id !== id))}
+              onHidden={id => setWaiting(prev => prev.filter(d => d.id !== id))}
+              onRetry={loadWaiting}
+              emptyVariant="saved"
+            />
+          ) : waitingLoading ? (
+            <div className="grid grid-cols-3 gap-1.5">{[0, 1, 2, 3, 4, 5].map(i => <div key={i} className="aspect-square rounded-xl bg-gray-50 dark:bg-gray-800 animate-pulse" />)}</div>
+          ) : waiting.length === 0 ? (
+            <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm">
+              <EmptyState icon={Clock} title="Nothing waiting" description="Tap Save to Unlock on a sealed Drop to find it here." />
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              <WaitingGrid drops={waiting} />
+              {waitingHasMore && (
+                <button type="button" onClick={loadMoreWaiting} disabled={waitingLoadingMore} className="self-center text-xs font-medium text-purple-600 hover:text-purple-700 disabled:opacity-50 py-2">
+                  {waitingLoadingMore ? 'Loading...' : 'Load more'}
+                </button>
+              )}
+            </div>
+          )}
+        </div>
       )}
 
       {tab === 'memories' && (
@@ -215,26 +268,55 @@ export const SavedPage: React.FC = () => {
             </select>
           </div>
 
-          <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm px-4">
-            {loading ? (
-              <div className="flex flex-col gap-3 py-4">{[0, 1, 2].map(i => <div key={i} className="h-14 rounded-xl bg-gray-50 dark:bg-gray-800 animate-pulse" />)}</div>
-            ) : items.length === 0 ? (
-              <EmptyState icon={Bookmark} title="Nothing saved yet" description="Save an unlocked Drop or Capsule to find it here later." />
-            ) : (
-              <>
-                {items.map(item => (
-                  <SavedMemoryRow key={`${item.memory_type}-${item.id}`} memory={item} onUnsave={() => unsave(item)} />
-                ))}
-                {hasMore && (
-                  <div className="py-3 flex justify-center">
-                    <button type="button" onClick={loadMoreMemories} disabled={loadingMore} className="text-xs font-medium text-purple-600 hover:text-purple-700 disabled:opacity-50">
-                      {loadingMore ? 'Loading...' : 'Load more'}
-                    </button>
-                  </div>
-                )}
-              </>
-            )}
+          <div className="flex bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-xl p-1 gap-1 border border-white/60 dark:border-gray-800/60 shadow-sm w-fit">
+            {MEMORY_LAYOUTS.map(({ id, icon: Icon, label }) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setMemoriesLayout(id)}
+                aria-label={label}
+                aria-pressed={memoriesLayout === id}
+                className={[
+                  'p-2 rounded-lg transition-colors',
+                  memoriesLayout === id ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'text-gray-500 hover:text-gray-800',
+                ].join(' ')}
+              >
+                <Icon size={15} aria-hidden="true" />
+              </button>
+            ))}
           </div>
+
+          {loading ? (
+            <div className="flex flex-col gap-3">{[0, 1, 2].map(i => <div key={i} className="h-14 rounded-xl bg-gray-50 dark:bg-gray-800 animate-pulse" />)}</div>
+          ) : items.length === 0 ? (
+            <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm">
+              <EmptyState icon={Bookmark} title="Nothing saved yet" description="Save an unlocked Drop or Capsule to find it here later." />
+            </div>
+          ) : memoriesLayout === 'list' ? (
+            <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm px-4">
+              {items.map(item => (
+                <SavedMemoryRow key={`${item.memory_type}-${item.id}`} memory={item} onUnsave={() => unsave(item)} />
+              ))}
+              {hasMore && (
+                <div className="py-3 flex justify-center">
+                  <button type="button" onClick={loadMoreMemories} disabled={loadingMore} className="text-xs font-medium text-purple-600 hover:text-purple-700 disabled:opacity-50">
+                    {loadingMore ? 'Loading...' : 'Load more'}
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {memoriesLayout === 'timeline' && <TimelineView memories={items} />}
+              {memoriesLayout === 'journal' && <JournalView memories={items} />}
+              {memoriesLayout === 'grid' && <GridView memories={items} />}
+              {hasMore && (
+                <button type="button" onClick={loadMoreMemories} disabled={loadingMore} className="self-center text-xs font-medium text-purple-600 hover:text-purple-700 disabled:opacity-50 py-2">
+                  {loadingMore ? 'Loading...' : 'Load more'}
+                </button>
+              )}
+            </div>
+          )}
         </div>
       )}
 
