@@ -64,11 +64,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenMenu }) => {
 
         <nav className="flex items-center gap-1">
           {/* Below `sm`, MobileNav's bottom bar owns primary navigation
-              (Feed/Capsules/Memories/Search) — showing the same
-              destinations again as icons up here too would be a
-              redundant, cluttered second nav row. Explore/Friends
-              remain reachable from the menu button above at that
-              width. */}
+              (Feed/Capsules/Memories) — showing the same destinations
+              again as icons up here too would be a redundant, cluttered
+              second nav row. Explore/Friends remain reachable from the
+              menu button above at that width. */}
           <div className="hidden sm:flex items-center gap-1">
             {NAV_LINKS.map(({ to, label, icon: Icon }) => (
               <NavLink
@@ -95,6 +94,19 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenMenu }) => {
               </NavLink>
             ))}
           </div>
+
+          {/* Icon-only, mobile-only — on desktop, Search is already a
+              full labeled link in the NAV_LINKS row above. MobileNav's
+              bottom bar is reserved for Feed/Capsules/Create/Memories
+              only, so Search lives up here at every width below `sm`. */}
+          <button
+            type="button"
+            onClick={() => navigate('/search')}
+            aria-label="Search"
+            className="sm:hidden p-2 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100 transition-colors focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none"
+          >
+            <Search size={18} aria-hidden="true" />
+          </button>
 
           <MessagesNavButton />
           <NotificationBell />
