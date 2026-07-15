@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, AtSign, LogOut } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useSettings } from '../../hooks/useSettings';
+import { useToast } from '../../hooks/useToast';
 import { SettingsSection } from './SettingsSection';
 import { SettingsCard } from './SettingsCard';
 import { DangerZone } from './DangerZone';
@@ -12,6 +13,7 @@ import { validateEmail, validatePassword, validateUsername, getUsernameCooldownD
 export const AccountSettings: React.FC = () => {
   const { user, profile, signOut, updateProfile } = useAuth();
   const { changeEmail, changePassword, deleteAccount } = useSettings();
+  const { showToast } = useToast();
   const navigate = useNavigate();
 
   const [newEmail, setNewEmail] = useState('');
@@ -68,7 +70,12 @@ export const AccountSettings: React.FC = () => {
 
   const handleDeleteAccount = async () => {
     const { error } = await deleteAccount();
-    if (!error) navigate('/login');
+    // Previously silent on failure — DangerZone's confirm button would
+    // just sit there with no feedback at all if the RPC errored (e.g. a
+    // permissions issue on auth.users), indistinguishable from nothing
+    // having happened. Now it's at least visible and actionable.
+    if (error) { showToast(error, 'error'); return; }
+    navigate('/login');
   };
 
   return (
