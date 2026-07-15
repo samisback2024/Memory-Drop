@@ -3,19 +3,17 @@ import { X } from 'lucide-react';
 import { MOOD_META, type Mood } from '../../types/feed';
 import { CAPSULE_VISIBILITY_META, MEMORY_TYPE_OPTIONS } from '../../types/capsule';
 import { MONTH_NAMES, type MemoryFilters as MemoryFiltersType } from '../../types/memory';
-import type { MemoryCollection } from '../../types/memory';
 
 interface MemoryFiltersProps {
   filters: MemoryFiltersType;
   onChange: (filters: MemoryFiltersType) => void;
   years: number[];
-  collections: MemoryCollection[];
 }
 
-export const MemoryFilters: React.FC<MemoryFiltersProps> = ({ filters, onChange, years, collections }) => {
+export const MemoryFilters: React.FC<MemoryFiltersProps> = ({ filters, onChange, years }) => {
   const hasActive = Boolean(
     filters.lockStatus || filters.year || filters.month || filters.mood ||
-    filters.visibility || filters.mediaType || filters.collectionId,
+    filters.visibility || filters.mediaType,
   );
 
   return (
@@ -78,21 +76,10 @@ export const MemoryFilters: React.FC<MemoryFiltersProps> = ({ filters, onChange,
           ))}
         </select>
 
-        {collections.length > 0 && (
-          <select
-            value={filters.collectionId ?? ''}
-            onChange={e => onChange({ ...filters, collectionId: e.target.value || null })}
-            className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 text-gray-600 bg-white flex-shrink-0"
-          >
-            <option value="">Any collection</option>
-            {collections.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
-          </select>
-        )}
-
         {hasActive && (
           <button
             type="button"
-            onClick={() => onChange({ ...filters, lockStatus: null, year: null, month: null, mood: null, visibility: null, mediaType: null, favoritesOnly: false, collectionId: null })}
+            onClick={() => onChange({ ...filters, lockStatus: null, year: null, month: null, mood: null, visibility: null, mediaType: null, favoritesOnly: false })}
             className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-700 flex-shrink-0 px-1"
           >
             <X size={12} aria-hidden="true" /> Clear

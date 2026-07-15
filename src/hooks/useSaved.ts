@@ -11,7 +11,6 @@ export const useSaved = () => {
   const getSavedMemories = useCallback(async (
     query: string,
     contentTypes: string[] | null,
-    collectionId: string | null,
     sort: 'newest' | 'oldest',
     limit = 20,
     offset = 0,
@@ -19,7 +18,6 @@ export const useSaved = () => {
     const { data, error } = await supabase.rpc('get_saved_memories', {
       p_query: query || null,
       p_content_types: contentTypes,
-      p_collection_id: collectionId,
       p_sort: sort,
       p_limit: limit,
       p_offset: offset,

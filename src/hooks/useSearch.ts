@@ -4,7 +4,7 @@ import { track } from '../lib/analytics';
 import { logger } from '../lib/logger';
 import { withAbortTimeout } from '../lib/timeout';
 import type {
-  CollectionSearchResult, ExploreTab, Memory, RecentSearch, SearchSuggestion, TrendingSearch,
+  ExploreTab, Memory, RecentSearch, SearchSuggestion, TrendingSearch,
 } from '../types/memory';
 
 // Phase 10a — Search + Explore. Every read here goes through a SECURITY
@@ -37,12 +37,6 @@ export const useSearch = () => {
       return [];
     }
     return data as Memory[];
-  }, []);
-
-  const searchCollections = useCallback(async (query: string, limit = 20): Promise<CollectionSearchResult[]> => {
-    const { data, error } = await supabase.rpc('search_collections', { p_query: query || null, p_limit: limit });
-    if (error || !data) return [];
-    return data as CollectionSearchResult[];
   }, []);
 
   const getExploreFeed = useCallback(async (tab: ExploreTab, limit = 20, offset = 0): Promise<Memory[]> => {
@@ -82,7 +76,6 @@ export const useSearch = () => {
 
   return {
     searchMemories,
-    searchCollections,
     getExploreFeed,
     recordSearch,
     getRecentSearches,

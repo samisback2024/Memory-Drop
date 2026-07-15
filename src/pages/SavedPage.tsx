@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Search, X, Bookmark, Gem, Layers, Clock } from 'lucide-react';
+import { Search, X, Bookmark, Gem, Clock } from 'lucide-react';
 import { useSaved } from '../hooks/useSaved';
 import { useDrops } from '../hooks/useDrops';
 import { useCapsules } from '../hooks/useCapsules';
@@ -8,12 +8,11 @@ import { useMemories } from '../hooks/useMemories';
 import { SavedMemoryRow } from '../components/saved/SavedMemoryRow';
 import { Feed } from '../components/feed/Feed';
 import { GridView } from '../components/memories/GridView';
-import { CollectionGrid } from '../components/memories/CollectionGrid';
 import { EmptyState } from '../components/ui/EmptyState';
-import { EMPTY_MEMORY_FILTERS, type Memory, type MemoryCollection, type SavedMemory } from '../types/memory';
+import { EMPTY_MEMORY_FILTERS, type Memory, type SavedMemory } from '../types/memory';
 import type { Drop } from '../types/feed';
 
-type SavedTab = 'waiting' | 'memories' | 'favorites' | 'collections';
+type SavedTab = 'waiting' | 'memories' | 'favorites';
 type TypeFilter = 'all' | 'drop' | 'capsule';
 type SortOption = 'newest' | 'oldest';
 
@@ -23,7 +22,6 @@ const TABS: { id: SavedTab; label: string; icon: typeof Bookmark }[] = [
   { id: 'waiting', label: 'Waiting to Unlock', icon: Clock },
   { id: 'memories', label: 'Saved Memories', icon: Bookmark },
   { id: 'favorites', label: 'Favorites', icon: Gem },
-  { id: 'collections', label: 'Collections', icon: Layers },
 ];
 
 // Two distinct concepts, kept visibly separate rather than merged into
@@ -31,17 +29,17 @@ const TABS: { id: SavedTab; label: string; icon: typeof Bookmark }[] = [
 // save_to_unlock marker (the same data Feed's own "Saved to Unlock" tab
 // already reads via getDropsFeed) — you haven't seen this content yet.
 // "Saved Memories" is a bookmark on something you HAVE already seen
-// (saved_posts/capsule_saves, Phase 10c). Favorites/Collections reuse
-// Memories' own mechanisms unchanged — this page is a second, saved-
-// content-focused entry point onto the same underlying data, not a
-// competing system.
-const VALID_TABS: SavedTab[] = ['waiting', 'memories', 'favorites', 'collections'];
+// (saved_posts/capsule_saves, Phase 10c). Favorites reuses Memories'
+// own mechanism unchanged — this page is a second, saved-content-
+// focused entry point onto the same underlying data, not a competing
+// system.
+const VALID_TABS: SavedTab[] = ['waiting', 'memories', 'favorites'];
 
 export const SavedPage: React.FC = () => {
   const { getSavedMemories } = useSaved();
   const { getDropsFeed, promoteUnlockedSaves, unsaveDrop } = useDrops();
   const { unsaveCapsule } = useCapsules();
-  const { getCollections, getMemories } = useMemories();
+  const { getMemories } = useMemories();
   const [searchParams] = useSearchParams();
 
   const requestedTab = searchParams.get('tab');
@@ -58,9 +56,7 @@ export const SavedPage: React.FC = () => {
 
   // Saved Memories
   const [items, setItems] = useState<SavedMemory[]>([]);
-  const [collections, setCollections] = useState<MemoryCollection[]>([]);
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
-  const [collectionFilter, setCollectionFilter] = useState<string | null>(null);
   const [sort, setSort] = useState<SortOption>('newest');
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
@@ -70,8 +66,6 @@ export const SavedPage: React.FC = () => {
   // Favorites
   const [favorites, setFavorites] = useState<Memory[]>([]);
   const [favoritesLoading, setFavoritesLoading] = useState(true);
-
-  useEffect(() => { getCollections().then(setCollections); }, [getCollections]);
 
   // Catches up anything that unlocked while this tab wasn't open live to
   // watch its countdown (DropCard promotes on the spot when it is) —
@@ -105,12 +99,12 @@ export const SavedPage: React.FC = () => {
   const loadMemories = useCallback(() => {
     setLoading(true);
     const contentTypes = typeFilter === 'all' ? null : [typeFilter];
-    getSavedMemories(query, contentTypes, collectionFilter, sort, PAGE_SIZE, 0).then(data => {
+    getSavedMemories(query, contentTypes, sort, PAGE_SIZE, 0).then(data => {
       setItems(data);
       setHasMore(data.length === PAGE_SIZE);
       setLoading(false);
     });
-  }, [getSavedMemories, query, typeFilter, collectionFilter, sort]);
+  }, [getSavedMemories, query, typeFilter, sort]);
 
   useEffect(() => {
     if (tab !== 'memories') return;
@@ -121,7 +115,7 @@ export const SavedPage: React.FC = () => {
   const loadMoreMemories = () => {
     setLoadingMore(true);
     const contentTypes = typeFilter === 'all' ? null : [typeFilter];
-    getSavedMemories(query, contentTypes, collectionFilter, sort, PAGE_SIZE, items.length).then(data => {
+    getSavedMemories(query, contentTypes, sort, PAGE_SIZE, items.length).then(data => {
       setItems(prev => [...prev, ...data]);
       setHasMore(data.length === PAGE_SIZE);
       setLoadingMore(false);
@@ -211,16 +205,6 @@ export const SavedPage: React.FC = () => {
             ))}
 
             <select
-              value={collectionFilter ?? ''}
-              onChange={e => setCollectionFilter(e.target.value || null)}
-              aria-label="Filter by collection"
-              className="px-2.5 py-1.5 rounded-full text-xs font-medium bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-purple-500"
-            >
-              <option value="">All folders</option>
-              {collections.map(c => <option key={c.id} value={c.id}>{c.icon} {c.name}</option>)}
-            </select>
-
-            <select
               value={sort}
               onChange={e => setSort(e.target.value as SortOption)}
               aria-label="Sort saved memories"
@@ -239,7 +223,7 @@ export const SavedPage: React.FC = () => {
             ) : (
               <>
                 {items.map(item => (
-                  <SavedMemoryRow key={`${item.memory_type}-${item.id}`} memory={item} collections={collections} onUnsave={() => unsave(item)} />
+                  <SavedMemoryRow key={`${item.memory_type}-${item.id}`} memory={item} onUnsave={() => unsave(item)} />
                 ))}
                 {hasMore && (
                   <div className="py-3 flex justify-center">
@@ -264,10 +248,6 @@ export const SavedPage: React.FC = () => {
         ) : (
           <GridView memories={favorites} />
         )
-      )}
-
-      {tab === 'collections' && (
-        <CollectionGrid collections={collections} onCollectionsChanged={() => getCollections().then(setCollections)} />
       )}
     </div>
   );

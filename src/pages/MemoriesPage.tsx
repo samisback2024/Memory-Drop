@@ -5,7 +5,7 @@ import { MemoryTimeline } from '../components/memories/MemoryTimeline';
 import { MemoryCalendar } from '../components/memories/MemoryCalendar';
 import { YearView } from '../components/memories/YearView';
 import { ListView } from '../components/memories/ListView';
-import { EMPTY_MEMORY_FILTERS, type Memory, type MemoryCollection } from '../types/memory';
+import { EMPTY_MEMORY_FILTERS, type Memory } from '../types/memory';
 
 type MemoriesTab = 'timeline' | 'calendar' | 'years';
 
@@ -18,19 +18,14 @@ const TABS: { id: MemoriesTab; label: string; icon: typeof GitCommitVertical }[]
 // The emotional heart of the app once someone's accumulated months and
 // years of memories — a journal/scrapbook, not a profile grid. Every
 // unlocked Capsule and expired Moment lives here, forever, across three
-// ways of looking back at them (Collections/Favorites/Flashbacks/
-// Highlights/Archive were removed as tabs — too much surface for a
-// first launch; MemoryTimeline's own collection filter still works for
-// anyone who already created one).
+// ways of looking back at them (Favorites/Flashbacks/Highlights/Archive
+// were removed as tabs — too much surface for a first launch).
 export const MemoriesPage: React.FC = () => {
-  const { getMemories, getCollections } = useMemories();
+  const { getMemories } = useMemories();
   const [tab, setTab] = useState<MemoriesTab>('timeline');
-  const [collections, setCollections] = useState<MemoryCollection[]>([]);
   const [recentlyUnlocked, setRecentlyUnlocked] = useState<Memory[]>([]);
   const [lockedUntilLater, setLockedUntilLater] = useState<Memory[]>([]);
   const [overviewLoading, setOverviewLoading] = useState(true);
-
-  useEffect(() => { getCollections().then(setCollections); }, [getCollections]);
 
   useEffect(() => {
     if (tab !== 'timeline') return;
@@ -95,7 +90,7 @@ export const MemoriesPage: React.FC = () => {
             </div>
           )}
 
-          <MemoryTimeline collections={collections} />
+          <MemoryTimeline />
         </div>
       )}
 

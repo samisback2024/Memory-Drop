@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { MapPin, Tag, FolderPlus, EyeOff, ArchiveRestore, Trash2, X, Plus, Lock, Mic, Music } from 'lucide-react';
+import { MapPin, Tag, EyeOff, ArchiveRestore, Trash2, X, Lock, Mic, Music } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useCapsules } from '../../hooks/useCapsules';
 import { useMoments } from '../../hooks/useMoments';
 import { useDrops } from '../../hooks/useDrops';
 import { useMemories } from '../../hooks/useMemories';
-import { supabase } from '../../lib/supabase';
 import { CapsuleCard } from '../capsules/CapsuleCard';
 import { DropCard } from '../feed/DropCard';
 import { Avatar } from '../ui/Avatar';
@@ -17,7 +16,7 @@ import { CAPSULE_VISIBILITY_META } from '../../types/capsule';
 import { formatDate } from '../../utils/date';
 import type { Capsule } from '../../types/capsule';
 import type { Drop } from '../../types/feed';
-import type { Memory, MemoryCollection, MemorySourceType } from '../../types/memory';
+import type { Memory, MemorySourceType } from '../../types/memory';
 
 interface MemoryViewerProps {
   memoryType: MemorySourceType;
@@ -69,32 +68,28 @@ const MomentMemoryBody: React.FC<{ memory: Memory }> = ({ memory }) => {
 // ritual/reveal and engagement; a simpler read-oriented display for
 // expired moments, since new reactions/replies aren't possible once
 // expired) plus the metadata this phase adds on top: tags, location,
-// collections, and the hide/restore/delete-permanently archive controls
-// — the last of which works for all three types, the first three only
-// for Capsules/Moments (Drops have no `tags`/`location_text`/`hidden_at`
-// columns yet, see the README).
+// and the hide/restore/delete-permanently archive controls — the last
+// of which works for all three types, the first two only for Capsules/
+// Moments (Drops have no `tags`/`location_text`/`hidden_at` columns
+// yet, see the README).
 export const MemoryViewer: React.FC<MemoryViewerProps> = ({ memoryType, memoryId }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { getCapsule } = useCapsules();
   const { getDrop } = useDrops();
-  const { getMemory, getCollections, addToCollection, removeFromCollection, updateTags, updateLocation, hideMemory, restoreMemory, deletePermanently, getPinnedMemories } = useMemories();
+  const { getMemory, updateTags, updateLocation, hideMemory, restoreMemory, deletePermanently, getPinnedMemories } = useMemories();
 
   const [memory, setMemory] = useState<Memory | null | undefined>(undefined);
   const [capsule, setCapsule] = useState<Capsule | null>(null);
   const [drop, setDrop] = useState<Drop | null>(null);
-  const [collections, setCollections] = useState<MemoryCollection[]>([]);
-  const [memoryCollectionIds, setMemoryCollectionIds] = useState<Set<string>>(new Set());
   const [isPinned, setIsPinned] = useState(false);
   const [tagDraft, setTagDraft] = useState('');
   const [locationDraft, setLocationDraft] = useState('');
   const [editingLocation, setEditingLocation] = useState(false);
-  const [collectionsOpen, setCollectionsOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   const supportsTagsAndLocation = memoryType !== 'drop';
   const supportsArchive = memoryType !== 'drop';
-  const collectionColumn = memoryType === 'capsule' ? 'capsule_id' : memoryType === 'moment' ? 'moment_id' : 'drop_id';
 
   useEffect(() => {
     let cancelled = false;
@@ -106,12 +101,7 @@ export const MemoryViewer: React.FC<MemoryViewerProps> = ({ memoryType, memoryId
       if (data?.memory_type === 'drop') setDrop(await getDrop(memoryId));
       if (data?.is_own) getPinnedMemories().then(pins => setIsPinned(pins.some(p => p.id === memoryId)));
     });
-    getCollections().then(setCollections);
-    supabase
-      .from('collection_items')
-      .select('collection_id')
-      .eq(collectionColumn, memoryId)
-      .then(({ data }) => setMemoryCollectionIds(new Set((data ?? []).map(row => row.collection_id as string))));
+    return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [memoryType, memoryId]);
 
@@ -150,15 +140,6 @@ export const MemoryViewer: React.FC<MemoryViewerProps> = ({ memoryType, memoryId
     setMemory({ ...memory, location_text: locationDraft.trim() || null });
     setEditingLocation(false);
     updateLocation(memoryType, memoryId, locationDraft);
-  };
-
-  const toggleCollection = async (collectionId: string) => {
-    const inCollection = memoryCollectionIds.has(collectionId);
-    const next = new Set(memoryCollectionIds);
-    if (inCollection) next.delete(collectionId); else next.add(collectionId);
-    setMemoryCollectionIds(next);
-    if (inCollection) await removeFromCollection(collectionId, memoryType, memoryId);
-    else await addToCollection(collectionId, memoryType, memoryId);
   };
 
   const handleHide = async () => { await hideMemory(memoryType, memoryId); setMemory({ ...memory, is_hidden: true }); };
@@ -248,32 +229,6 @@ export const MemoryViewer: React.FC<MemoryViewerProps> = ({ memoryType, memoryId
                 className="text-xs border border-gray-200 rounded-full px-2.5 py-1 w-24 focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
             </div>
-          </div>
-        )}
-
-        {isOwn && (
-          <div className="flex flex-col gap-1.5">
-            <button type="button" onClick={() => setCollectionsOpen(p => !p)} className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-purple-600 w-fit">
-              <FolderPlus size={12} aria-hidden="true" /> Add to collection
-            </button>
-            {collectionsOpen && (
-              <div className="flex flex-wrap gap-1.5">
-                {collections.map(c => {
-                  const active = memoryCollectionIds.has(c.id);
-                  return (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => toggleCollection(c.id)}
-                      className={`flex items-center gap-1 text-xs rounded-full px-2.5 py-1 border transition-colors ${active ? 'bg-purple-600 border-purple-600 text-white' : 'bg-white border-gray-200 text-gray-600'}`}
-                    >
-                      {active ? <X size={10} aria-hidden="true" /> : <Plus size={10} aria-hidden="true" />}
-                      {c.icon} {c.name}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
           </div>
         )}
 

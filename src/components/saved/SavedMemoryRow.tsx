@@ -1,12 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Image as ImageIcon, Video, Music, Mic, PenLine, FolderPlus, X, Plus, StickyNote, BookmarkX } from 'lucide-react';
+import { Image as ImageIcon, Video, Music, Mic, PenLine, StickyNote, BookmarkX } from 'lucide-react';
 import { useSaved } from '../../hooks/useSaved';
-import { useMemories } from '../../hooks/useMemories';
-import { supabase } from '../../lib/supabase';
 import { MOOD_META } from '../../types/feed';
 import { formatRelativeTime } from '../../utils/date';
-import type { MemoryCollection, SavedMemory } from '../../types/memory';
+import type { SavedMemory } from '../../types/memory';
 import type { CapsuleMemoryType } from '../../types/capsule';
 
 const TYPE_ICONS: Record<CapsuleMemoryType, typeof ImageIcon> = {
@@ -15,17 +13,13 @@ const TYPE_ICONS: Record<CapsuleMemoryType, typeof ImageIcon> = {
 
 interface SavedMemoryRowProps {
   memory: SavedMemory;
-  collections: MemoryCollection[];
   onUnsave: () => void;
 }
 
-export const SavedMemoryRow: React.FC<SavedMemoryRowProps> = ({ memory, collections, onUnsave }) => {
+export const SavedMemoryRow: React.FC<SavedMemoryRowProps> = ({ memory, onUnsave }) => {
   const { updateSavedNote } = useSaved();
-  const { addToCollection, removeFromCollection } = useMemories();
   const [note, setNote] = useState(memory.note ?? '');
   const [editingNote, setEditingNote] = useState(false);
-  const [collectionsOpen, setCollectionsOpen] = useState(false);
-  const [memberIds, setMemberIds] = useState<Set<string>>(new Set());
 
   const moodMeta = memory.mood ? MOOD_META[memory.mood] : null;
   const cover = memory.media.find(m => m.type === 'photo' || m.type === 'video');
@@ -33,30 +27,10 @@ export const SavedMemoryRow: React.FC<SavedMemoryRowProps> = ({ memory, collecti
   const TypeIcon = TYPE_ICONS[primaryType];
   const href = `/memories/${memory.memory_type}/${memory.id}`;
   const snippet = memory.title || memory.caption || 'A memory without words';
-  const collectionColumn = memory.memory_type === 'capsule' ? 'capsule_id' : 'drop_id';
-
-  useEffect(() => {
-    if (!collectionsOpen) return;
-    supabase
-      .from('collection_items')
-      .select('collection_id')
-      .eq(collectionColumn, memory.id)
-      .then(({ data }) => setMemberIds(new Set((data ?? []).map(row => row.collection_id as string))));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [collectionsOpen]);
 
   const saveNote = () => {
     setEditingNote(false);
     updateSavedNote(memory.memory_type, memory.id, note);
-  };
-
-  const toggleCollection = async (collectionId: string) => {
-    const inCollection = memberIds.has(collectionId);
-    const next = new Set(memberIds);
-    if (inCollection) next.delete(collectionId); else next.add(collectionId);
-    setMemberIds(next);
-    if (inCollection) await removeFromCollection(collectionId, memory.memory_type, memory.id);
-    else await addToCollection(collectionId, memory.memory_type, memory.id);
   };
 
   return (
@@ -81,15 +55,6 @@ export const SavedMemoryRow: React.FC<SavedMemoryRowProps> = ({ memory, collecti
         >
           <StickyNote size={16} aria-hidden="true" />
         </button>
-        <button
-          type="button"
-          onClick={() => setCollectionsOpen(p => !p)}
-          aria-label="Add to collection"
-          aria-pressed={collectionsOpen}
-          className="p-1.5 rounded-full text-gray-400 hover:text-purple-600 flex-shrink-0"
-        >
-          <FolderPlus size={16} aria-hidden="true" />
-        </button>
         <button type="button" onClick={onUnsave} aria-label="Remove from saved" className="p-1.5 rounded-full text-gray-400 hover:text-red-500 flex-shrink-0">
           <BookmarkX size={16} aria-hidden="true" />
         </button>
@@ -111,25 +76,6 @@ export const SavedMemoryRow: React.FC<SavedMemoryRowProps> = ({ memory, collecti
       )}
       {!editingNote && memory.note && (
         <p className="text-xs text-gray-500 pl-[68px] italic truncate">"{memory.note}"</p>
-      )}
-
-      {collectionsOpen && (
-        <div className="flex flex-wrap gap-1.5 pl-[68px]">
-          {collections.map(c => {
-            const active = memberIds.has(c.id);
-            return (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => toggleCollection(c.id)}
-                className={`flex items-center gap-1 text-xs rounded-full px-2.5 py-1 border transition-colors ${active ? 'bg-purple-600 border-purple-600 text-white' : 'bg-white border-gray-200 text-gray-600'}`}
-              >
-                {active ? <X size={10} aria-hidden="true" /> : <Plus size={10} aria-hidden="true" />}
-                {c.icon} {c.name}
-              </button>
-            );
-          })}
-        </div>
       )}
     </div>
   );

@@ -8,7 +8,7 @@ import { GridView } from './GridView';
 import { JournalView } from './JournalView';
 import { TimelineView } from './TimelineView';
 import { EmptyState } from '../ui/EmptyState';
-import { EMPTY_MEMORY_FILTERS, type Memory, type MemoryCollection, type MemoryLayout, type MemorySort } from '../../types/memory';
+import { EMPTY_MEMORY_FILTERS, type Memory, type MemoryLayout, type MemorySort } from '../../types/memory';
 
 const PAGE_SIZE = 18;
 
@@ -19,14 +19,10 @@ const LAYOUTS: { id: MemoryLayout; icon: typeof List; label: string }[] = [
   { id: 'list', icon: List, label: 'List' },
 ];
 
-interface MemoryTimelineProps {
-  collections: MemoryCollection[];
-}
-
 // The Timeline tab — search, filters, a layout switcher (List / Grid /
 // Journal / Timeline, all reading the same underlying data), and
 // infinite pagination via get_memories().
-export const MemoryTimeline: React.FC<MemoryTimelineProps> = ({ collections }) => {
+export const MemoryTimeline: React.FC = () => {
   const { getMemories, getMemoryYearCounts } = useMemories();
   const [filters, setFilters] = useState(EMPTY_MEMORY_FILTERS);
   const [sort, setSort] = useState<MemorySort>('newest');
@@ -54,7 +50,7 @@ export const MemoryTimeline: React.FC<MemoryTimelineProps> = ({ collections }) =
   return (
     <div className="flex flex-col gap-4">
       <MemorySearch value={filters.search} onChange={search => setFilters(f => ({ ...f, search }))} />
-      <MemoryFilters filters={filters} onChange={setFilters} years={years} collections={collections} />
+      <MemoryFilters filters={filters} onChange={setFilters} years={years} />
 
       <div className="flex items-center justify-between">
         <div className="flex bg-white/70 backdrop-blur-xl rounded-xl p-1 gap-1 border border-white/60 shadow-sm">

@@ -60,22 +60,12 @@ export interface MemoryFilters {
   visibility: CapsuleVisibility | null;
   mediaType: CapsuleMemoryType | null;
   favoritesOnly: boolean;
-  collectionId: string | null;
 }
 
 export const EMPTY_MEMORY_FILTERS: MemoryFilters = {
   search: '', lockStatus: null, year: null, month: null, mood: null,
-  visibility: null, mediaType: null, favoritesOnly: false, collectionId: null,
+  visibility: null, mediaType: null, favoritesOnly: false,
 };
-
-export interface MemoryCollection {
-  id: string;
-  name: string;
-  icon: string | null;
-  is_default: boolean;
-  item_count: number;
-  created_at: string;
-}
 
 // get_memory_stats() — the caller's own accurate counts, live-aggregated
 // (never a separately-tracked counter that could drift). locked_items/
@@ -152,14 +142,6 @@ export type SearchSuggestionType = 'user' | 'trending';
 export interface SearchSuggestion {
   suggestion: string;
   suggestion_type: SearchSuggestionType;
-}
-
-export interface CollectionSearchResult {
-  id: string;
-  name: string;
-  icon: string | null;
-  is_default: boolean;
-  item_count: number;
 }
 
 // Revised Phase 10 spec's exact section list. The two "person" tabs

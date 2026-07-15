@@ -6,7 +6,7 @@ import { useMoments } from './useMoments';
 import { useDrops } from './useDrops';
 import type { AuthResult } from '../types/auth';
 import type {
-  Memory, MemoryFilters, MemoryCollection,
+  Memory, MemoryFilters,
   MemoryStats, PublicStats, MemorySort, MemorySourceType, PinnedMemory, ActivityItem, MemoryActivity, MemoryActivityType,
 } from '../types/memory';
 
@@ -42,7 +42,6 @@ export const useMemories = () => {
       p_visibility: filters.visibility ?? null,
       p_media_type: filters.mediaType ?? null,
       p_favorites_only: filters.favoritesOnly ?? false,
-      p_collection_id: filters.collectionId ?? null,
       p_include_hidden: false,
       p_sort: sort,
       p_limit: limit,
@@ -56,7 +55,7 @@ export const useMemories = () => {
     const { data, error } = await supabase.rpc('get_memories', {
       p_user_id: null, p_search: null, p_lock_status: null, p_year: null, p_month: null,
       p_mood: null, p_visibility: null, p_media_type: null, p_favorites_only: false,
-      p_collection_id: null, p_include_hidden: true, p_archived_only: true,
+      p_include_hidden: true, p_archived_only: true,
       p_sort: 'newest', p_limit: limit, p_offset: offset,
     });
     if (error || !data) return [];
@@ -91,46 +90,6 @@ export const useMemories = () => {
     const { data, error } = await supabase.rpc('get_memory_year_counts');
     if (error || !data) return [];
     return data as { year: number; memory_count: number }[];
-  }, []);
-
-  const getCollections = useCallback(async (): Promise<MemoryCollection[]> => {
-    await supabase.rpc('seed_default_collections');
-    const { data, error } = await supabase.rpc('get_collections');
-    if (error || !data) return [];
-    return data as MemoryCollection[];
-  }, []);
-
-  const createCollection = useCallback(async (name: string, icon: string | null): Promise<AuthResult> => {
-    if (!user) return { error: 'Not authenticated' };
-    const { error } = await supabase.from('memory_collections').insert({ user_id: user.id, name: name.trim(), icon });
-    if (error) {
-      if (/unique/i.test(error.message)) return { error: 'You already have a collection with that name.' };
-      return { error: error.message };
-    }
-    return { error: null };
-  }, [user]);
-
-  const deleteCollection = useCallback(async (collectionId: string): Promise<AuthResult> => {
-    const { error } = await supabase.from('memory_collections').delete().eq('id', collectionId);
-    return { error: error?.message ?? null };
-  }, []);
-
-  const addToCollection = useCallback(async (collectionId: string, memoryType: MemorySourceType, memoryId: string): Promise<AuthResult> => {
-    const payload: Record<string, string> = memoryType === 'capsule'
-      ? { collection_id: collectionId, capsule_id: memoryId }
-      : memoryType === 'moment'
-      ? { collection_id: collectionId, moment_id: memoryId }
-      : { collection_id: collectionId, drop_id: memoryId };
-    const { error } = await supabase.from('collection_items').insert(payload);
-    if (error && !/unique/i.test(error.message)) return { error: error.message };
-    return { error: null };
-  }, []);
-
-  const removeFromCollection = useCallback(async (collectionId: string, memoryType: MemorySourceType, memoryId: string): Promise<AuthResult> => {
-    let query = supabase.from('collection_items').delete().eq('collection_id', collectionId);
-    query = memoryType === 'capsule' ? query.eq('capsule_id', memoryId) : memoryType === 'moment' ? query.eq('moment_id', memoryId) : query.eq('drop_id', memoryId);
-    const { error } = await query;
-    return { error: error?.message ?? null };
   }, []);
 
   const favoriteMemory = useCallback(async (memoryType: MemorySourceType, memoryId: string): Promise<AuthResult> => {
@@ -265,11 +224,6 @@ export const useMemories = () => {
     getMemoryActivityCalendar,
     getMemoryActivityDay,
     getMemoryYearCounts,
-    getCollections,
-    createCollection,
-    deleteCollection,
-    addToCollection,
-    removeFromCollection,
     favoriteMemory,
     unfavoriteMemory,
     hideMemory,

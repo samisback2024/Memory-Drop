@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Search, X, Clock, TrendingUp, Layers } from 'lucide-react';
+import { Search, X, Clock, TrendingUp } from 'lucide-react';
 import { useSocial } from '../hooks/useSocial';
 import { useSearch } from '../hooks/useSearch';
 import { UserSearchResults } from '../components/social/UserSearchResults';
@@ -9,9 +9,9 @@ import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import type { SocialUserWithRelationship } from '../types/social';
-import type { CollectionSearchResult, Memory, RecentSearch, SearchSuggestion, TrendingSearch } from '../types/memory';
+import type { Memory, RecentSearch, SearchSuggestion, TrendingSearch } from '../types/memory';
 
-type ResultType = 'all' | 'user' | 'drop' | 'capsule' | 'moment' | 'collection';
+type ResultType = 'all' | 'user' | 'drop' | 'capsule' | 'moment';
 
 const TYPE_CHIPS: { id: ResultType; label: string }[] = [
   { id: 'all', label: 'All' },
@@ -19,7 +19,6 @@ const TYPE_CHIPS: { id: ResultType; label: string }[] = [
   { id: 'drop', label: 'Drops' },
   { id: 'capsule', label: 'Capsules' },
   { id: 'moment', label: 'Moments' },
-  { id: 'collection', label: 'Collections' },
 ];
 
 const DEBOUNCE_MS = 350;
@@ -28,11 +27,10 @@ const DEBOUNCE_MS = 350;
 // unchanged (via useSocial); Drops/Capsules/Moments/tags/locations all go
 // through search_memories() (Phase 10a), which returns the exact Memory
 // shape get_memories() does, so results render with the same GridView/
-// MemoryCard used everywhere else in the app. Collections are searched
-// separately since they're a personal, own-only organizing feature.
+// MemoryCard used everywhere else in the app.
 export const SearchPage: React.FC = () => {
   const { searchUsers } = useSocial();
-  const { searchMemories, searchCollections, recordSearch, getRecentSearches, clearSearchHistory, getTrendingSearches, getSearchSuggestions } = useSearch();
+  const { searchMemories, recordSearch, getRecentSearches, clearSearchHistory, getTrendingSearches, getSearchSuggestions } = useSearch();
   const isOnline = useOnlineStatus();
 
   const [inputValue, setInputValue] = useState('');
@@ -43,7 +41,6 @@ export const SearchPage: React.FC = () => {
 
   const [users, setUsers] = useState<SocialUserWithRelationship[]>([]);
   const [memories, setMemories] = useState<Memory[]>([]);
-  const [collections, setCollections] = useState<CollectionSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
 
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
@@ -77,7 +74,6 @@ export const SearchPage: React.FC = () => {
     if (!query) {
       setUsers([]);
       setMemories([]);
-      setCollections([]);
       return;
     }
     setLoading(true);
@@ -87,19 +83,16 @@ export const SearchPage: React.FC = () => {
     const contentTypes = type === 'drop' || type === 'capsule' || type === 'moment' ? [type] : null;
     const wantUsers = type === 'all' || type === 'user';
     const wantMemories = type === 'all' || contentTypes !== null;
-    const wantCollections = type === 'all' || type === 'collection';
 
     Promise.all([
       wantUsers ? searchUsers(query) : Promise.resolve([]),
       wantMemories ? searchMemories(query, contentTypes, 'newest', 30, 0) : Promise.resolve([]),
-      wantCollections ? searchCollections(query, 20) : Promise.resolve([]),
-    ]).then(([userResults, memoryResults, collectionResults]) => {
+    ]).then(([userResults, memoryResults]) => {
       setUsers(userResults);
       setMemories(memoryResults);
-      setCollections(collectionResults);
       setLoading(false);
     });
-  }, [recordSearch, refreshRecent, searchUsers, searchMemories, searchCollections]);
+  }, [recordSearch, refreshRecent, searchUsers, searchMemories]);
 
   // Debounced auto-search as the user types (in addition to explicit
   // submit/suggestion-click, which commit immediately without waiting).
@@ -123,15 +116,13 @@ export const SearchPage: React.FC = () => {
     setCommittedQuery('');
     setUsers([]);
     setMemories([]);
-    setCollections([]);
     inputRef.current?.focus();
   };
 
   const showResults = committedQuery.length > 0;
   const showUsers = activeType === 'all' || activeType === 'user';
   const showMemories = activeType === 'all' || activeType === 'drop' || activeType === 'capsule' || activeType === 'moment';
-  const showCollections = activeType === 'all' || activeType === 'collection';
-  const nothingFound = !loading && users.length === 0 && memories.length === 0 && collections.length === 0;
+  const nothingFound = !loading && users.length === 0 && memories.length === 0;
 
   return (
     <div className="flex flex-col gap-4">
@@ -280,24 +271,6 @@ export const SearchPage: React.FC = () => {
             <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4">
               <h2 className="text-sm font-semibold text-gray-900 mb-2">Users</h2>
               <UserSearchResults users={users} loading={false} />
-            </div>
-          )}
-
-          {showCollections && collections.length > 0 && (
-            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 flex flex-col gap-2">
-              <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
-                <Layers size={14} className="text-purple-500" aria-hidden="true" />
-                Your collections
-              </h2>
-              <div className="flex flex-col divide-y divide-gray-100">
-                {collections.map(c => (
-                  <div key={c.id} className="flex items-center gap-2 py-2 text-sm text-gray-700">
-                    <span aria-hidden="true">{c.icon || '📁'}</span>
-                    <span className="font-medium">{c.name}</span>
-                    <span className="text-xs text-gray-400 ml-auto">{c.item_count} {c.item_count === 1 ? 'item' : 'items'}</span>
-                  </div>
-                ))}
-              </div>
             </div>
           )}
 
