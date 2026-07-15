@@ -64,26 +64,34 @@ export interface UserSettings {
   updated_at: string;
 }
 
-// The 11 Memory Stats tiles a profile owner can opt into showing on
+// The 14 Memory Stats tiles a profile owner can opt into showing on
 // their public profile — Orbiting You/In Orbit stay unconditionally
 // public (a separate, already-existing display) and aren't part of
-// this list.
+// this list. The four interest-reaction stats (Save to Unlock/
+// Interested/Can't Wait/Good Vibes) are lifetime totals received on your
+// own Drops — they survive a Drop rolling off the feed 2 days after
+// unlocking (Phase 16), since the underlying counts live on the Drop row
+// itself, not on whether it's currently showing in anyone's feed tab.
 export type ProfileStatKey =
   | 'total_drops' | 'locked_items' | 'unlocked_items' | 'expired_moments' | 'saved_to_unlock'
-  | 'public_drops' | 'total_views' | 'total_unlocks' | 'total_reactions' | 'total_comments' | 'total_moments';
+  | 'public_drops' | 'total_views' | 'total_unlocks' | 'total_reactions' | 'total_comments' | 'total_moments'
+  | 'interested_received' | 'cant_wait_received' | 'good_vibes_received';
 
 export const PROFILE_STAT_META: Record<ProfileStatKey, { label: string; description: string }> = {
   total_drops: { label: 'Drops', description: 'Total number of Drops you\'ve made.' },
   locked_items: { label: 'Locked', description: 'How many of your memories are still sealed.' },
   unlocked_items: { label: 'Unlocked', description: 'How many of your memories have unlocked.' },
   expired_moments: { label: 'Expired moments', description: 'How many Moments you\'ve posted that have expired.' },
-  saved_to_unlock: { label: 'Saved to unlock', description: 'How many Drops you\'ve saved to unlock later.' },
+  saved_to_unlock: { label: 'Save to Unlock', description: 'How many times people have saved one of your Drops to unlock later.' },
   public_drops: { label: 'Public drops', description: 'How many of your Drops are set to Everyone.' },
   total_views: { label: 'Views received', description: 'Total views across everything you\'ve unlocked or posted.' },
   total_unlocks: { label: 'Unlocks received', description: 'How many times your content has been unlocked by others.' },
-  total_reactions: { label: 'Reactions received', description: 'Likes and reactions across all your content.' },
+  total_reactions: { label: 'Reactions received', description: 'Sparkle Drops and reactions across all your content.' },
   total_comments: { label: 'Comments received', description: 'Comments and replies across all your content.' },
   total_moments: { label: 'Moments', description: 'Total number of Moments you\'ve posted.' },
+  interested_received: { label: 'I\'m Interested', description: 'How many times people reacted "I\'m Interested" to one of your sealed Drops.' },
+  cant_wait_received: { label: 'Can\'t Wait', description: 'How many times people reacted "Can\'t Wait" to one of your sealed Drops.' },
+  good_vibes_received: { label: 'Good Vibes', description: 'How many times people sent "Good Vibes" to one of your sealed Drops.' },
 };
 
 export interface NotificationPreferences {
@@ -133,7 +141,7 @@ export const NOTIFICATION_PREFERENCE_META: Record<keyof Omit<NotificationPrefere
   new_orbiters: { label: 'New orbiters', description: 'When someone enters your Orbit.' },
   orbit_requests: { label: 'Orbit requests', description: 'When someone requests to join your private account\'s Orbit.' },
   comments: { label: 'Comments', description: 'When someone comments on your drop or capsule.' },
-  reactions: { label: 'Reactions', description: 'When someone reacts to your moment or likes your capsule.' },
+  reactions: { label: 'Reactions', description: 'When someone reacts to your moment or Sparkle Drops your capsule.' },
   replies: { label: 'Replies', description: 'When someone replies to your moment.' },
   weekly_recap: { label: 'Weekly recap', description: 'A weekly summary of what unlocked and what you missed.' },
   product_updates: { label: 'Product updates', description: 'News about new Memory Drop features.' },

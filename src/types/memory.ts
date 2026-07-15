@@ -95,13 +95,16 @@ export interface MemoryStats {
   total_reactions: number;
   total_comments: number;
   total_moments: number;
+  interested_received: number;
+  cant_wait_received: number;
+  good_vibes_received: number;
 }
 
 // get_public_stats(user_id) — what anyone is allowed to know about
 // someone else. Never leaks locked content, private/only-me/Orbit
 // visibility, saved-to-unlock, views, reactions, or comments.
-// The 10 fields beyond public_memories_count/orbiting_count/
-// in_orbit_count are only ever non-null if the profile owner opted
+// Every field beyond public_memories_count/orbiting_count/
+// in_orbit_count is only ever non-null if the profile owner opted
 // that specific stat into public visibility (Settings → Privacy) —
 // null means "hidden," not "zero."
 export interface PublicStats {
@@ -119,6 +122,9 @@ export interface PublicStats {
   total_reactions: number | null;
   total_comments: number | null;
   total_moments: number | null;
+  interested_received: number | null;
+  cant_wait_received: number | null;
+  good_vibes_received: number | null;
 }
 
 export const MONTH_NAMES = [
