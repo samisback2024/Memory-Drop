@@ -3,14 +3,8 @@ import { Plus } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useMoments } from '../../hooks/useMoments';
 import { Avatar } from '../ui/Avatar';
+import { groupMomentTrayItems } from '../../utils/moments';
 import type { MomentTrayItem } from '../../types/moment';
-
-interface AuthorGroup {
-  userId: string;
-  name: string;
-  photoUrl: string | null;
-  hasUnviewed: boolean;
-}
 
 interface MomentSidebarProps {
   onCreate: () => void;
@@ -36,25 +30,7 @@ export const MomentSidebar: React.FC<MomentSidebarProps> = ({ onCreate, onOpenAu
     return () => { cancelled = true; };
   }, [getMomentsTray, refreshKey]);
 
-  const groups = useMemo<AuthorGroup[]>(() => {
-    const order: string[] = [];
-    const map = new Map<string, AuthorGroup>();
-    for (const item of items) {
-      const existing = map.get(item.user_id);
-      if (!existing) {
-        order.push(item.user_id);
-        map.set(item.user_id, {
-          userId: item.user_id,
-          name: item.display_name || item.username,
-          photoUrl: item.profile_photo_url,
-          hasUnviewed: !item.is_viewed,
-        });
-      } else if (!item.is_viewed) {
-        existing.hasUnviewed = true;
-      }
-    }
-    return order.map(id => map.get(id)!);
-  }, [items]);
+  const groups = useMemo(() => groupMomentTrayItems(items), [items]);
 
   return (
     <div className="flex flex-col items-center gap-3 w-14 flex-shrink-0 pt-1" role="list" aria-label="Moments">

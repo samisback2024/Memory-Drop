@@ -9,6 +9,8 @@ import { DropTabs } from '../components/feed/DropTabs';
 import { Feed } from '../components/feed/Feed';
 import { DropComposer } from '../components/feed/DropComposer';
 import { MomentSidebar } from '../components/moments/MomentSidebar';
+import { MomentPileButton } from '../components/moments/MomentPileButton';
+import { MomentPileGround } from '../components/moments/MomentPileGround';
 import { CreateMomentModal } from '../components/moments/CreateMomentModal';
 import { MomentViewer } from '../components/moments/MomentViewer';
 import { Avatar } from '../components/ui/Avatar';
@@ -75,6 +77,7 @@ export const FeedPage: React.FC = () => {
   const [momentComposerOpen, setMomentComposerOpen] = useState(false);
   const [viewingMomentsFor, setViewingMomentsFor] = useState<string | null>(null);
   const [momentTrayKey, setMomentTrayKey] = useState(0);
+  const [pileOpen, setPileOpen] = useState(false);
   const scrollPositions = useRef<Record<DropTab, number>>({
     my_drops: 0, in_orbit: 0, public_drops: 0, saved_to_unlock: 0,
   });
@@ -299,6 +302,8 @@ export const FeedPage: React.FC = () => {
 
       <DropComposer isOpen={composerOpen} onClose={() => setComposerOpen(false)} onDropped={handleDropped} />
 
+      <MomentPileButton onClick={() => setPileOpen(true)} />
+
       <CreateMomentModal
         isOpen={momentComposerOpen}
         onClose={() => setMomentComposerOpen(false)}
@@ -309,6 +314,15 @@ export const FeedPage: React.FC = () => {
         <MomentViewer
           authorUserId={viewingMomentsFor}
           onClose={() => { setViewingMomentsFor(null); setMomentTrayKey(k => k + 1); }}
+        />
+      )}
+
+      {pileOpen && (
+        <MomentPileGround
+          refreshKey={momentTrayKey}
+          onClose={() => setPileOpen(false)}
+          onCreate={() => setMomentComposerOpen(true)}
+          onViewed={() => setMomentTrayKey(k => k + 1)}
         />
       )}
     </div>

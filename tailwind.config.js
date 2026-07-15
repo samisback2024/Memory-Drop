@@ -53,6 +53,8 @@ export default {
         'shimmer-sweep': 'shimmerSweep 3.2s ease-in-out infinite',
         'capsule-crack': 'capsuleCrack 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
         'pill-pulse': 'pillPulse 1.6s ease-in-out infinite',
+        'capsule-float': 'capsuleFloat 3.4s ease-in-out infinite',
+        'sparkle-twinkle': 'sparkleTwinkle 2.2s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
@@ -100,6 +102,16 @@ export default {
         pillPulse: {
           '0%, 100%': { boxShadow: '0 0 0 0 rgba(147,51,234,0.35)' },
           '50%': { boxShadow: '0 0 0 6px rgba(147,51,234,0)' },
+        },
+        // A gentle, continuous bob — the "cozy, alive" idle motion behind
+        // the floating moments capsule and the piled-up capsules at rest.
+        capsuleFloat: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-6px)' },
+        },
+        sparkleTwinkle: {
+          '0%, 100%': { opacity: '0.25', transform: 'scale(0.7)' },
+          '50%': { opacity: '1', transform: 'scale(1.1)' },
         },
       },
     },

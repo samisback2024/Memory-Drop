@@ -71,7 +71,13 @@ export const Modal: React.FC<ModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+    // Above MomentViewer/MediaViewer's z-[70] — a modal (confirm dialogs
+    // in particular, e.g. deleting a moment from inside its full-screen
+    // viewer) is meant to interrupt whatever's on screen, including a
+    // full-screen viewer; at the old z-50 its buttons were rendered
+    // under the viewer's invisible prev/next tap targets and couldn't
+    // actually be clicked.
+    <div className="fixed inset-0 z-[75] flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in"
         onClick={onClose}

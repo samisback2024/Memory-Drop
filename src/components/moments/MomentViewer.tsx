@@ -66,20 +66,21 @@ export const MomentViewer: React.FC<MomentViewerProps> = ({ authorUserId, includ
 
   const current = moments[index];
 
+  // onClose is a plain top-level call here, not nested inside the
+  // setIndex updater — calling a parent's setState from inside another
+  // component's state-updater function trips React's "setState while
+  // rendering a different component" warning (updater functions can be
+  // invoked during render, e.g. Strict Mode's double-invoke check).
   const goNext = useCallback(() => {
+    if (index >= moments.length - 1) { onClose(); return; }
     setProgress(0);
-    setIndex(i => {
-      if (i >= moments.length - 1) { onClose(); return i; }
-      return i + 1;
-    });
-  }, [moments.length, onClose]);
+    setIndex(i => i + 1);
+  }, [index, moments.length, onClose]);
 
   const goPrev = () => {
+    if (index <= 0) { onClose(); return; }
     setProgress(0);
-    setIndex(i => {
-      if (i <= 0) { onClose(); return i; }
-      return i - 1;
-    });
+    setIndex(i => i - 1);
   };
 
   // Record the view once per moment per mount — never for your own.
