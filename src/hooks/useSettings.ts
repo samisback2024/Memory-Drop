@@ -145,16 +145,56 @@ export const useSettings = () => {
   // cleanup logic in two places. The account itself is untouched.
   const deleteAllContent = useCallback(async (): Promise<AuthResult> => {
     if (!user) return { error: 'Not authenticated' };
+    const PAGE = 100;
+    const failures: string[] = [];
     try {
-      const drops = await getDropsFeed('my_drops', 500, 0);
-      for (const drop of drops) await deleteDrop(drop);
+      // Paginated rather than a single capped fetch — a single 500-item
+      // page silently left anything past it undeleted for any account
+      // with more content than that. Always re-fetched at offset 0, not
+      // incremented — items are being deleted between fetches, so an
+      // incrementing offset would skip whatever just shifted into the
+      // range already passed. Each delete's own {error} is checked too
+      // — these delete* functions return a result object rather than
+      // throwing on failure (same as every other delete button in the
+      // app), so a plain `await deleteDrop(drop)` with the result
+      // discarded reported "all deleted" even when every single delete
+      // had actually failed. That combination — ignored per-item errors
+      // plus a page cap — is what made this look like it succeeded
+      // while doing nothing, or only partially working.
+      while (true) {
+        const drops = await getDropsFeed('my_drops', PAGE, 0);
+        if (drops.length === 0) break;
+        let anySucceeded = false;
+        for (const drop of drops) {
+          const { error } = await deleteDrop(drop);
+          if (error) failures.push(error); else anySucceeded = true;
+        }
+        // A failed delete leaves its item in place, so a stalled page
+        // would otherwise refetch the exact same items forever — bail
+        // once a full pass makes no progress at all.
+        if (!anySucceeded || drops.length < PAGE) break;
+      }
 
-      const capsules = await getUserCapsules(user.id, {}, 500, 0);
-      for (const capsule of capsules) await deleteCapsule(capsule);
+      while (true) {
+        const capsules = await getUserCapsules(user.id, {}, PAGE, 0);
+        if (capsules.length === 0) break;
+        let anySucceeded = false;
+        for (const capsule of capsules) {
+          const { error } = await deleteCapsule(capsule);
+          if (error) failures.push(error); else anySucceeded = true;
+        }
+        if (!anySucceeded || capsules.length < PAGE) break;
+      }
 
       const moments = await getUserMoments(user.id, true);
-      for (const moment of moments) await deleteMoment(moment);
+      for (const moment of moments) {
+        const { error } = await deleteMoment(moment);
+        if (error) failures.push(error);
+      }
 
+      if (failures.length > 0) {
+        return { error: `${failures.length} item${failures.length === 1 ? '' : 's'} couldn't be deleted: ${failures[0]}` };
+      }
       return { error: null };
     } catch (err) {
       return { error: err instanceof Error ? err.message : 'Could not delete all your data.' };
