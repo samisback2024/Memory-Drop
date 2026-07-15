@@ -8,7 +8,7 @@ import { usePullToRefresh } from '../hooks/usePullToRefresh';
 import { DropTabs } from '../components/feed/DropTabs';
 import { Feed } from '../components/feed/Feed';
 import { DropComposer } from '../components/feed/DropComposer';
-import { MomentTray } from '../components/moments/MomentTray';
+import { MomentSidebar } from '../components/moments/MomentSidebar';
 import { CreateMomentModal } from '../components/moments/CreateMomentModal';
 import { MomentViewer } from '../components/moments/MomentViewer';
 import { Avatar } from '../components/ui/Avatar';
@@ -204,7 +204,14 @@ export const FeedPage: React.FC = () => {
   const displayName = profile?.display_name || profile?.username || 'there';
 
   return (
-    <div className="flex flex-col gap-4 -mx-4 px-4 -mt-6 pt-6 pb-6 bg-gradient-to-b from-purple-50/60 via-transparent to-transparent min-h-[calc(100vh-4rem)]">
+    <div className="flex gap-3 -mx-4 px-4 -mt-6 pt-6 pb-6 bg-gradient-to-b from-purple-50/60 via-transparent to-transparent min-h-[calc(100vh-4rem)]">
+      <MomentSidebar
+        onCreate={() => setMomentComposerOpen(true)}
+        onOpenAuthor={setViewingMomentsFor}
+        refreshKey={momentTrayKey}
+      />
+
+      <div className="flex-1 min-w-0 flex flex-col gap-4">
       {(pulling || refreshing) && (
         <div className="flex justify-center items-center overflow-hidden transition-[height]" style={{ height: refreshing ? 36 : distance }}>
           <Loader2
@@ -216,16 +223,10 @@ export const FeedPage: React.FC = () => {
         </div>
       )}
 
-      <MomentTray
-        onCreate={() => setMomentComposerOpen(true)}
-        onOpenAuthor={setViewingMomentsFor}
-        refreshKey={momentTrayKey}
-      />
-
       <button
         type="button"
         onClick={() => setComposerOpen(true)}
-        className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm p-4 flex items-center gap-3 text-left hover:shadow-md transition-shadow"
+        className="glass-panel tactile rounded-2xl p-4 flex items-center gap-3 text-left"
       >
         <Avatar src={profile?.profile_photo_url} name={displayName} size="md" />
         <span className="flex-1 text-sm text-gray-400 dark:text-gray-500">What moment do you want to save, {displayName.split(' ')[0]}?</span>
@@ -244,8 +245,8 @@ export const FeedPage: React.FC = () => {
           aria-checked={mediaFilter === null}
           onClick={() => handleMediaFilterChange(null)}
           className={[
-            'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap flex-shrink-0 transition-colors',
-            mediaFilter === null ? 'bg-purple-600 text-white' : 'bg-white/70 dark:bg-gray-900/70 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 border border-white/60 dark:border-gray-800/60',
+            'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap flex-shrink-0 tactile transition-colors',
+            mediaFilter === null ? 'bg-purple-600 text-white' : 'glass-panel text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200',
           ].join(' ')}
         >
           <LayoutGrid size={12} aria-hidden="true" /> All
@@ -261,8 +262,8 @@ export const FeedPage: React.FC = () => {
               aria-checked={active}
               onClick={() => handleMediaFilterChange(type)}
               className={[
-                'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap flex-shrink-0 transition-colors',
-                active ? 'bg-purple-600 text-white' : 'bg-white/70 dark:bg-gray-900/70 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 border border-white/60 dark:border-gray-800/60',
+                'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap flex-shrink-0 tactile transition-colors',
+                active ? 'bg-purple-600 text-white' : 'glass-panel text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200',
               ].join(' ')}
             >
               <Icon size={12} aria-hidden="true" /> {MEDIA_FILTER_LABELS[type]}
@@ -276,7 +277,7 @@ export const FeedPage: React.FC = () => {
           <button
             type="button"
             onClick={handleRefreshNewDrops}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-to-r from-purple-600 to-blue-500 text-white text-xs font-semibold shadow-lg hover:shadow-xl transition-shadow animate-fade-in"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-to-r from-purple-600 to-blue-500 text-white text-xs font-semibold tactile animate-fade-in"
           >
             <ArrowUp size={13} aria-hidden="true" /> New drops — tap to refresh
           </button>
@@ -294,6 +295,7 @@ export const FeedPage: React.FC = () => {
         onRetry={() => loadTab(activeTab)}
         emptyVariant={activeTab}
       />
+      </div>
 
       <DropComposer isOpen={composerOpen} onClose={() => setComposerOpen(false)} onDropped={handleDropped} />
 

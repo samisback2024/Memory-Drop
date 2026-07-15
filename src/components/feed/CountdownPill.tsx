@@ -42,11 +42,16 @@ export const CountdownPill: React.FC<CountdownPillProps> = ({ unlockDate, onUnlo
     return () => clearInterval(interval);
   }, [target, onUnlock]);
 
+  // Under an hour left pulses gently — a physical "it's almost ready"
+  // cue rather than just the number changing.
+  const almostThere = remaining > 0 && remaining <= 3_600_000;
+
   return (
     <span
       className={[
-        'inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-purple-600 to-blue-500 text-white font-medium shadow-sm',
+        'inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-purple-600 to-blue-500 text-white font-medium tactile',
         size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-3.5 py-1.5 text-sm',
+        almostThere || remaining <= 0 ? 'animate-pill-pulse' : '',
       ].join(' ')}
     >
       <Clock size={size === 'sm' ? 11 : 13} aria-hidden="true" />

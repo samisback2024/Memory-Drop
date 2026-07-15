@@ -111,7 +111,7 @@ const DropCardImpl: React.FC<DropCardProps> = ({ drop, onDeleted, onHidden, onUn
         <div className="w-px flex-1 bg-gradient-to-b from-purple-200 to-transparent mt-1" />
       </div>
 
-      <article className="flex-1 min-w-0 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_8px_24px_-8px_rgba(124,58,237,0.12)] overflow-hidden">
+      <article className="flex-1 min-w-0 glass-panel rounded-[28px] overflow-hidden transition-transform duration-300 ease-spring sm:hover:-translate-y-0.5">
         <div className="flex items-center gap-3 p-4">
           <Link to={`/u/${content.username}`} className="flex-shrink-0">
             <Avatar src={content.profile_photo_url} name={displayName} size="md" />
@@ -143,12 +143,12 @@ const DropCardImpl: React.FC<DropCardProps> = ({ drop, onDeleted, onHidden, onUn
               aria-label="More options"
               aria-haspopup="menu"
               aria-expanded={menuOpen}
-              className="p-2 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none"
+              className="p-2 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 tactile focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none"
             >
               <MoreHorizontal size={16} aria-hidden="true" />
             </button>
             {menuOpen && (
-              <div role="menu" className="absolute right-0 top-11 w-48 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl z-20 overflow-hidden py-1 animate-fade-in">
+              <div role="menu" className="absolute right-0 top-11 w-48 glass-panel rounded-2xl shadow-xl z-20 overflow-hidden py-1 animate-fade-in">
                 <Link
                   to={`/u/${content.username}`}
                   role="menuitem"
