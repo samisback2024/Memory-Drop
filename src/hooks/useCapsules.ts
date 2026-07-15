@@ -49,6 +49,25 @@ export const useCapsules = () => {
     return data[0] as Capsule;
   }, []);
 
+  // My Capsules / In Orbit / Public — same three-way discovery split
+  // Drops already has via getDropsFeed, backed by its own RPC rather
+  // than getUserCapsules (which only ever shows *your own* view of a
+  // single user's capsules and, for anyone else, hides locked ones
+  // entirely — get_capsules_feed shows a locked capsule's sealed card
+  // to everyone who can see it, same as a locked Drop).
+  const getCapsulesFeed = useCallback(async (
+    tab: 'my_capsules' | 'in_orbit' | 'public',
+    limit = 20,
+    offset = 0,
+  ): Promise<Capsule[]> => {
+    const { data, error } = await supabase.rpc('get_capsules_feed', { p_tab: tab, p_limit: limit, p_offset: offset });
+    if (error || !data) {
+      if (error) logger.warn('getCapsulesFeed failed', { tab, message: error.message });
+      return [];
+    }
+    return data as Capsule[];
+  }, []);
+
   const getUserCapsules = useCallback(async (
     userId: string,
     filters: Partial<CapsuleArchiveFilters> = {},
@@ -222,6 +241,7 @@ export const useCapsules = () => {
   return {
     getCapsule,
     getUserCapsules,
+    getCapsulesFeed,
     unlockCapsule,
     createCapsule,
     deleteCapsule,

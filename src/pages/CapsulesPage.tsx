@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Plus, Clock, Lock, Hourglass, Unlock, Archive as ArchiveIcon, LayoutList } from 'lucide-react';
+import { Plus, Clock, Lock, Hourglass, Unlock, Archive as ArchiveIcon, LayoutList, Users, Globe2 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useCapsules } from '../hooks/useCapsules';
 import { useMemories } from '../hooks/useMemories';
@@ -13,6 +13,9 @@ import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { EMPTY_CAPSULE_FILTERS, type Capsule } from '../types/capsule';
 
 const SOON_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
+const PAGE_SIZE = 15;
+
+type DiscoveryTab = 'in_orbit' | 'public';
 
 interface SectionProps {
   title: string;
@@ -49,11 +52,11 @@ const CapsuleSection: React.FC<SectionProps> = ({ title, icon: Icon, capsules, l
 export const CapsulesPage: React.FC = () => {
   const { user } = useAuth();
   const isOnline = useOnlineStatus();
-  const { getUserCapsules } = useCapsules();
+  const { getUserCapsules, getCapsulesFeed } = useCapsules();
   const { getArchivedMemories } = useMemories();
   const [wizardOpen, setWizardOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [mode, setMode] = useState<'overview' | 'browse'>('overview');
+  const [mode, setMode] = useState<'overview' | 'browse' | DiscoveryTab>('overview');
 
   const [locked, setLocked] = useState<Capsule[]>([]);
   const [unlocked, setUnlocked] = useState<Capsule[]>([]);
@@ -82,6 +85,37 @@ export const CapsulesPage: React.FC = () => {
 
   useEffect(() => { if (mode === 'overview') loadOverview(); }, [mode, refreshKey, loadOverview]);
 
+  // In Orbit / Public — a second, discovery-focused way into Capsules,
+  // same shape as Feed's own tabs: fetched fresh per tab (not cached
+  // across all of them at once, unlike Overview's own arrays above,
+  // since these are lighter-weight and only one is ever visible).
+  const [discoveryItems, setDiscoveryItems] = useState<Capsule[]>([]);
+  const [discoveryLoading, setDiscoveryLoading] = useState(true);
+  const [discoveryLoadingMore, setDiscoveryLoadingMore] = useState(false);
+  const [discoveryHasMore, setDiscoveryHasMore] = useState(true);
+
+  const isDiscoveryTab = (m: typeof mode): m is DiscoveryTab => m === 'in_orbit' || m === 'public';
+
+  const loadDiscovery = useCallback(async (tab: DiscoveryTab) => {
+    setDiscoveryLoading(true);
+    const data = await getCapsulesFeed(tab, PAGE_SIZE, 0);
+    setDiscoveryItems(data);
+    setDiscoveryHasMore(data.length === PAGE_SIZE);
+    setDiscoveryLoading(false);
+  }, [getCapsulesFeed]);
+
+  useEffect(() => { if (isDiscoveryTab(mode)) loadDiscovery(mode); }, [mode, loadDiscovery]);
+
+  const loadMoreDiscovery = () => {
+    if (!isDiscoveryTab(mode)) return;
+    setDiscoveryLoadingMore(true);
+    getCapsulesFeed(mode, PAGE_SIZE, discoveryItems.length).then(data => {
+      setDiscoveryItems(prev => [...prev, ...data]);
+      setDiscoveryHasMore(data.length === PAGE_SIZE);
+      setDiscoveryLoadingMore(false);
+    });
+  };
+
   const now = Date.now();
   const unlockingSoon = locked.filter(c => new Date(c.unlock_date).getTime() - now <= SOON_WINDOW_MS);
   const stillLocked = locked.filter(c => new Date(c.unlock_date).getTime() - now > SOON_WINDOW_MS);
@@ -106,18 +140,40 @@ export const CapsulesPage: React.FC = () => {
         </Button>
       </div>
 
-      <div className="flex bg-white/70 backdrop-blur-xl rounded-xl p-1 gap-1 border border-white/60 shadow-sm w-fit">
+      <div role="tablist" aria-label="Capsules views" className="flex bg-white/70 backdrop-blur-xl rounded-xl p-1 gap-1 border border-white/60 shadow-sm overflow-x-auto">
         <button
           type="button"
+          role="tab"
+          aria-selected={mode === 'overview'}
           onClick={() => setMode('overview')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${mode === 'overview' ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'text-gray-500'}`}
+          className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0 ${mode === 'overview' ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'text-gray-500'}`}
         >
-          Overview
+          My Capsules
         </button>
         <button
           type="button"
+          role="tab"
+          aria-selected={mode === 'in_orbit'}
+          onClick={() => setMode('in_orbit')}
+          className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0 ${mode === 'in_orbit' ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'text-gray-500'}`}
+        >
+          <Users size={12} aria-hidden="true" /> In Orbit
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mode === 'public'}
+          onClick={() => setMode('public')}
+          className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0 ${mode === 'public' ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'text-gray-500'}`}
+        >
+          <Globe2 size={12} aria-hidden="true" /> Public
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={mode === 'browse'}
           onClick={() => setMode('browse')}
-          className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${mode === 'browse' ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'text-gray-500'}`}
+          className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0 ${mode === 'browse' ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'text-gray-500'}`}
         >
           <LayoutList size={12} aria-hidden="true" /> Browse & Search
         </button>
@@ -125,6 +181,31 @@ export const CapsulesPage: React.FC = () => {
 
       {mode === 'browse' ? (
         <CapsuleArchive key={refreshKey} userId={user.id} isOwnArchive />
+      ) : isDiscoveryTab(mode) ? (
+        discoveryLoading ? (
+          <div className="flex flex-col gap-3">{[0, 1, 2].map(i => <div key={i} className="h-32 rounded-2xl bg-white/60 animate-pulse" />)}</div>
+        ) : discoveryItems.length === 0 ? (
+          <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm">
+            {!isOnline ? (
+              <ErrorState title="You're offline" description="Reconnect and try again." onRetry={() => loadDiscovery(mode)} />
+            ) : mode === 'in_orbit' ? (
+              <EmptyState icon={Users} title="Nothing here yet" description="Capsules from people in your Orbit will show up here, sealed or open." />
+            ) : (
+              <EmptyState icon={Globe2} title="Nothing here yet" description="Public capsules from everyone will show up here, sealed or open." />
+            )}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4">
+            <CapsuleTimeline capsules={discoveryItems} onDeleted={id => setDiscoveryItems(prev => prev.filter(c => c.id !== id))} />
+            {discoveryHasMore ? (
+              <Button variant="secondary" size="sm" onClick={loadMoreDiscovery} disabled={discoveryLoadingMore} className="self-center">
+                {discoveryLoadingMore ? 'Loading...' : 'Load more'}
+              </Button>
+            ) : (
+              <p className="text-center text-xs text-gray-400 py-2">You've reached the end.</p>
+            )}
+          </div>
+        )
       ) : (
         <div className="flex flex-col gap-4">
           <CapsuleSection title="Unlocking Soon" icon={Hourglass} capsules={unlockingSoon} loading={loading} emptyLabel="Nothing unlocking in the next 7 days." onDeleted={removeFrom(setLocked)} />
