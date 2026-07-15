@@ -1,5 +1,5 @@
 import React from 'react';
-import { Heart, X } from 'lucide-react';
+import { X } from 'lucide-react';
 import { MOOD_META, type Mood } from '../../types/feed';
 import { CAPSULE_VISIBILITY_META, MEMORY_TYPE_OPTIONS } from '../../types/capsule';
 import { MONTH_NAMES, type MemoryFilters as MemoryFiltersType } from '../../types/memory';
@@ -15,23 +15,12 @@ interface MemoryFiltersProps {
 export const MemoryFilters: React.FC<MemoryFiltersProps> = ({ filters, onChange, years, collections }) => {
   const hasActive = Boolean(
     filters.lockStatus || filters.year || filters.month || filters.mood ||
-    filters.visibility || filters.mediaType || filters.favoritesOnly || filters.collectionId,
+    filters.visibility || filters.mediaType || filters.collectionId,
   );
 
   return (
     <div className="flex flex-col gap-2">
       <div className="flex gap-2 overflow-x-auto pb-0.5">
-        <button
-          type="button"
-          onClick={() => onChange({ ...filters, favoritesOnly: !filters.favoritesOnly })}
-          className={[
-            'flex items-center gap-1 text-xs font-medium rounded-lg px-2.5 py-1.5 flex-shrink-0 border transition-colors',
-            filters.favoritesOnly ? 'bg-pink-50 border-pink-200 text-pink-600' : 'bg-white border-gray-200 text-gray-600',
-          ].join(' ')}
-        >
-          <Heart size={12} className={filters.favoritesOnly ? 'fill-pink-600' : ''} aria-hidden="true" /> Favorites
-        </button>
-
         <select
           value={filters.lockStatus ?? ''}
           onChange={e => onChange({ ...filters, lockStatus: (e.target.value || null) as MemoryFiltersType['lockStatus'] })}
