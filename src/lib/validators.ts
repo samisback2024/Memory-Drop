@@ -60,8 +60,16 @@ export const LOCATION_MAX = 60;
 export const WEBSITE_MAX = 200;
 export const PRONOUNS_MAX = 30;
 
-export const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
-export const MAX_COVER_BYTES = 8 * 1024 * 1024;
+// Generous on purpose: every one of these uploads gets downscaled to a
+// 1600px-max-dimension, quality-0.85 JPEG client-side (compressImageFile
+// in lib/image.ts, or the crop pipeline for avatar/cover) before it's
+// actually stored, regardless of how large the source file was — so
+// this ceiling only exists to reject something pathological (a
+// mislabeled video, a multi-hundred-MB scan), not to gate a normal
+// modern phone camera photo. The old 5MB/8MB caps rejected those
+// outright before compression ever got a chance to shrink them.
+export const MAX_AVATAR_BYTES = 20 * 1024 * 1024;
+export const MAX_COVER_BYTES = 25 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
 
 export const validateDisplayName = (displayName: string): string | null => {
@@ -120,7 +128,7 @@ export const validateImageFile = (file: File, maxBytes: number): string | null =
 
 export const CAPTION_MAX = 2200;
 export const MAX_POST_IMAGES = 10;
-export const MAX_POST_IMAGE_BYTES = 8 * 1024 * 1024;
+export const MAX_POST_IMAGE_BYTES = 25 * 1024 * 1024;
 export const MAX_POST_VIDEO_BYTES = 50 * 1024 * 1024;
 const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime'];
 
