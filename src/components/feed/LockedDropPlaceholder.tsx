@@ -17,32 +17,18 @@ interface LockedDropPlaceholderProps {
   onUnlocked?: () => void;
 }
 
-// A stable, per-drop hue offset for the aurora background — derived only
-// from unlockDate (already public, it's what the countdown itself shows),
-// never from the sealed content. Gives every locked card its own subtle
-// color variation instead of an identical placeholder repeated down the
-// feed, while staying clamped to +/-28deg so it drifts around the brand's
-// purple/blue identity rather than landing on an unrelated hue like green.
-const hueFromSeed = (seed: string): number => {
-  let h = 0;
-  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) % 57;
-  return h - 28;
-};
-
-// What a locked drop actually shows: no blurred preview of real content —
-// there isn't one to blur, the server never sends it — just a sealed
-// capsule under frosted glass. The aurora glow, shimmer sweep, and hidden
-// watermark icon are all decorative/derived from already-public metadata
-// (memory type, mood, unlock time), meant to make the seal itself feel
-// alive and worth waiting for rather than revealing anything early.
-// `onUnlocked` fires after the crack-open transition once the countdown
-// hits zero, giving the parent a moment to swap in the real content
-// instead of popping it in instantly.
+// What a locked drop actually shows: no preview of real content — there
+// isn't one to show, the server never sends it — just a sealed capsule on
+// a plain tinted card. The faint watermark icon is derived from already-
+// public metadata (memory type), a quiet hint at *what kind* of moment
+// this is without saying anything about its actual contents. `onUnlocked`
+// fires after the crack-open transition once the countdown hits zero,
+// giving the parent a moment to swap in the real content instead of
+// popping it in instantly.
 export const LockedDropPlaceholder: React.FC<LockedDropPlaceholderProps> = ({ memoryType, mood, unlockDate, onUnlocked }) => {
   const [revealing, setRevealing] = useState(false);
   const moodMeta = mood ? MOOD_META[mood] : null;
   const MemoryIcon = MEMORY_TYPE_ICONS[memoryType];
-  const hue = hueFromSeed(unlockDate + memoryType);
 
   const handleUnlock = () => {
     setRevealing(true);
@@ -53,33 +39,12 @@ export const LockedDropPlaceholder: React.FC<LockedDropPlaceholderProps> = ({ me
     <div
       className={[
         'relative overflow-hidden rounded-[28px] border border-purple-100/70 dark:border-purple-900/50',
-        'px-6 py-10 flex flex-col items-center text-center gap-3',
+        'px-6 py-10 flex flex-col items-center text-center gap-3 bg-purple-50 dark:bg-purple-950/20',
         revealing ? 'animate-capsule-crack' : '',
       ].join(' ')}
-      style={{ filter: `hue-rotate(${hue}deg)` }}
     >
-      {/* Ambient aurora, slowly drifting — the "something's in there"
-          feeling, never a preview of actual content. */}
-      <div
-        className="absolute inset-0 opacity-70 dark:opacity-50 animate-aurora-shift"
-        style={{
-          backgroundImage:
-            'radial-gradient(at 20% 25%, rgb(var(--color-purple-400)) 0px, transparent 55%), radial-gradient(at 80% 20%, rgb(var(--color-blue-400)) 0px, transparent 55%), radial-gradient(at 50% 85%, rgb(var(--color-purple-300)) 0px, transparent 55%)',
-          backgroundSize: '200% 200%',
-        }}
-        aria-hidden="true"
-      />
-      {/* Frosted glass over the aurora — diffuses it into a soft glow
-          rather than a legible shape. */}
-      <div className="absolute inset-0 backdrop-blur-2xl bg-white/55 dark:bg-gray-950/55" aria-hidden="true" />
-
-      {/* A light streak sweeping across the glass, like a reflection. */}
-      <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
-        <div className="absolute -inset-y-10 left-0 w-1/3 bg-gradient-to-r from-transparent via-white/50 dark:via-white/10 to-transparent animate-shimmer-sweep" />
-      </div>
-
       {/* Faint oversized watermark of the memory type, sealed behind the
-          glass — a hint at *what kind* of moment this is without saying
+          card — a hint at *what kind* of moment this is without saying
           anything about its actual contents. */}
       <MemoryIcon size={96} className="absolute inset-0 m-auto text-purple-500/10 dark:text-purple-300/10" aria-hidden="true" />
 

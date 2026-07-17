@@ -120,7 +120,7 @@ const CapsuleCardImpl: React.FC<CapsuleCardProps> = ({ capsule, onDeleted }) => 
   if (deleting) return null;
 
   return (
-    <article className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_8px_24px_-8px_rgba(124,58,237,0.12)] overflow-hidden cv-auto">
+    <article className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-[0_1px_3px_rgba(0,0,0,0.04),0_8px_24px_-8px_rgba(124,58,237,0.12)] overflow-hidden cv-auto">
       <span role="status" aria-live="polite" className="sr-only">{announcement}</span>
       <div className="flex items-center gap-3 p-4">
         <Link to={`/u/${content.username}`} className="flex-shrink-0">
@@ -166,7 +166,7 @@ const CapsuleCardImpl: React.FC<CapsuleCardProps> = ({ capsule, onDeleted }) => 
               className={[
                 'relative inline-flex items-center gap-1.5 rounded-full pl-2.5 pr-3 py-1.5 text-xs font-semibold transition-all',
                 content.is_liked
-                  ? 'bg-gradient-to-r from-fuchsia-500 to-purple-600 text-white shadow-sm shadow-purple-500/25'
+                  ? 'bg-purple-600 text-white shadow-sm shadow-purple-500/25'
                   : 'bg-gray-50 dark:bg-gray-800/70 text-gray-500 dark:text-gray-400',
               ].join(' ')}
             >
@@ -193,7 +193,7 @@ const CapsuleCardImpl: React.FC<CapsuleCardProps> = ({ capsule, onDeleted }) => 
               className={[
                 'inline-flex items-center gap-1.5 rounded-full pl-2.5 pr-3 py-1.5 text-xs font-semibold transition-all focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none',
                 content.is_saved
-                  ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-sm shadow-purple-500/25'
+                  ? 'bg-purple-600 text-white shadow-sm shadow-purple-500/25'
                   : 'bg-gray-50 dark:bg-gray-800/70 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/70',
               ].join(' ')}
             >
@@ -240,7 +240,7 @@ const CapsuleCardImpl: React.FC<CapsuleCardProps> = ({ capsule, onDeleted }) => 
             className="border border-gray-200 rounded-xl px-3.5 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           />
           {reflectionError && <p className="text-xs text-red-600">{reflectionError}</p>}
-          <button type="button" onClick={submitReflection} className="self-end px-4 py-1.5 rounded-full bg-gradient-to-r from-purple-600 to-blue-500 text-white text-sm font-medium hover:shadow-md transition-shadow">
+          <button type="button" onClick={submitReflection} className="self-end px-4 py-1.5 rounded-full bg-purple-600 text-white text-sm font-medium hover:bg-purple-700 transition-colors">
             Save reflection
           </button>
           {reflections.length > 0 && (

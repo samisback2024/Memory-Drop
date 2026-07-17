@@ -27,7 +27,7 @@ interface SectionProps {
 }
 
 const CapsuleSection: React.FC<SectionProps> = ({ title, icon: Icon, capsules, loading, emptyLabel, onDeleted }) => (
-  <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm p-4 flex flex-col gap-3">
+  <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 flex flex-col gap-3">
     <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
       <Icon size={15} className="text-purple-500" aria-hidden="true" />
       {title}
@@ -134,19 +134,19 @@ export const CapsulesPage: React.FC = () => {
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">Memories you've sent into the future.</p>
         </div>
-        <Button variant="gradient" size="sm" onClick={() => setWizardOpen(true)}>
+        <Button variant="accent" size="sm" onClick={() => setWizardOpen(true)}>
           <Plus size={15} aria-hidden="true" />
           New Capsule
         </Button>
       </div>
 
-      <div role="tablist" aria-label="Capsules views" className="flex bg-white/70 backdrop-blur-xl rounded-xl p-1 gap-1 border border-white/60 shadow-sm overflow-x-auto">
+      <div role="tablist" aria-label="Capsules views" className="flex bg-white dark:bg-gray-900 rounded-xl p-1 gap-1 border border-gray-100 dark:border-gray-800 shadow-sm overflow-x-auto">
         <button
           type="button"
           role="tab"
           aria-selected={mode === 'overview'}
           onClick={() => setMode('overview')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0 ${mode === 'overview' ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'text-gray-500'}`}
+          className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0 ${mode === 'overview' ? 'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300' : 'text-gray-500'}`}
         >
           My Capsules
         </button>
@@ -155,7 +155,7 @@ export const CapsulesPage: React.FC = () => {
           role="tab"
           aria-selected={mode === 'in_orbit'}
           onClick={() => setMode('in_orbit')}
-          className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0 ${mode === 'in_orbit' ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'text-gray-500'}`}
+          className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0 ${mode === 'in_orbit' ? 'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300' : 'text-gray-500'}`}
         >
           <Users size={12} aria-hidden="true" /> In Orbit
         </button>
@@ -164,7 +164,7 @@ export const CapsulesPage: React.FC = () => {
           role="tab"
           aria-selected={mode === 'public'}
           onClick={() => setMode('public')}
-          className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0 ${mode === 'public' ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'text-gray-500'}`}
+          className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0 ${mode === 'public' ? 'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300' : 'text-gray-500'}`}
         >
           <Globe2 size={12} aria-hidden="true" /> Public
         </button>
@@ -173,7 +173,7 @@ export const CapsulesPage: React.FC = () => {
           role="tab"
           aria-selected={mode === 'browse'}
           onClick={() => setMode('browse')}
-          className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0 ${mode === 'browse' ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'text-gray-500'}`}
+          className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0 ${mode === 'browse' ? 'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300' : 'text-gray-500'}`}
         >
           <LayoutList size={12} aria-hidden="true" /> Browse & Search
         </button>
@@ -185,13 +185,13 @@ export const CapsulesPage: React.FC = () => {
         discoveryLoading ? (
           <div className="flex flex-col gap-3">{[0, 1, 2].map(i => <div key={i} className="h-32 rounded-2xl bg-white/60 animate-pulse" />)}</div>
         ) : discoveryItems.length === 0 ? (
-          <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
             {!isOnline ? (
               <ErrorState title="You're offline" description="Reconnect and try again." onRetry={() => loadDiscovery(mode)} />
             ) : mode === 'in_orbit' ? (
-              <EmptyState icon={Users} title="Nothing here yet" description="Capsules from people in your Orbit will show up here, sealed or open." />
+              <EmptyState icon={Users} title="No Orbit capsules yet" description="Capsules from people in your Orbit will show up here, sealed or open." />
             ) : (
-              <EmptyState icon={Globe2} title="Nothing here yet" description="Public capsules from everyone will show up here, sealed or open." />
+              <EmptyState icon={Globe2} title="No public capsules yet" description="Public capsules from everyone will show up here, sealed or open." />
             )}
           </div>
         ) : (
@@ -215,7 +215,7 @@ export const CapsulesPage: React.FC = () => {
             <CapsuleSection title="Archived" icon={ArchiveIcon} capsules={archived} loading={loading} emptyLabel="" onDeleted={removeFrom(setArchived)} />
           )}
           {!loading && locked.length === 0 && unlocked.length === 0 && (
-            <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
               {!isOnline ? (
                 <ErrorState title="You're offline" description="Reconnect and try again." onRetry={loadOverview} />
               ) : (

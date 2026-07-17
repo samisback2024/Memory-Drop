@@ -376,7 +376,7 @@ export const CapsuleWizard: React.FC<CapsuleWizardProps> = ({ isOpen, onClose, o
                   onClick={() => pickPreset(p.id)}
                   className={[
                     'py-2.5 rounded-xl text-sm font-medium border transition-colors',
-                    preset === p.id ? 'bg-gradient-to-r from-purple-600 to-blue-500 border-transparent text-white shadow-sm' : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300',
+                    preset === p.id ? 'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 shadow-sm' : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300',
                   ].join(' ')}
                 >
                   {p.label}
@@ -400,7 +400,7 @@ export const CapsuleWizard: React.FC<CapsuleWizardProps> = ({ isOpen, onClose, o
 
         {step === 8 && (
           <div className="flex flex-col gap-4">
-            <div className="rounded-2xl bg-gradient-to-br from-purple-50 to-blue-50 p-4 flex flex-col gap-2">
+            <div className="rounded-2xl bg-purple-50 p-4 flex flex-col gap-2">
               <div className="flex items-center gap-1.5 flex-wrap">
                 {memoryTypes.map(type => {
                   const Icon = MEMORY_TYPE_ICONS[type];
@@ -422,14 +422,14 @@ export const CapsuleWizard: React.FC<CapsuleWizardProps> = ({ isOpen, onClose, o
 
         {step === 9 && createdCapsule && (
           <div className="flex flex-col items-center gap-4 text-center py-2">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center shadow-lg">
+            <div className="w-16 h-16 rounded-full bg-purple-600 flex items-center justify-center shadow-lg">
               <Lock size={24} className="text-white" aria-hidden="true" />
             </div>
             <div>
               <p className="text-lg font-bold text-gray-900">Memory Locked</p>
               <p className="text-sm text-gray-500 mt-1">Unlocks on {formatDate(createdCapsule.unlock_date)}</p>
             </div>
-            <div className="w-full rounded-2xl bg-gradient-to-br from-purple-800 via-fuchsia-800 to-blue-800 p-4">
+            <div className="w-full rounded-2xl bg-purple-900 p-4">
               <CapsuleCountdown unlockDate={createdCapsule.unlock_date} size="lg" />
             </div>
             <p className="text-sm text-gray-400 italic">You just sent a memory into the future.</p>
@@ -444,7 +444,7 @@ export const CapsuleWizard: React.FC<CapsuleWizardProps> = ({ isOpen, onClose, o
 
         <div className="flex gap-3">
           {step === 9 ? (
-            <Button variant="gradient" fullWidth onClick={handleDone}>Done</Button>
+            <Button variant="accent" fullWidth onClick={handleDone}>Done</Button>
           ) : (
             <>
               {step > 1 && (
@@ -453,11 +453,11 @@ export const CapsuleWizard: React.FC<CapsuleWizardProps> = ({ isOpen, onClose, o
                 </Button>
               )}
               {step < 8 ? (
-                <Button variant="gradient" fullWidth onClick={goNext}>
+                <Button variant="accent" fullWidth onClick={goNext}>
                   Next <ChevronRight size={15} aria-hidden="true" />
                 </Button>
               ) : (
-                <Button variant="gradient" fullWidth loading={submitting} onClick={handleLockMemory}>
+                <Button variant="accent" fullWidth loading={submitting} onClick={handleLockMemory}>
                   <Lock size={14} aria-hidden="true" /> Lock Memory
                 </Button>
               )}

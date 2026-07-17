@@ -29,7 +29,7 @@ export const CapsuleViewer: React.FC<CapsuleViewerProps> = ({ capsuleId, onDelet
 
   if (!capsule) {
     return (
-      <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
         <EmptyState icon={Lock} title="Capsule not found" description="This capsule doesn't exist, or you don't have permission to see it." />
       </div>
     );

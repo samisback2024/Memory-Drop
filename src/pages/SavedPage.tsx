@@ -154,7 +154,7 @@ export const SavedPage: React.FC = () => {
     <div className="flex flex-col gap-4">
       <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">Saved</h1>
 
-      <div role="tablist" aria-label="Saved content" className="flex bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-xl p-1 gap-1 border border-white/60 dark:border-gray-800/60 shadow-sm overflow-x-auto">
+      <div role="tablist" aria-label="Saved content" className="flex bg-white dark:bg-gray-900 rounded-xl p-1 gap-1 border border-gray-100 dark:border-gray-800 shadow-sm overflow-x-auto">
         {TABS.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
@@ -163,7 +163,7 @@ export const SavedPage: React.FC = () => {
             onClick={() => setTab(id)}
             className={[
               'flex items-center gap-1.5 py-2 px-3 rounded-lg text-sm font-medium transition-colors whitespace-nowrap flex-shrink-0',
-              tab === id ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200',
+              tab === id ? 'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200',
             ].join(' ')}
           >
             <Icon size={14} aria-hidden="true" />
@@ -174,13 +174,13 @@ export const SavedPage: React.FC = () => {
 
       {tab === 'waiting' && (
         <div className="flex flex-col gap-3">
-          <div className="flex bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-xl p-1 gap-1 border border-white/60 dark:border-gray-800/60 shadow-sm w-fit">
+          <div className="flex bg-white dark:bg-gray-900 rounded-xl p-1 gap-1 border border-gray-100 dark:border-gray-800 shadow-sm w-fit">
             <button
               type="button"
               onClick={() => setWaitingLayout('feed')}
               aria-label="Timeline"
               aria-pressed={waitingLayout === 'feed'}
-              className={`p-2 rounded-lg transition-colors ${waitingLayout === 'feed' ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'text-gray-500'}`}
+              className={`p-2 rounded-lg transition-colors ${waitingLayout === 'feed' ? 'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300' : 'text-gray-500'}`}
             >
               <GitCommitVertical size={15} aria-hidden="true" />
             </button>
@@ -189,7 +189,7 @@ export const SavedPage: React.FC = () => {
               onClick={() => setWaitingLayout('grid')}
               aria-label="Grid"
               aria-pressed={waitingLayout === 'grid'}
-              className={`p-2 rounded-lg transition-colors ${waitingLayout === 'grid' ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'text-gray-500'}`}
+              className={`p-2 rounded-lg transition-colors ${waitingLayout === 'grid' ? 'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300' : 'text-gray-500'}`}
             >
               <LayoutGrid size={15} aria-hidden="true" />
             </button>
@@ -210,7 +210,7 @@ export const SavedPage: React.FC = () => {
           ) : waitingLoading ? (
             <div className="grid grid-cols-3 gap-1.5">{[0, 1, 2, 3, 4, 5].map(i => <div key={i} className="aspect-square rounded-xl bg-gray-50 dark:bg-gray-800 animate-pulse" />)}</div>
           ) : waiting.length === 0 ? (
-            <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
               <EmptyState icon={Clock} title="Nothing waiting" description="Tap Save to Unlock on a sealed Drop to find it here." />
             </div>
           ) : (
@@ -251,7 +251,7 @@ export const SavedPage: React.FC = () => {
                 key={t}
                 type="button"
                 onClick={() => setTypeFilter(t)}
-                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${typeFilter === t ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+                className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${typeFilter === t ? 'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300' : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'}`}
               >
                 {t === 'all' ? 'All' : t === 'drop' ? 'Drops' : 'Capsules'}
               </button>
@@ -268,7 +268,7 @@ export const SavedPage: React.FC = () => {
             </select>
           </div>
 
-          <div className="flex bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-xl p-1 gap-1 border border-white/60 dark:border-gray-800/60 shadow-sm w-fit">
+          <div className="flex bg-white dark:bg-gray-900 rounded-xl p-1 gap-1 border border-gray-100 dark:border-gray-800 shadow-sm w-fit">
             {MEMORY_LAYOUTS.map(({ id, icon: Icon, label }) => (
               <button
                 key={id}
@@ -278,7 +278,7 @@ export const SavedPage: React.FC = () => {
                 aria-pressed={memoriesLayout === id}
                 className={[
                   'p-2 rounded-lg transition-colors',
-                  memoriesLayout === id ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'text-gray-500 hover:text-gray-800',
+                  memoriesLayout === id ? 'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300' : 'text-gray-500 hover:text-gray-800',
                 ].join(' ')}
               >
                 <Icon size={15} aria-hidden="true" />
@@ -289,11 +289,11 @@ export const SavedPage: React.FC = () => {
           {loading ? (
             <div className="flex flex-col gap-3">{[0, 1, 2].map(i => <div key={i} className="h-14 rounded-xl bg-gray-50 dark:bg-gray-800 animate-pulse" />)}</div>
           ) : items.length === 0 ? (
-            <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
               <EmptyState icon={Bookmark} title="Nothing saved yet" description="Save an unlocked Drop or Capsule to find it here later." />
             </div>
           ) : memoriesLayout === 'list' ? (
-            <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm px-4">
+            <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm px-4">
               {items.map(item => (
                 <SavedMemoryRow key={`${item.memory_type}-${item.id}`} memory={item} onUnsave={() => unsave(item)} />
               ))}
@@ -324,7 +324,7 @@ export const SavedPage: React.FC = () => {
         favoritesLoading ? (
           <div className="grid grid-cols-3 gap-1.5">{[0, 1, 2].map(i => <div key={i} className="aspect-square rounded-xl bg-gray-50 dark:bg-gray-800 animate-pulse" />)}</div>
         ) : favorites.length === 0 ? (
-          <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
             <EmptyState icon={Gem} title="No favorites yet" description="Tap the gem on any memory to keep it close." />
           </div>
         ) : (

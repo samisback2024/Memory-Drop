@@ -39,7 +39,7 @@ export const MobileNav: React.FC = () => {
           ref={sheetRef}
           role="menu"
           aria-label="Create"
-          className="sm:hidden fixed bottom-[84px] left-3 right-3 z-50 glass-panel rounded-2xl shadow-xl overflow-hidden animate-slide-up"
+          className="sm:hidden fixed bottom-[84px] left-3 right-3 z-50 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl overflow-hidden animate-slide-up"
         >
           <button
             role="menuitem"
@@ -67,7 +67,7 @@ export const MobileNav: React.FC = () => {
 
       <nav
         aria-label="Primary"
-        className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/90 dark:bg-gray-900/90 backdrop-blur-xl border-t border-white/60 dark:border-gray-800/60 shadow-[0_-4px_20px_-4px_rgba(124,58,237,0.12)] overflow-x-hidden"
+        className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-800 shadow-[0_-4px_20px_-4px_rgba(124,58,237,0.12)] overflow-x-hidden"
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         <div className="flex items-stretch max-w-2xl mx-auto px-1">
@@ -79,7 +79,7 @@ export const MobileNav: React.FC = () => {
                     className={[
                       'flex items-center justify-center w-9 h-9 rounded-full transition-all duration-200 ease-spring tactile',
                       isActive
-                        ? 'bg-gradient-to-br from-purple-500 via-purple-600 to-blue-600 shadow-[0_4px_12px_-2px_rgba(124,58,237,0.55)]'
+                        ? 'bg-purple-600 shadow-[0_4px_12px_-2px_rgba(124,58,237,0.55)]'
                         : '',
                     ].join(' ')}
                   >
@@ -100,14 +100,7 @@ export const MobileNav: React.FC = () => {
             className="flex flex-col items-center justify-center flex-1 min-w-0 py-1.5"
           >
             <span className="relative flex items-center justify-center w-11 h-11 -mt-5">
-              {/* Same glossy-capsule language as MomentPileButton — a
-                  shine highlight and twinkling sparkles so the primary
-                  create action reads as this product's own signature
-                  shape, not a generic FAB. */}
-              <Sparkles size={9} className="absolute -top-0.5 -left-1 text-purple-300 animate-sparkle-twinkle" style={{ animationDelay: '0s' }} aria-hidden="true" />
-              <Sparkles size={8} className="absolute -top-1 right-0 text-blue-300 animate-sparkle-twinkle" style={{ animationDelay: '0.8s' }} aria-hidden="true" />
-              <span className="relative w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 via-purple-600 to-blue-600 flex items-center justify-center shadow-[0_6px_16px_-3px_rgba(124,58,237,0.6)] tactile overflow-hidden">
-                <span className="absolute -top-1 left-1 w-4 h-5 rounded-full bg-white/40 blur-[2px] rotate-[-18deg]" aria-hidden="true" />
+              <span className="relative w-10 h-10 rounded-full bg-purple-600 flex items-center justify-center shadow-[0_6px_16px_-3px_rgba(124,58,237,0.6)] tactile overflow-hidden">
                 {createOpen ? <X size={18} className="text-white relative" aria-hidden="true" /> : <Plus size={18} className="text-white relative" aria-hidden="true" />}
               </span>
             </span>
@@ -121,7 +114,7 @@ export const MobileNav: React.FC = () => {
                     className={[
                       'flex items-center justify-center w-9 h-9 rounded-full transition-all duration-200 ease-spring tactile',
                       isActive
-                        ? 'bg-gradient-to-br from-purple-500 via-purple-600 to-blue-600 shadow-[0_4px_12px_-2px_rgba(124,58,237,0.55)]'
+                        ? 'bg-purple-600 shadow-[0_4px_12px_-2px_rgba(124,58,237,0.55)]'
                         : '',
                     ].join(' ')}
                   >

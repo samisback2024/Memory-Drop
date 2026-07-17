@@ -268,7 +268,7 @@ export const MessageComposer: React.FC<MessageComposerProps> = ({
           onClick={handleSendText}
           disabled={!text.trim() || sending || disabled}
           aria-label="Send"
-          className="w-9 h-9 rounded-full bg-gradient-to-br from-purple-600 to-blue-500 text-white flex items-center justify-center flex-shrink-0 disabled:opacity-40 transition-opacity"
+          className="w-9 h-9 rounded-full bg-purple-600 text-white flex items-center justify-center flex-shrink-0 disabled:opacity-40 transition-opacity"
         >
           {sending ? <Loader2 size={16} className="animate-spin" aria-hidden="true" /> : <Send size={15} className="ml-0.5" aria-hidden="true" />}
         </button>

@@ -40,7 +40,7 @@ export const SaveButton: React.FC<SaveButtonProps> = ({ dropId, isSaved, onChang
         'inline-flex items-center gap-1.5 rounded-full pl-2.5 pr-3 py-1.5 text-xs font-semibold transition-all',
         'focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none',
         saved
-          ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-sm shadow-purple-500/25'
+          ? 'bg-purple-600 text-white shadow-sm shadow-purple-500/25'
           : 'bg-gray-50 dark:bg-gray-800/70 text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700/70',
       ].join(' ')}
     >

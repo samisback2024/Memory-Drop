@@ -44,7 +44,7 @@ export const CoverPhotoUpload: React.FC<CoverPhotoUploadProps> = ({ src, onUploa
     <div className="flex flex-col gap-2">
       <div
         className={[
-          'relative w-full h-32 sm:h-40 md:h-48 rounded-2xl overflow-hidden bg-gradient-to-r from-purple-600 to-blue-500',
+          'relative w-full h-32 sm:h-40 md:h-48 rounded-2xl overflow-hidden bg-purple-600',
           dragActive ? 'ring-2 ring-purple-500 ring-offset-2' : '',
         ].join(' ')}
         {...dragHandlers}

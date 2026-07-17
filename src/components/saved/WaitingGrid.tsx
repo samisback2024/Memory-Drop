@@ -28,7 +28,7 @@ export const WaitingGrid: React.FC<WaitingGridProps> = ({ drops }) => (
       const moodMeta = drop.mood ? MOOD_META[drop.mood] : null;
       const cover = drop.images[0];
 
-      const cellClass = 'relative aspect-square rounded-xl overflow-hidden bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-950/50 dark:to-blue-950/50 block';
+      const cellClass = 'relative aspect-square rounded-xl overflow-hidden bg-purple-50 dark:bg-purple-950/30 block';
 
       const inner = (
         <>

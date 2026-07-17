@@ -54,7 +54,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
       {displayName ? (
         <Avatar src={n.actor_profile_photo_url} name={displayName} size="sm" />
       ) : (
-        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-100 to-blue-100 dark:from-purple-950/50 dark:to-blue-950/50 flex items-center justify-center flex-shrink-0">
+        <div className="w-8 h-8 rounded-full bg-purple-50 dark:bg-purple-950/30 flex items-center justify-center flex-shrink-0">
           <Icon size={15} className="text-purple-500" aria-hidden="true" />
         </div>
       )}

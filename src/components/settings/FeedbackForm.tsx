@@ -13,33 +13,32 @@ interface FeedbackFormProps {
 
 // Each mailbox gets its own quiet identity — a tone, an icon, a glow —
 // so "report a bug" doesn't visually read as "send feedback" at a
-// glance. `brand` rides the app's own mix-and-match theme tokens
-// (purple/blue are CSS-variable driven, see index.css); the other two
-// are deliberately fixed hues so they read consistently regardless of
-// which theme the user has picked.
+// glance. `support` rides the app's own theme-driven purple token (see
+// index.css); the other two are deliberately fixed hues so they read
+// consistently regardless of which theme the user has picked.
 const TONE = {
   support: {
     icon: LifeBuoy,
-    chip: 'bg-gradient-brand',
+    chip: 'bg-purple-600',
     glow: 'bg-purple-400/25 dark:bg-purple-500/20',
     ring: 'focus:ring-purple-400/70 dark:focus:ring-purple-500/50',
-    button: 'bg-gradient-brand hover:shadow-purple-500/30',
+    button: 'bg-purple-600 hover:bg-purple-700 hover:shadow-purple-500/30',
     badge: 'text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/40',
   },
   bug: {
     icon: Bug,
-    chip: 'bg-gradient-to-br from-amber-500 to-orange-500',
+    chip: 'bg-amber-500',
     glow: 'bg-amber-400/25 dark:bg-amber-500/20',
     ring: 'focus:ring-amber-400/70 dark:focus:ring-amber-500/50',
-    button: 'bg-gradient-to-br from-amber-500 to-orange-500 hover:shadow-amber-500/30',
+    button: 'bg-amber-500 hover:bg-amber-600 hover:shadow-amber-500/30',
     badge: 'text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40',
   },
   feedback: {
     icon: Sparkles,
-    chip: 'bg-gradient-to-br from-emerald-500 to-teal-500',
+    chip: 'bg-emerald-500',
     glow: 'bg-emerald-400/25 dark:bg-emerald-500/20',
     ring: 'focus:ring-emerald-400/70 dark:focus:ring-emerald-500/50',
-    button: 'bg-gradient-to-br from-emerald-500 to-teal-500 hover:shadow-emerald-500/30',
+    button: 'bg-emerald-500 hover:bg-emerald-600 hover:shadow-emerald-500/30',
     badge: 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40',
   },
 } as const;

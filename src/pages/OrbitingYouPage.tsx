@@ -1,13 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { UserX } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import { useSocial } from '../hooks/useSocial';
 import { PublicPageHeader } from '../components/layout/PublicPageHeader';
 import { OrbitingYouList } from '../components/social/OrbitingYouList';
 import { UserListSkeleton } from '../components/social/UserList';
-import { EmptyState } from '../components/ui/EmptyState';
+import { UserNotFoundState } from '../components/shared/UserNotFoundState';
 import { ErrorState } from '../components/ui/ErrorState';
 
 interface TargetProfile {
@@ -65,12 +64,12 @@ export const OrbitingYouPage: React.FC = () => {
         )}
         {state === 'not_found' && (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
-            <EmptyState icon={UserX} title="User not found" description={`No account with the username @${username}.`} />
+            <UserNotFoundState username={username} />
           </div>
         )}
         {state === 'error' && (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
-            <ErrorState title="Couldn't load Orbit" description="Check your connection and try again." onRetry={load} />
+            <ErrorState title="Couldn't load Orbit" onRetry={load} />
           </div>
         )}
         {state === 'ready' && target && (

@@ -34,7 +34,7 @@ const MomentMemoryBody: React.FC<{ memory: Memory }> = ({ memory }) => {
   const media = memory.media[0];
 
   return (
-    <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm overflow-hidden">
+    <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
       <div className="flex items-center gap-3 p-4">
         <Link to={`/u/${memory.username}`}><Avatar src={memory.profile_photo_url} name={memory.display_name || memory.username} size="md" /></Link>
         <div>
@@ -109,7 +109,7 @@ export const MemoryViewer: React.FC<MemoryViewerProps> = ({ memoryType, memoryId
 
   if (!memory) {
     return (
-      <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
         <div className="flex flex-col items-center gap-3 py-14 text-center">
           <Lock size={28} className="text-gray-300" aria-hidden="true" />
           <p className="text-sm text-gray-500">This memory doesn't exist, or isn't visible to you.</p>
@@ -162,7 +162,7 @@ export const MemoryViewer: React.FC<MemoryViewerProps> = ({ memoryType, memoryId
         <MomentMemoryBody memory={memory} />
       ) : null}
 
-      <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm p-4 flex flex-col gap-4">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold text-gray-900">Details</h2>
           <FavoriteButton memoryType={memoryType} memoryId={memoryId} isFavorited={memory.is_favorited} size={17} />

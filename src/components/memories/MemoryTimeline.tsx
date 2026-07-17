@@ -53,7 +53,7 @@ export const MemoryTimeline: React.FC = () => {
       <MemoryFilters filters={filters} onChange={setFilters} years={years} />
 
       <div className="flex items-center justify-between">
-        <div className="flex bg-white/70 backdrop-blur-xl rounded-xl p-1 gap-1 border border-white/60 shadow-sm">
+        <div className="flex bg-white dark:bg-gray-900 rounded-xl p-1 gap-1 border border-gray-100 dark:border-gray-800 shadow-sm">
           {LAYOUTS.map(({ id, icon: Icon, label }) => (
             <button
               key={id}
@@ -63,7 +63,7 @@ export const MemoryTimeline: React.FC = () => {
               aria-pressed={layout === id}
               className={[
                 'p-2 rounded-lg transition-colors',
-                layout === id ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'text-gray-500 hover:text-gray-800',
+                layout === id ? 'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300' : 'text-gray-500 hover:text-gray-800',
               ].join(' ')}
             >
               <Icon size={15} aria-hidden="true" />
@@ -84,7 +84,7 @@ export const MemoryTimeline: React.FC = () => {
           {[0, 1, 2].map(i => <div key={i} className="h-32 rounded-2xl bg-white/60 animate-pulse" />)}
         </div>
       ) : memories.length === 0 ? (
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
           <EmptyState icon={Archive} title="No memories here yet" description="Once a capsule unlocks or a moment expires, it'll live here forever." />
         </div>
       ) : (

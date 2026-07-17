@@ -201,7 +201,7 @@ export const CreateMomentModal: React.FC<CreateMomentModalProps> = ({ isOpen, on
         )}
 
         <div className="flex gap-3">
-          <Button variant="gradient" fullWidth loading={creating} onClick={handleSubmit}>
+          <Button variant="accent" fullWidth loading={creating} onClick={handleSubmit}>
             Save this moment for {durationHours}h
           </Button>
           <Button variant="outline" fullWidth onClick={handleClose} disabled={creating}>

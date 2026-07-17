@@ -210,7 +210,7 @@ export const MomentViewer: React.FC<MomentViewerProps> = ({ authorUserId, includ
           <video ref={videoRef} src={current.media_url} className="max-h-full max-w-full object-contain" playsInline autoPlay />
         )}
         {current.media_type === 'text' && (
-          <div className="w-full h-full flex items-center justify-center p-10 bg-gradient-to-br from-purple-700 via-fuchsia-700 to-blue-700">
+          <div className="w-full h-full flex items-center justify-center p-10 bg-purple-700">
             <p className="text-white text-2xl font-medium text-center leading-relaxed whitespace-pre-wrap">{current.text_content}</p>
           </div>
         )}

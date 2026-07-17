@@ -219,7 +219,7 @@ export const FeedPage: React.FC = () => {
       <button
         type="button"
         onClick={() => setComposerOpen(true)}
-        className="glass-panel tactile rounded-2xl p-4 flex items-center gap-3 text-left"
+        className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-sm tactile rounded-2xl p-4 flex items-center gap-3 text-left"
       >
         <Avatar src={profile?.profile_photo_url} name={displayName} size="md" />
         <span className="flex-1 text-sm text-gray-400 dark:text-gray-500">What moment do you want to save, {displayName.split(' ')[0]}?</span>
@@ -239,7 +239,7 @@ export const FeedPage: React.FC = () => {
           onClick={() => handleMediaFilterChange(null)}
           className={[
             'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap flex-shrink-0 tactile transition-colors',
-            mediaFilter === null ? 'bg-purple-600 text-white' : 'glass-panel text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200',
+            mediaFilter === null ? 'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300' : 'bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200',
           ].join(' ')}
         >
           <LayoutGrid size={12} aria-hidden="true" /> All
@@ -256,7 +256,7 @@ export const FeedPage: React.FC = () => {
               onClick={() => handleMediaFilterChange(type)}
               className={[
                 'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap flex-shrink-0 tactile transition-colors',
-                active ? 'bg-purple-600 text-white' : 'glass-panel text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200',
+                active ? 'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300' : 'bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200',
               ].join(' ')}
             >
               <Icon size={12} aria-hidden="true" /> {MEDIA_FILTER_LABELS[type]}
@@ -270,7 +270,7 @@ export const FeedPage: React.FC = () => {
           <button
             type="button"
             onClick={handleRefreshNewDrops}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-gradient-to-r from-purple-600 to-blue-500 text-white text-xs font-semibold tactile animate-fade-in"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-purple-600 text-white text-xs font-semibold tactile animate-fade-in"
           >
             <ArrowUp size={13} aria-hidden="true" /> New drops — tap to refresh
           </button>

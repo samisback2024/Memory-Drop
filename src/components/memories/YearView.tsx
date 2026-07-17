@@ -35,7 +35,7 @@ export const YearView: React.FC = () => {
 
   if (years.length === 0) {
     return (
-      <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
         <EmptyState icon={CalendarRange} title="No years yet" description="Your memories will group themselves here as they arrive." />
       </div>
     );
@@ -44,14 +44,14 @@ export const YearView: React.FC = () => {
   return (
     <div className="flex flex-col gap-3">
       {years.map(({ year, memory_count }) => (
-        <div key={year} className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm overflow-hidden">
+        <div key={year} className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
           <button
             type="button"
             onClick={() => toggleYear(year)}
             className="w-full flex items-center justify-between p-4"
           >
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">{year}</span>
+              <span className="text-2xl font-bold text-purple-600 dark:text-purple-400">{year}</span>
               <span className="text-xs text-gray-400">{memory_count} {memory_count === 1 ? 'memory' : 'memories'}</span>
             </div>
             <ChevronDown size={16} className={`text-gray-400 transition-transform ${openYear === year ? 'rotate-180' : ''}`} aria-hidden="true" />

@@ -88,7 +88,7 @@ export const RichLinkPreview: React.FC<RichLinkPreviewProps> = ({ link }) => {
       {link.kind === 'profile' ? (
         <Avatar src={preview.photoUrl} name={preview.title} size="md" />
       ) : (
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center flex-shrink-0">
+        <div className="w-10 h-10 rounded-xl bg-purple-500 flex items-center justify-center flex-shrink-0">
           {preview.locked ? <Lock size={16} className="text-white" aria-hidden="true" /> : <Icon size={16} className="text-white" aria-hidden="true" />}
         </div>
       )}

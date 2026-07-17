@@ -50,7 +50,7 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({ src, name, onUpload 
           type="button"
           onClick={() => setPickerOpen(true)}
           disabled={uploading}
-          className="absolute bottom-0 left-0 w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center hover:opacity-90 transition-opacity border-2 border-white disabled:opacity-60 focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none"
+          className="absolute bottom-0 left-0 w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center hover:bg-purple-700 transition-colors border-2 border-white disabled:opacity-60 focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none"
           aria-label="Choose a generated avatar"
         >
           <Sparkles size={14} className="text-white" aria-hidden="true" />

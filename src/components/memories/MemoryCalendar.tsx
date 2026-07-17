@@ -64,7 +64,7 @@ export const MemoryCalendar: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm p-4">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4">
         <div className="flex items-center justify-between mb-4">
           <button type="button" onClick={goPrevMonth} aria-label="Previous month" className="p-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
             <ChevronLeft size={16} aria-hidden="true" />
@@ -105,7 +105,7 @@ export const MemoryCalendar: React.FC = () => {
                 disabled={!hasActivity}
                 className={[
                   'aspect-square rounded-lg flex flex-col items-center justify-center gap-0.5 text-xs transition-colors',
-                  isSelected ? 'bg-gradient-to-br from-purple-600 to-blue-500 text-white font-semibold' : hasActivity ? 'text-gray-900 dark:text-gray-100 hover:bg-purple-50 dark:hover:bg-purple-950/40' : 'text-gray-300 dark:text-gray-700',
+                  isSelected ? 'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 font-semibold' : hasActivity ? 'text-gray-900 dark:text-gray-100 hover:bg-purple-50 dark:hover:bg-purple-950/40' : 'text-gray-300 dark:text-gray-700',
                 ].join(' ')}
               >
                 {day}
@@ -136,7 +136,7 @@ export const MemoryCalendar: React.FC = () => {
                   <p className="flex items-center gap-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 px-1">
                     <Icon size={13} aria-hidden="true" /> {label}
                   </p>
-                  <div className="flex flex-col divide-y divide-gray-100 dark:divide-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm px-3">
+                  <div className="flex flex-col divide-y divide-gray-100 dark:divide-gray-800 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm px-3">
                     {group.items.map(item => (
                       <MemoryCard key={`${group.type}-${item.memory_type}-${item.id}`} memory={item} variant="list" />
                     ))}
@@ -146,7 +146,7 @@ export const MemoryCalendar: React.FC = () => {
             })}
           </div>
         ) : (
-          <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
             <EmptyState icon={CalendarDays} title="Nothing on this day" description="No activity from this date yet." />
           </div>
         )

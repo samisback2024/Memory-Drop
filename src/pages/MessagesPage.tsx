@@ -133,7 +133,7 @@ export const MessagesPage: React.FC = () => {
       </div>
 
       {!showingSearch && (
-        <div role="tablist" aria-label="Conversation filters" className="flex bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-xl p-1 gap-1 border border-white/60 dark:border-gray-800/60 shadow-sm overflow-x-auto">
+        <div role="tablist" aria-label="Conversation filters" className="flex bg-white dark:bg-gray-900 rounded-xl p-1 gap-1 border border-gray-100 dark:border-gray-800 shadow-sm overflow-x-auto">
           {CONVERSATION_FILTERS.map(({ id, label }) => (
             <button
               key={id}
@@ -143,7 +143,7 @@ export const MessagesPage: React.FC = () => {
               className={[
                 'flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors whitespace-nowrap',
                 'focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none',
-                filter === id ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200',
+                filter === id ? 'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200',
               ].join(' ')}
             >
               {label}

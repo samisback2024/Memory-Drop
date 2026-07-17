@@ -41,9 +41,9 @@ export const DropTabs: React.FC<DropTabsProps> = ({ active, onChange }) => {
     : { opacity: 0 };
 
   return (
-    <div role="tablist" aria-label="Memory Drop feed" className="relative flex glass-panel rounded-2xl p-1 gap-1 overflow-x-auto">
+    <div role="tablist" aria-label="Memory Drop feed" className="relative flex bg-white dark:bg-gray-900 rounded-2xl p-1 gap-1 border border-gray-100 dark:border-gray-800 shadow-sm overflow-x-auto">
       <div
-        className="absolute top-1 bottom-1 left-0 rounded-xl bg-gradient-to-r from-purple-600 to-blue-500 shadow-sm transition-[transform,width] duration-300 ease-spring"
+        className="absolute top-1 bottom-1 left-0 rounded-xl bg-purple-50 dark:bg-purple-950/30 transition-[transform,width] duration-300 ease-spring"
         style={indicatorStyle}
         aria-hidden="true"
       />
@@ -57,7 +57,7 @@ export const DropTabs: React.FC<DropTabsProps> = ({ active, onChange }) => {
           className={[
             'relative z-10 flex-1 py-2 px-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors duration-200',
             'focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none',
-            active === tab.key ? 'text-white' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200',
+            active === tab.key ? 'text-purple-700 dark:text-purple-300' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200',
           ].join(' ')}
         >
           {tab.label}

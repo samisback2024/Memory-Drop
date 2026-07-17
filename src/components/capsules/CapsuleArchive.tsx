@@ -65,7 +65,7 @@ export const CapsuleArchive: React.FC<CapsuleArchiveProps> = ({ userId, isOwnArc
           {[0, 1, 2].map(i => <div key={i} className="h-40 rounded-2xl bg-white/60 animate-pulse" />)}
         </div>
       ) : capsules.length === 0 ? (
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm">
+        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
           <EmptyState
             icon={Archive}
             title={isOwnArchive ? 'No capsules yet' : 'No capsules to show'}

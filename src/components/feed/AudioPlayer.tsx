@@ -14,7 +14,7 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ src }) => {
   const { ref, inView } = useInView(OBSERVER_OPTIONS);
 
   return (
-    <div ref={ref} className="mx-4 mb-1 rounded-2xl bg-gradient-to-br from-purple-50 to-blue-50 border border-purple-100/60 p-4 flex items-center gap-3">
+    <div ref={ref} className="mx-4 mb-1 rounded-2xl bg-purple-50 dark:bg-purple-950/20 border border-purple-100/60 dark:border-purple-900/40 p-4 flex items-center gap-3">
       <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center flex-shrink-0">
         <Mic size={16} className="text-purple-500" aria-hidden="true" />
       </div>

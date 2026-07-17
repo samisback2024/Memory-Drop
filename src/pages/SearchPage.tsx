@@ -182,7 +182,7 @@ export const SearchPage: React.FC = () => {
               onClick={() => setActiveType(id)}
               className={[
                 'px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0',
-                activeType === id ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50',
+                activeType === id ? 'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50',
               ].join(' ')}
             >
               {label}

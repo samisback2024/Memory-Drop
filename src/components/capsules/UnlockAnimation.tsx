@@ -17,7 +17,7 @@ export const UnlockAnimation: React.FC<UnlockAnimationProps> = ({ onComplete }) 
   }, [onComplete]);
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-800 via-fuchsia-800 to-blue-800 px-6 py-16 flex flex-col items-center justify-center gap-4 min-h-[280px]">
+    <div className="relative overflow-hidden rounded-2xl bg-purple-900 px-6 py-16 flex flex-col items-center justify-center gap-4 min-h-[280px]">
       <div className="relative w-24 h-24 flex items-center justify-center">
         {stage === 'burst' && (
           <>

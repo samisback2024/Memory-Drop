@@ -32,7 +32,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = React.memo(({ profile
 
   return (
     <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm overflow-hidden">
-      <div className="relative h-32 sm:h-40 md:h-48 bg-gradient-to-r from-purple-600 to-blue-500">
+      <div className="relative h-32 sm:h-40 md:h-48 bg-purple-600">
         {profile.cover_photo_url && (
           <img
             src={profile.cover_photo_url}
@@ -62,7 +62,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = React.memo(({ profile
               type="button"
               onClick={onViewMoments}
               aria-label={isOwnProfile ? 'View your moments' : `View ${displayName}'s moments`}
-              className="rounded-2xl p-[3px] bg-gradient-to-br from-purple-500 via-fuchsia-500 to-blue-500 focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none"
+              className="rounded-2xl p-[3px] bg-purple-500 focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none"
             >
               <Avatar
                 src={profile.profile_photo_url}
