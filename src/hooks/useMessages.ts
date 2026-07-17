@@ -7,7 +7,7 @@ import { withAbortTimeout } from '../lib/timeout';
 import type { AuthResult } from '../types/auth';
 import type {
   Conversation, ConversationFilter, ConversationHeader, ConversationMediaItem, ConversationSearchResult,
-  Message, MessageGate, MessageRequest, MessageSearchResult, MessageType,
+  Message, MessageRequest, MessageSearchResult, MessageType,
 } from '../types/message';
 
 // Reads go through SECURITY DEFINER RPCs (get_conversations/get_messages/
@@ -21,12 +21,6 @@ import type {
 // pattern useComments.ts already established for comment editing.
 export const useMessages = () => {
   const { user } = useAuth();
-
-  const canMessage = useCallback(async (otherUserId: string): Promise<MessageGate> => {
-    const { data, error } = await supabase.rpc('can_message', { p_recipient_id: otherUserId });
-    if (error || !data) return 'blocked';
-    return data as MessageGate;
-  }, []);
 
   const getOrCreateConversation = useCallback(async (otherUserId: string): Promise<{ error: string | null; conversationId: string | null }> => {
     const { data, error } = await supabase.rpc('get_or_create_direct_conversation', { p_other_id: otherUserId });
@@ -227,7 +221,6 @@ export const useMessages = () => {
   }, []);
 
   return {
-    canMessage,
     getOrCreateConversation,
     getConversations,
     getConversationHeader,

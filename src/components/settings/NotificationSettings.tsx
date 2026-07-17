@@ -9,7 +9,7 @@ import type { NotificationPreferences } from '../../types/settings';
 type PreferenceKey = keyof Omit<NotificationPreferences, 'user_id' | 'created_at' | 'updated_at'>;
 
 const PREFERENCE_ORDER: PreferenceKey[] = [
-  'unlock_reminders', 'new_orbiters', 'orbit_requests', 'messages', 'message_requests', 'mentions', 'comments', 'reactions', 'replies', 'weekly_recap', 'security_alerts', 'product_updates',
+  'unlock_reminders', 'new_orbiters', 'orbit_requests', 'messages', 'mentions', 'comments', 'reactions', 'replies', 'weekly_recap', 'security_alerts', 'product_updates',
 ];
 
 // Real delivery since Phase 11 — every trigger that creates a

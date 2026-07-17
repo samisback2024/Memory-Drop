@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Download, Eye } from 'lucide-react';
+import { Download, Eye, MessageCircle } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useSocial } from '../../hooks/useSocial';
 import { useSettings } from '../../hooks/useSettings';
@@ -11,14 +11,10 @@ import { ToggleRow } from './ToggleRow';
 import { DangerZone } from './DangerZone';
 import { Avatar } from '../ui/Avatar';
 import { Button } from '../ui/Button';
-import { MESSAGING_PRIVACY_META } from '../../types/message';
 import { setAnalyticsEnabled as setAnalyticsEnabledCache } from '../../lib/analytics';
-import type { MessagingPrivacy } from '../../types/message';
 import { PROFILE_STAT_META, type ManagedUser, type ProfileStatKey } from '../../types/settings';
 
 const PROFILE_STAT_KEYS = Object.keys(PROFILE_STAT_META) as ProfileStatKey[];
-
-const MESSAGING_PRIVACY_OPTIONS: MessagingPrivacy[] = ['everyone', 'followers', 'mutual_followers', 'nobody'];
 
 type ListKind = 'blocked' | 'muted' | 'restricted';
 
@@ -68,8 +64,6 @@ export const PrivacySettings: React.FC = () => {
     hydratedPrivate.current = true;
     setIsPrivate(profile.is_private ?? false);
   }, [profile]);
-  const [messagingPrivacy, setMessagingPrivacy] = useState<MessagingPrivacy | null>(null);
-  const [allowMessageRequests, setAllowMessageRequests] = useState(true);
   const [showInterestCounts, setShowInterestCounts] = useState(true);
   const [analyticsEnabled, setAnalyticsEnabledState] = useState(true);
   // null until getSettings() resolves — ToggleRow only reads `checked`
@@ -95,8 +89,6 @@ export const PrivacySettings: React.FC = () => {
   useEffect(() => {
     getSettings().then(s => {
       if (!s) return;
-      setMessagingPrivacy(s.messaging_privacy);
-      setAllowMessageRequests(s.allow_message_requests);
       setShowInterestCounts(s.show_interest_counts);
       setAnalyticsEnabledState(s.analytics_enabled);
       setVisibleStats((s.visible_stats ?? []) as ProfileStatKey[]);
@@ -106,16 +98,6 @@ export const PrivacySettings: React.FC = () => {
   const togglePrivate = async (next: boolean) => {
     setIsPrivate(next);
     await updateProfile({ isPrivate: next });
-  };
-
-  const handleMessagingPrivacyChange = async (next: MessagingPrivacy) => {
-    setMessagingPrivacy(next);
-    await updateSettings({ messaging_privacy: next });
-  };
-
-  const handleAllowRequestsChange = async (next: boolean) => {
-    setAllowMessageRequests(next);
-    await updateSettings({ allow_message_requests: next });
   };
 
   const handleShowInterestCountsChange = async (next: boolean) => {
@@ -176,33 +158,13 @@ export const PrivacySettings: React.FC = () => {
         </Link>
       </SettingsCard>
 
-      <SettingsCard title="Who can message you" description="People outside this circle land in Message Requests instead of your main inbox.">
-        <div className="flex flex-col gap-1.5">
-          {MESSAGING_PRIVACY_OPTIONS.map(option => (
-            <button
-              key={option}
-              type="button"
-              onClick={() => handleMessagingPrivacyChange(option)}
-              className={`flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl border text-left transition-colors ${
-                messagingPrivacy === option
-                  ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/30'
-                  : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'
-              }`}
-            >
-              <span>
-                <span className="block text-sm font-medium text-gray-900 dark:text-gray-100">{MESSAGING_PRIVACY_META[option].label}</span>
-                <span className="block text-xs text-gray-500 dark:text-gray-400">{MESSAGING_PRIVACY_META[option].description}</span>
-              </span>
-              {messagingPrivacy === option && <span className="w-2 h-2 rounded-full bg-purple-500 flex-shrink-0" aria-hidden="true" />}
-            </button>
-          ))}
+      <SettingsCard title="Who can message you">
+        <div className="flex items-start gap-3 px-3.5 py-2.5 rounded-xl bg-gray-50 dark:bg-gray-800">
+          <MessageCircle size={16} className="text-gray-400 mt-0.5 flex-shrink-0" aria-hidden="true" />
+          <p className="text-sm text-gray-600 dark:text-gray-300">
+            Only people you mutually orbit — you're in their Orbit and they're in yours. Send or accept an Orbit request to unlock messaging with someone.
+          </p>
         </div>
-        <ToggleRow
-          label="Allow message requests"
-          description="If off, people outside your circle can't message you at all — not even as a request."
-          checked={allowMessageRequests}
-          onChange={handleAllowRequestsChange}
-        />
       </SettingsCard>
 
       <SettingsCard>

@@ -2,8 +2,6 @@
 // real column or RPC return column, not a client-invented shape.
 
 export type MessageType = 'text' | 'image' | 'video' | 'audio' | 'gif' | 'sticker' | 'location' | 'file';
-export type MessagingPrivacy = 'everyone' | 'followers' | 'mutual_followers' | 'nobody';
-export type MessageGate = 'allowed' | 'request' | 'blocked';
 export type ConversationFilter = 'all' | 'unread' | 'pinned' | 'muted' | 'archived';
 export type RequestStatus = 'none' | 'pending' | 'accepted' | 'declined';
 
@@ -159,13 +157,6 @@ export const CONVERSATION_FILTERS: { id: ConversationFilter; label: string }[] =
   { id: 'muted', label: 'Muted' },
   { id: 'archived', label: 'Archived' },
 ];
-
-export const MESSAGING_PRIVACY_META: Record<MessagingPrivacy, { label: string; description: string }> = {
-  everyone: { label: 'Everyone', description: 'Anyone can message you directly.' },
-  followers: { label: 'Orbit', description: 'Only people in your Orbit can message you directly.' },
-  mutual_followers: { label: 'Mutual Orbit', description: 'Only people you orbit back can message you directly.' },
-  nobody: { label: 'Nobody', description: 'No one can message you directly.' },
-};
 
 // A curated set of oversized emoji rendered without a bubble background —
 // this app's "stickers," with no external asset pack or dependency.
