@@ -33,7 +33,7 @@ export const CapsuleUnlockedCard: React.FC<CapsuleUnlockedCardProps> = ({ capsul
       {photos.length > 0 && (
         <div className={`grid gap-1.5 ${photos.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
           {photos.map(p => (
-            <img key={p.url} src={p.url} alt={capsule.title || 'A photo from this time capsule'} loading="lazy" className="w-full rounded-xl object-cover max-h-96" />
+            <img key={p.url} src={p.url} alt={capsule.title || 'A photo from this time capsule'} loading="lazy" decoding="async" className="w-full rounded-xl object-cover max-h-96" />
           ))}
         </div>
       )}

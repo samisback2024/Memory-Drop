@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { Plus, Clock, Lock, Hourglass, Unlock, Archive as ArchiveIcon, LayoutList, Users, Globe2 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useCapsules } from '../hooks/useCapsules';
@@ -6,7 +6,6 @@ import { useMemories } from '../hooks/useMemories';
 import { Button } from '../components/ui/Button';
 import { CapsuleArchive } from '../components/capsules/CapsuleArchive';
 import { CapsuleTimeline } from '../components/capsules/CapsuleTimeline';
-import { CapsuleWizard } from '../components/capsules/CapsuleWizard';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
@@ -14,6 +13,11 @@ import { EMPTY_CAPSULE_FILTERS, type Capsule } from '../types/capsule';
 
 const SOON_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 const PAGE_SIZE = 15;
+
+// The multi-step wizard (media pickers, mood/visibility selectors, the
+// countdown-preview) is the heaviest thing this page pulls in, and most
+// visits never open it — deferred so it's not part of Capsules' first paint.
+const CapsuleWizard = lazy(() => import('../components/capsules/CapsuleWizard').then(m => ({ default: m.CapsuleWizard })));
 
 type DiscoveryTab = 'in_orbit' | 'public';
 
@@ -63,14 +67,23 @@ export const CapsulesPage: React.FC = () => {
   const [archived, setArchived] = useState<Capsule[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Guards against a rapid mode switch (back to "My Capsules") or a quick
+  // successive refreshKey bump letting an older, slower response overwrite
+  // a newer, faster one's result — same `cancelled` convention used
+  // throughout the app, adapted with a ref since `loadOverview` is a
+  // useCallback shared with the effect below.
+  const overviewCancelledRef = useRef(false);
+
   const loadOverview = useCallback(async () => {
     if (!user) return;
+    overviewCancelledRef.current = false;
     setLoading(true);
     const [lockedData, unlockedData, archivedData] = await Promise.all([
       getUserCapsules(user.id, { ...EMPTY_CAPSULE_FILTERS, lockStatus: 'locked' }, 50, 0),
       getUserCapsules(user.id, { ...EMPTY_CAPSULE_FILTERS, lockStatus: 'unlocked' }, 12, 0),
       getArchivedMemories(50, 0),
     ]);
+    if (overviewCancelledRef.current) return;
     setLocked(lockedData);
     setUnlocked(unlockedData);
     setArchived(archivedData.filter(m => m.memory_type === 'capsule').map(m => ({
@@ -83,7 +96,10 @@ export const CapsulesPage: React.FC = () => {
     setLoading(false);
   }, [user, getUserCapsules, getArchivedMemories]);
 
-  useEffect(() => { if (mode === 'overview') loadOverview(); }, [mode, refreshKey, loadOverview]);
+  useEffect(() => {
+    if (mode === 'overview') loadOverview();
+    return () => { overviewCancelledRef.current = true; };
+  }, [mode, refreshKey, loadOverview]);
 
   // In Orbit / Public — a second, discovery-focused way into Capsules,
   // same shape as Feed's own tabs: fetched fresh per tab (not cached
@@ -96,15 +112,26 @@ export const CapsulesPage: React.FC = () => {
 
   const isDiscoveryTab = (m: typeof mode): m is DiscoveryTab => m === 'in_orbit' || m === 'public';
 
+  // Guards against rapid tab switching (In Orbit <-> Public) letting an
+  // older, slower response overwrite a newer, faster one's result — same
+  // `cancelled` convention used throughout the app, adapted with a ref
+  // since `loadDiscovery` is a useCallback shared with the effect below.
+  const discoveryCancelledRef = useRef(false);
+
   const loadDiscovery = useCallback(async (tab: DiscoveryTab) => {
+    discoveryCancelledRef.current = false;
     setDiscoveryLoading(true);
     const data = await getCapsulesFeed(tab, PAGE_SIZE, 0);
+    if (discoveryCancelledRef.current) return;
     setDiscoveryItems(data);
     setDiscoveryHasMore(data.length === PAGE_SIZE);
     setDiscoveryLoading(false);
   }, [getCapsulesFeed]);
 
-  useEffect(() => { if (isDiscoveryTab(mode)) loadDiscovery(mode); }, [mode, loadDiscovery]);
+  useEffect(() => {
+    if (isDiscoveryTab(mode)) loadDiscovery(mode);
+    return () => { discoveryCancelledRef.current = true; };
+  }, [mode, loadDiscovery]);
 
   const loadMoreDiscovery = () => {
     if (!isDiscoveryTab(mode)) return;
@@ -226,11 +253,15 @@ export const CapsulesPage: React.FC = () => {
         </div>
       )}
 
-      <CapsuleWizard
-        isOpen={wizardOpen}
-        onClose={() => setWizardOpen(false)}
-        onCreated={() => setRefreshKey(k => k + 1)}
-      />
+      {wizardOpen && (
+        <Suspense fallback={null}>
+          <CapsuleWizard
+            isOpen={wizardOpen}
+            onClose={() => setWizardOpen(false)}
+            onCreated={() => setRefreshKey(k => k + 1)}
+          />
+        </Suspense>
+      )}
     </div>
   );
 };

@@ -33,7 +33,7 @@ export const WaitingGrid: React.FC<WaitingGridProps> = ({ drops }) => (
       const inner = (
         <>
           {cover && drop.is_unlocked ? (
-            <img src={cover.url} alt="" loading="lazy" className="w-full h-full object-cover" />
+            <img src={cover.url} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center gap-1.5 p-2 text-center">
               {!drop.is_unlocked ? <Lock size={18} className="text-purple-400" aria-hidden="true" /> : <Icon size={18} className="text-purple-400" aria-hidden="true" />}

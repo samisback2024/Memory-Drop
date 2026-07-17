@@ -1,7 +1,6 @@
-import React, { useRef, useState } from 'react';
+import React, { lazy, Suspense, useRef, useState } from 'react';
 import { Camera, Loader2, Sparkles } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
-import { ImageCropModal } from './ImageCropModal';
 import { AvatarPickerModal } from './AvatarPickerModal';
 import { useImageUpload } from '../../hooks/useImageUpload';
 import { MAX_AVATAR_BYTES } from '../../lib/validators';
@@ -13,6 +12,10 @@ interface AvatarUploadProps {
 }
 
 const AVATAR_OUTPUT_SIZE = 512;
+// The crop UI (canvas drawing, drag/pinch handling) only matters once a
+// user actually picks a photo — deferred out of every profile-editing
+// page's first paint.
+const ImageCropModal = lazy(() => import('./ImageCropModal').then(m => ({ default: m.ImageCropModal })));
 
 export const AvatarUpload: React.FC<AvatarUploadProps> = ({ src, name, onUpload }) => {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -75,16 +78,18 @@ export const AvatarUpload: React.FC<AvatarUploadProps> = ({ src, name, onUpload 
       )}
 
       {pendingFile && (
-        <ImageCropModal
-          file={pendingFile}
-          title="Adjust your photo"
-          aspect={1}
-          shape="rect"
-          outputWidth={AVATAR_OUTPUT_SIZE}
-          outputHeight={AVATAR_OUTPUT_SIZE}
-          onCancel={cancelCrop}
-          onConfirm={confirmCrop}
-        />
+        <Suspense fallback={null}>
+          <ImageCropModal
+            file={pendingFile}
+            title="Adjust your photo"
+            aspect={1}
+            shape="rect"
+            outputWidth={AVATAR_OUTPUT_SIZE}
+            outputHeight={AVATAR_OUTPUT_SIZE}
+            onCancel={cancelCrop}
+            onConfirm={confirmCrop}
+          />
+        </Suspense>
       )}
 
       <AvatarPickerModal isOpen={pickerOpen} onClose={() => setPickerOpen(false)} onUpload={onUpload} />

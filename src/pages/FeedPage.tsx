@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Loader2, Sparkles, LayoutGrid, ArrowUp } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
@@ -9,7 +9,6 @@ import { DropTabs } from '../components/feed/DropTabs';
 import { Feed } from '../components/feed/Feed';
 import { DropComposer } from '../components/feed/DropComposer';
 import { MomentPileButton } from '../components/moments/MomentPileButton';
-import { MomentPileGround } from '../components/moments/MomentPileGround';
 import { CreateMomentModal } from '../components/moments/CreateMomentModal';
 import { Avatar } from '../components/ui/Avatar';
 import { MEMORY_TYPE_ICONS } from '../components/feed/LockedDropPlaceholder';
@@ -17,6 +16,11 @@ import type { Drop, DropTab, MemoryType } from '../types/feed';
 
 const PAGE_SIZE = 10;
 const ALL_TABS: DropTab[] = ['my_drops', 'in_orbit', 'public_drops', 'saved_to_unlock'];
+// The full-screen pile ground (avatars, per-capsule fills, the moment
+// viewer it can open) is only ever needed once the FAB is tapped —
+// deferred so it's not part of Feed's first paint, the app's most
+// common landing destination.
+const MomentPileGround = lazy(() => import('../components/moments/MomentPileGround').then(m => ({ default: m.MomentPileGround })));
 // 'audio' stays a valid MemoryType (existing audio drops still need to
 // render), it's just not offered as a filter option anymore — Drops no
 // longer support creating one, see DropComposer.tsx.
@@ -300,12 +304,14 @@ export const FeedPage: React.FC = () => {
       />
 
       {pileOpen && (
-        <MomentPileGround
-          refreshKey={momentTrayKey}
-          onClose={() => setPileOpen(false)}
-          onCreate={() => setMomentComposerOpen(true)}
-          onViewed={() => setMomentTrayKey(k => k + 1)}
-        />
+        <Suspense fallback={null}>
+          <MomentPileGround
+            refreshKey={momentTrayKey}
+            onClose={() => setPileOpen(false)}
+            onCreate={() => setMomentComposerOpen(true)}
+            onViewed={() => setMomentTrayKey(k => k + 1)}
+          />
+        </Suspense>
       )}
     </div>
   );

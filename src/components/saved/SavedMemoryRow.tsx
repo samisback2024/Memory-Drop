@@ -37,7 +37,7 @@ export const SavedMemoryRow: React.FC<SavedMemoryRowProps> = ({ memory, onUnsave
     <div className="flex flex-col gap-2 py-3 border-b border-gray-50 last:border-0">
       <div className="flex items-center gap-3">
         <Link to={href} className="w-14 h-14 rounded-lg overflow-hidden bg-gradient-to-br from-purple-100 to-blue-100 flex-shrink-0 flex items-center justify-center">
-          {cover ? <img src={cover.url} alt="" loading="lazy" className="w-full h-full object-cover" /> : <TypeIcon size={18} className="text-purple-400" aria-hidden="true" />}
+          {cover ? <img src={cover.url} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" /> : <TypeIcon size={18} className="text-purple-400" aria-hidden="true" />}
         </Link>
         <Link to={href} className="min-w-0 flex-1">
           <p className="text-sm font-medium text-gray-900 truncate">{snippet}</p>

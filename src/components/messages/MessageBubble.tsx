@@ -85,7 +85,7 @@ const MessageBubbleImpl: React.FC<MessageBubbleProps> = ({
           <div className="flex flex-wrap gap-1 max-w-[220px]">
             {m.attachments.map((a, i) => (
               <button key={a.id} type="button" onClick={() => setViewerIndex(i)} className="block hover:opacity-90 transition-opacity">
-                <img src={a.thumbnail_url || a.url} alt={`Photo from ${isMine ? 'you' : otherName}`} loading="lazy" className="rounded-xl max-h-64 object-cover" />
+                <img src={a.thumbnail_url || a.url} alt={`Photo from ${isMine ? 'you' : otherName}`} loading="lazy" decoding="async" className="rounded-xl max-h-64 object-cover" />
               </button>
             ))}
             {m.content && <p className="text-sm w-full mt-1">{linkify(m.content)}</p>}

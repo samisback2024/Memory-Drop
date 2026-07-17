@@ -1,6 +1,5 @@
-import React, { useRef, useState } from 'react';
+import React, { lazy, Suspense, useRef, useState } from 'react';
 import { Camera, Trash2, Loader2 } from 'lucide-react';
-import { ImageCropModal } from './ImageCropModal';
 import { useImageUpload } from '../../hooks/useImageUpload';
 import { MAX_COVER_BYTES } from '../../lib/validators';
 
@@ -13,6 +12,7 @@ interface CoverPhotoUploadProps {
 const COVER_ASPECT = 3;
 const COVER_OUTPUT_WIDTH = 1500;
 const COVER_OUTPUT_HEIGHT = 500;
+const ImageCropModal = lazy(() => import('./ImageCropModal').then(m => ({ default: m.ImageCropModal })));
 
 // Controls are always visible (not hover-only) so this works identically
 // with mouse, touch, and keyboard — a hover-reveal toolbar would be
@@ -104,16 +104,18 @@ export const CoverPhotoUpload: React.FC<CoverPhotoUploadProps> = ({ src, onUploa
       )}
 
       {pendingFile && (
-        <ImageCropModal
-          file={pendingFile}
-          title="Adjust your cover photo"
-          aspect={COVER_ASPECT}
-          shape="rect"
-          outputWidth={COVER_OUTPUT_WIDTH}
-          outputHeight={COVER_OUTPUT_HEIGHT}
-          onCancel={cancelCrop}
-          onConfirm={confirmCrop}
-        />
+        <Suspense fallback={null}>
+          <ImageCropModal
+            file={pendingFile}
+            title="Adjust your cover photo"
+            aspect={COVER_ASPECT}
+            shape="rect"
+            outputWidth={COVER_OUTPUT_WIDTH}
+            outputHeight={COVER_OUTPUT_HEIGHT}
+            onCancel={cancelCrop}
+            onConfirm={confirmCrop}
+          />
+        </Suspense>
       )}
     </div>
   );

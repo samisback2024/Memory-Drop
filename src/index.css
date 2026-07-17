@@ -128,6 +128,17 @@ html { font-size: calc(16px * var(--md-font-scale, 1)); }
   content-visibility: auto;
   contain-intrinsic-size: 0 400px;
 }
+/* Same technique as .cv-auto, sized for MemoryCard's smaller variants
+   instead of a full feed card — a 400px placeholder on a ~150px grid
+   tile or ~60px list row would badly overestimate scroll height. */
+.cv-auto-grid-tile {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 150px;
+}
+.cv-auto-list-row {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 60px;
+}
 
 /* --------------------------------------------------------------------
  * Tactile design system (Feed redesign) — a small shared vocabulary of

@@ -32,7 +32,6 @@ import { MomentsPage } from './pages/MomentsPage';
 import { MomentCreatePage } from './pages/MomentCreatePage';
 import { MomentViewerPage } from './pages/MomentViewerPage';
 import { CapsulesPage } from './pages/CapsulesPage';
-import { CapsuleCreatePage } from './pages/CapsuleCreatePage';
 import { CapsuleViewerPage } from './pages/CapsuleViewerPage';
 import { MemoryDetailPage } from './pages/MemoryDetailPage';
 import { TermsPage } from './pages/TermsPage';
@@ -55,6 +54,12 @@ const MessageRequestsPage = lazy(() => import('./pages/MessageRequestsPage').the
 // together) — lazy, same reasoning as the Phase 10g bundle-size pass,
 // even though it sits outside AppShell like DropPage/MomentViewerPage.
 const ConversationPage = lazy(() => import('./pages/ConversationPage').then(m => ({ default: m.ConversationPage })));
+// CapsuleWizard (media pickers, mood/visibility selectors) is statically
+// imported by this page, so a lazy() wrapper around the wizard alone
+// inside CapsulesPage.tsx couldn't move it out of the main chunk — Vite
+// still had to bundle it eagerly to serve this route. Making the route
+// itself lazy is what actually defers that weight.
+const CapsuleCreatePage = lazy(() => import('./pages/CapsuleCreatePage').then(m => ({ default: m.CapsuleCreatePage })));
 
 const RouteLoadingFallback = () => (
   <div className="flex flex-col gap-3 py-6" aria-busy="true" aria-label="Loading page">

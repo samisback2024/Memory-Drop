@@ -44,7 +44,7 @@ export const ConversationMediaPanel: React.FC<ConversationMediaPanelProps> = ({ 
               {item.type === 'video' ? (
                 <video src={item.url} className="w-full h-full object-cover" muted />
               ) : (
-                <img src={item.url} alt="" loading="lazy" className="w-full h-full object-cover" />
+                <img src={item.url} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
               )}
             </button>
           ))}
