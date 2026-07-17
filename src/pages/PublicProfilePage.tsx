@@ -91,6 +91,7 @@ export const PublicProfilePage: React.FC = () => {
   const [pinned, setPinned] = useState<PinnedMemory[]>([]);
   const [shareOpen, setShareOpen] = useState(false);
   const [messaging, setMessaging] = useState(false);
+  const [statsRefreshKey, setStatsRefreshKey] = useState(0);
 
   const handleMessage = async () => {
     if (!data || messaging) return;
@@ -171,6 +172,7 @@ export const PublicProfilePage: React.FC = () => {
               bioHidden={bioHidden}
               hasActiveMoments={hasActiveMoments}
               onViewMoments={() => setViewerOpen(true)}
+              statsRefreshKey={statsRefreshKey}
             />
 
             {!data.is_own_profile && user && relationship && (
@@ -185,7 +187,15 @@ export const PublicProfilePage: React.FC = () => {
                     isOrbitingYou={relationship.is_orbiting_you}
                     iBlocked={relationship.i_blocked}
                     blockedMe={relationship.blocked_me}
-                    onChange={patch => setRelationship(r => (r ? { ...r, is_in_orbit: patch.isInOrbit ?? r.is_in_orbit, is_orbit_pending: patch.isPending ?? r.is_orbit_pending, i_blocked: patch.iBlocked ?? r.i_blocked } : r))}
+                    onChange={patch => {
+                      setRelationship(r => (r ? { ...r, is_in_orbit: patch.isInOrbit ?? r.is_in_orbit, is_orbit_pending: patch.isPending ?? r.is_orbit_pending, i_blocked: patch.iBlocked ?? r.i_blocked } : r));
+                      // The orbiting/in-orbit counts shown in StatsRow and
+                      // below are fetched once on mount — an orbit action
+                      // doesn't touch either count's own state, so without
+                      // this they'd stay stale until a full page reload.
+                      setStatsRefreshKey(k => k + 1);
+                      getPublicStats(data.id).then(setPublicStats);
+                    }}
                   />
                   {relationship.is_in_orbit && relationship.is_orbiting_you && !relationship.blocked_me && (
                     <button

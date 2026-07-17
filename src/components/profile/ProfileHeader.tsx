@@ -22,9 +22,10 @@ interface ProfileHeaderProps {
   bioHidden?: boolean;
   hasActiveMoments?: boolean;
   onViewMoments?: () => void;
+  statsRefreshKey?: number;
 }
 
-export const ProfileHeader: React.FC<ProfileHeaderProps> = React.memo(({ profile, isOwnProfile, bioHidden = false, hasActiveMoments = false, onViewMoments }) => {
+export const ProfileHeader: React.FC<ProfileHeaderProps> = React.memo(({ profile, isOwnProfile, bioHidden = false, hasActiveMoments = false, onViewMoments, statsRefreshKey }) => {
   const navigate = useNavigate();
   const displayName = profile.display_name || profile.username || 'Memory Drop user';
   const completion = isOwnProfile ? getProfileCompletion(profile) : null;
@@ -148,7 +149,7 @@ export const ProfileHeader: React.FC<ProfileHeaderProps> = React.memo(({ profile
           <p className="text-sm text-gray-400 dark:text-gray-500 italic mb-1">Add a bio to tell people about yourself.</p>
         ) : null}
 
-        {profile.username && <StatsRow profileId={profile.id} username={profile.username} isOwnProfile={isOwnProfile} />}
+        {profile.username && <StatsRow profileId={profile.id} username={profile.username} isOwnProfile={isOwnProfile} refreshKey={statsRefreshKey} />}
       </div>
     </div>
   );

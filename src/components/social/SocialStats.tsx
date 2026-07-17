@@ -6,12 +6,13 @@ import { Skeleton } from '../ui/Skeleton';
 interface SocialStatsProps {
   profileId: string;
   username: string;
+  refreshKey?: number;
 }
 
 // The two real cells in the stats row — Orbiting You and In Orbit now have
 // an actual table behind them, unlike Capsules/Stories/Memory Streak
 // (still placeholders; see StatsRow, which renders this alongside those).
-export const SocialStats: React.FC<SocialStatsProps> = ({ profileId, username }) => {
+export const SocialStats: React.FC<SocialStatsProps> = ({ profileId, username, refreshKey }) => {
   const { getSocialCounts } = useSocial();
   const [counts, setCounts] = useState<{ orbiting_count: number; in_orbit_count: number } | null>(null);
 
@@ -19,7 +20,7 @@ export const SocialStats: React.FC<SocialStatsProps> = ({ profileId, username })
     let cancelled = false;
     getSocialCounts(profileId).then(c => { if (!cancelled) setCounts(c); });
     return () => { cancelled = true; };
-  }, [profileId, getSocialCounts]);
+  }, [profileId, getSocialCounts, refreshKey]);
 
   return (
     <>
