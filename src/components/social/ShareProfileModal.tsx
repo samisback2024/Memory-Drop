@@ -4,6 +4,7 @@ import { Modal } from '../ui/Modal';
 import { Avatar } from '../ui/Avatar';
 import { useSocial } from '../../hooks/useSocial';
 import { useMessages } from '../../hooks/useMessages';
+import { useToast } from '../../hooks/useToast';
 import type { SocialUserWithRelationship } from '../../types/social';
 
 interface ShareProfileModalProps {
@@ -22,6 +23,7 @@ interface ShareProfileModalProps {
 export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, onClose, username, displayName }) => {
   const { searchUsers } = useSocial();
   const { getOrCreateConversation, sendMessage } = useMessages();
+  const { showToast } = useToast();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SocialUserWithRelationship[]>([]);
   const [loading, setLoading] = useState(false);
@@ -50,8 +52,9 @@ export const ShareProfileModal: React.FC<ShareProfileModalProps> = ({ isOpen, on
       return;
     }
     const shareUrl = `${window.location.origin}/u/${username}`;
-    await sendMessage(conversationId, 'text', `Check out ${displayName}'s profile: ${shareUrl}`);
+    const { error: sendError } = await sendMessage(conversationId, 'text', `Check out ${displayName}'s profile: ${shareUrl}`);
     setSendingTo(null);
+    if (sendError) { showToast(sendError || "Couldn't send.", 'error'); return; }
     setSentTo(prev => new Set(prev).add(targetUserId));
   };
 

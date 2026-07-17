@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MessageCircle, SquarePen, Search, X, Loader2, Inbox } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
@@ -37,16 +37,28 @@ export const MessagesPage: React.FC = () => {
   const [searching, setSearching] = useState(false);
   const [composeOpen, setComposeOpen] = useState(false);
 
+  // Guards against a filter switch letting an older, slower response
+  // overwrite a newer, faster one's result — same `cancelled` convention
+  // used throughout the app, adapted with a ref since `load` here is
+  // shared between the effect below and manual triggers (pull-to-refresh,
+  // the realtime conversations subscription).
+  const cancelledRef = useRef(false);
+
   const load = useCallback(() => {
+    cancelledRef.current = false;
     setLoading(true);
     Promise.all([getConversations(filter), getMessageRequests()]).then(([convos, requests]) => {
+      if (cancelledRef.current) return;
       setConversations(convos);
       setRequestCount(requests.length);
       setLoading(false);
     });
   }, [filter, getConversations, getMessageRequests]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+    return () => { cancelledRef.current = true; };
+  }, [load]);
 
   const { pulling, distance, refreshing } = usePullToRefresh(load, true);
 

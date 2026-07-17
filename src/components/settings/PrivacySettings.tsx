@@ -4,6 +4,7 @@ import { Download, Eye } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useSocial } from '../../hooks/useSocial';
 import { useSettings } from '../../hooks/useSettings';
+import { useToast } from '../../hooks/useToast';
 import { SettingsSection } from './SettingsSection';
 import { SettingsCard } from './SettingsCard';
 import { ToggleRow } from './ToggleRow';
@@ -52,6 +53,7 @@ export const PrivacySettings: React.FC = () => {
   const { profile, updateProfile } = useAuth();
   const { unblockUser, unmuteUser, unrestrictUser } = useSocial();
   const { getBlockedUsers, getMutedUsers, getRestrictedUsers, deleteAllContent, getSettings, updateSettings } = useSettings();
+  const { showToast } = useToast();
 
   const [isPrivate, setIsPrivate] = useState(profile?.is_private ?? false);
   // Same fresh-page-load race as EditProfilePage/AccountSettings: on a
@@ -133,9 +135,21 @@ export const PrivacySettings: React.FC = () => {
     await updateSettings({ visible_stats: updated });
   };
 
-  const handleUnblock = async (id: string) => { await unblockUser(id); setLists(prev => ({ ...prev, blocked: prev.blocked.filter(u => u.id !== id) })); };
-  const handleUnmute = async (id: string) => { await unmuteUser(id); setLists(prev => ({ ...prev, muted: prev.muted.filter(u => u.id !== id) })); };
-  const handleUnrestrict = async (id: string) => { await unrestrictUser(id); setLists(prev => ({ ...prev, restricted: prev.restricted.filter(u => u.id !== id) })); };
+  const handleUnblock = async (id: string) => {
+    const { error } = await unblockUser(id);
+    if (error) { showToast(error, 'error'); return; }
+    setLists(prev => ({ ...prev, blocked: prev.blocked.filter(u => u.id !== id) }));
+  };
+  const handleUnmute = async (id: string) => {
+    const { error } = await unmuteUser(id);
+    if (error) { showToast(error, 'error'); return; }
+    setLists(prev => ({ ...prev, muted: prev.muted.filter(u => u.id !== id) }));
+  };
+  const handleUnrestrict = async (id: string) => {
+    const { error } = await unrestrictUser(id);
+    if (error) { showToast(error, 'error'); return; }
+    setLists(prev => ({ ...prev, restricted: prev.restricted.filter(u => u.id !== id) }));
+  };
 
   const handleDeleteAllContent = async () => {
     setDeleteAllStatus(null);

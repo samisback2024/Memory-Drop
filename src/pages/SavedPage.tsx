@@ -1,10 +1,11 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Search, X, Bookmark, Gem, Clock, GitCommitVertical, LayoutGrid, BookOpen, List } from 'lucide-react';
 import { useSaved } from '../hooks/useSaved';
 import { useDrops } from '../hooks/useDrops';
 import { useCapsules } from '../hooks/useCapsules';
 import { useMemories } from '../hooks/useMemories';
+import { useToast } from '../hooks/useToast';
 import { SavedMemoryRow } from '../components/saved/SavedMemoryRow';
 import { WaitingGrid } from '../components/saved/WaitingGrid';
 import { Feed } from '../components/feed/Feed';
@@ -51,6 +52,7 @@ export const SavedPage: React.FC = () => {
   const { getDropsFeed, promoteUnlockedSaves, unsaveDrop } = useDrops();
   const { unsaveCapsule } = useCapsules();
   const { getMemories } = useMemories();
+  const { showToast } = useToast();
   const [searchParams] = useSearchParams();
 
   const requestedTab = searchParams.get('tab');
@@ -85,10 +87,18 @@ export const SavedPage: React.FC = () => {
   // otherwise a drop could sit unlocked-but-still-"waiting" until this
   // page happened to be revisited. Quiet, no toast: this is a background
   // catch-up pass, not the live "it just unlocked" moment.
+  // Guards against a rapid tab switch letting an older, slower response
+  // overwrite a newer, faster one's result — same `cancelled` convention
+  // used throughout the app, adapted with a ref since `loadWaiting` is a
+  // useCallback shared with the effect below.
+  const waitingCancelledRef = useRef(false);
+
   const loadWaiting = useCallback(() => {
+    waitingCancelledRef.current = false;
     setWaitingLoading(true);
     promoteUnlockedSaves().finally(() => {
       getDropsFeed('saved_to_unlock', PAGE_SIZE, 0).then(data => {
+        if (waitingCancelledRef.current) return;
         setWaiting(data);
         setWaitingOffset(data.length);
         setWaitingHasMore(data.length === PAGE_SIZE);
@@ -97,7 +107,10 @@ export const SavedPage: React.FC = () => {
     });
   }, [getDropsFeed, promoteUnlockedSaves]);
 
-  useEffect(() => { if (tab === 'waiting') loadWaiting(); }, [tab, loadWaiting]);
+  useEffect(() => {
+    if (tab === 'waiting') loadWaiting();
+    return () => { waitingCancelledRef.current = true; };
+  }, [tab, loadWaiting]);
 
   const loadMoreWaiting = () => {
     setWaitingLoadingMore(true);
@@ -109,10 +122,18 @@ export const SavedPage: React.FC = () => {
     });
   };
 
+  // Guards against a rapid tab/query/typeFilter/sort change letting an
+  // older, slower response overwrite a newer, faster one's result — same
+  // `cancelled` convention used throughout the app, adapted with a ref
+  // since `loadMemories` is a useCallback shared with the effect below.
+  const memoriesCancelledRef = useRef(false);
+
   const loadMemories = useCallback(() => {
+    memoriesCancelledRef.current = false;
     setLoading(true);
     const contentTypes = typeFilter === 'all' ? null : [typeFilter];
     getSavedMemories(query, contentTypes, sort, PAGE_SIZE, 0).then(data => {
+      if (memoriesCancelledRef.current) return;
       setItems(data);
       setHasMore(data.length === PAGE_SIZE);
       setLoading(false);
@@ -122,7 +143,7 @@ export const SavedPage: React.FC = () => {
   useEffect(() => {
     if (tab !== 'memories') return;
     const timer = setTimeout(loadMemories, 300);
-    return () => clearTimeout(timer);
+    return () => { clearTimeout(timer); memoriesCancelledRef.current = true; };
   }, [tab, loadMemories]);
 
   const loadMoreMemories = () => {
@@ -136,9 +157,17 @@ export const SavedPage: React.FC = () => {
   };
 
   const unsave = async (memory: SavedMemory) => {
-    setItems(prev => prev.filter(m => m.id !== memory.id));
-    if (memory.memory_type === 'drop') await unsaveDrop(memory.id);
-    else await unsaveCapsule(memory.id);
+    const index = items.findIndex(m => m.id === memory.id && m.memory_type === memory.memory_type);
+    setItems(prev => prev.filter(m => !(m.id === memory.id && m.memory_type === memory.memory_type)));
+    const { error } = memory.memory_type === 'drop' ? await unsaveDrop(memory.id) : await unsaveCapsule(memory.id);
+    if (error) {
+      setItems(prev => {
+        const next = [...prev];
+        next.splice(index, 0, memory);
+        return next;
+      });
+      showToast(error, 'error');
+    }
   };
 
   useEffect(() => {

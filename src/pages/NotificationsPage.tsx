@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Bell, CheckCheck, Archive, Trash2, Mail, MailOpen, Loader2 } from 'lucide-react';
 import { useNotifications } from '../hooks/useNotifications';
 import { useToast } from '../hooks/useToast';
@@ -28,12 +28,24 @@ export const NotificationsPage: React.FC = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
+  // Guards against a filter switch letting an older, slower response
+  // overwrite a newer, faster one's result — same `cancelled` convention
+  // used throughout the app, adapted with a ref since `load` here is
+  // shared between the effect below and pull-to-refresh. markAllRead()
+  // still fires unconditionally off the resolved data, even for a call
+  // that's since gone stale — it's a real side effect on the server, not
+  // a display update, so there's nothing to cancel about it.
+  const cancelledRef = useRef(false);
+
   const load = useCallback(() => {
+    cancelledRef.current = false;
     setLoading(true);
     getNotifications(filter, PAGE_SIZE, 0).then(data => {
-      setItems(data);
-      setHasMore(data.length === PAGE_SIZE);
-      setLoading(false);
+      if (!cancelledRef.current) {
+        setItems(data);
+        setHasMore(data.length === PAGE_SIZE);
+        setLoading(false);
+      }
       // Landing on this page is the read signal now — same reasoning as
       // the bell dropdown. `items` still holds the original is_read
       // values, so the unread highlight/dot survives for this one visit.
@@ -41,7 +53,10 @@ export const NotificationsPage: React.FC = () => {
     });
   }, [filter, getNotifications, markAllRead]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+    return () => { cancelledRef.current = true; };
+  }, [load]);
 
   const { pulling, distance, refreshing } = usePullToRefresh(load, true);
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AtSign, User, Calendar, Check, X, Loader2 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
@@ -18,6 +18,23 @@ export const CompleteProfilePage: React.FC = () => {
   const { user, profile, completeProfile, signOut } = useAuth();
 
   const [displayName, setDisplayName] = useState(profile?.display_name ?? '');
+
+  // On a hard refresh straight to /complete-profile, useAuth's profile
+  // fetch is still async when this component first mounts — the useState
+  // initializer above runs before it resolves and captures an empty
+  // profile, then never re-syncs once it arrives, since a hook's initial
+  // value only runs once. Left unfixed, the OAuth-supplied display name
+  // silently stays blank. Runs exactly once, the first time `profile`
+  // actually has data — not on every profile change, so it doesn't
+  // clobber an in-progress edit if the profile object updates for an
+  // unrelated reason later.
+  const hydrated = useRef(false);
+  useEffect(() => {
+    if (!profile || hydrated.current) return;
+    hydrated.current = true;
+    setDisplayName(profile.display_name ?? '');
+  }, [profile]);
+
   const [username, setUsername] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);

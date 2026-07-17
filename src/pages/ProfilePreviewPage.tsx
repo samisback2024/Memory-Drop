@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Lock, Globe2, Eye } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
@@ -18,6 +18,22 @@ type PreviewAs = 'public' | 'private';
 export const ProfilePreviewPage: React.FC = () => {
   const { profile } = useAuth();
   const [previewAs, setPreviewAs] = useState<PreviewAs>(profile?.is_private ? 'private' : 'public');
+
+  // On a fresh page load, useAuth's profile fetch is still async when this
+  // component first mounts — the useState initializer above runs before it
+  // resolves and captures a null profile, defaulting to 'public', then
+  // never re-syncs once the real profile arrives, since a hook's initial
+  // value only runs once. Left unfixed, the toggle can silently default to
+  // "Public" regardless of the user's actual privacy setting. Runs exactly
+  // once, the first time `profile` actually has data — not on every
+  // profile change, so it doesn't clobber the user's in-progress toggle
+  // selection if the profile object updates for an unrelated reason later.
+  const hydrated = useRef(false);
+  useEffect(() => {
+    if (!profile || hydrated.current) return;
+    hydrated.current = true;
+    setPreviewAs(profile.is_private ? 'private' : 'public');
+  }, [profile]);
 
   if (!profile) return null;
 

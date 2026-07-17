@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Compass, RefreshCw } from 'lucide-react';
 import { useSearch } from '../hooks/useSearch';
 import { GridView } from '../components/memories/GridView';
@@ -31,16 +31,28 @@ export const ExplorePage: React.FC = () => {
 
   const isPersonTab = PERSON_TABS.includes(tab);
 
+  // Guards against rapid tab switching letting an older, slower response
+  // overwrite a newer, faster one's result — same `cancelled` convention
+  // used throughout the app (e.g. PublicProfilePage's load()), adapted
+  // with a ref since `load` here is shared between the effect below and
+  // manual triggers (the refresh button, the error-state retry).
+  const cancelledRef = useRef(false);
+
   const load = useCallback((selectedTab: ExploreTab) => {
+    cancelledRef.current = false;
     setLoading(true);
     getExploreFeed(selectedTab, PAGE_SIZE, 0).then(data => {
+      if (cancelledRef.current) return;
       setItems(data);
       setHasMore(data.length === PAGE_SIZE);
       setLoading(false);
     });
   }, [getExploreFeed]);
 
-  useEffect(() => { if (!isPersonTab) load(tab); }, [tab, isPersonTab, load]);
+  useEffect(() => {
+    if (!isPersonTab) load(tab);
+    return () => { cancelledRef.current = true; };
+  }, [tab, isPersonTab, load]);
 
   const loadMore = () => {
     setLoadingMore(true);

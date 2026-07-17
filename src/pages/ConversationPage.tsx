@@ -201,6 +201,24 @@ export const ConversationPage: React.FC = () => {
     await declineMessageRequest(conversationId);
     navigate('/messages');
   };
+  const handlePinConversation = async () => {
+    if (!conversationId) return;
+    await setConversationPinned(conversationId, true);
+    setMenuOpen(false);
+    showToast('Pinned.', 'success');
+  };
+  const handleMuteConversation = async () => {
+    if (!conversationId) return;
+    await setConversationMuted(conversationId, true);
+    setMenuOpen(false);
+    showToast('Muted.', 'success');
+  };
+  const handleArchiveConversation = async () => {
+    if (!conversationId) return;
+    await setConversationArchived(conversationId, true);
+    setMenuOpen(false);
+    navigate('/messages');
+  };
   const handleDeleteConversation = async () => {
     if (!conversationId) return;
     const ok = await confirm({
@@ -260,13 +278,13 @@ export const ConversationPage: React.FC = () => {
               <button type="button" onClick={() => { setMediaOpen(true); setMenuOpen(false); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
                 <Images size={15} aria-hidden="true" /> Shared media
               </button>
-              <button type="button" onClick={async () => { await setConversationPinned(conversationId!, true); setMenuOpen(false); showToast('Pinned.', 'success'); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
+              <button type="button" onClick={handlePinConversation} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
                 <Pin size={15} aria-hidden="true" /> Pin conversation
               </button>
-              <button type="button" onClick={async () => { await setConversationMuted(conversationId!, true); setMenuOpen(false); showToast('Muted.', 'success'); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
+              <button type="button" onClick={handleMuteConversation} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
                 <BellOff size={15} aria-hidden="true" /> Mute
               </button>
-              <button type="button" onClick={async () => { await setConversationArchived(conversationId!, true); setMenuOpen(false); navigate('/messages'); }} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
+              <button type="button" onClick={handleArchiveConversation} className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">
                 <Archive size={15} aria-hidden="true" /> Archive
               </button>
               <div className="border-t border-gray-100 dark:border-gray-800" />
