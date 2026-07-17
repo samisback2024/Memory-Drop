@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Download, Eye } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
@@ -54,6 +54,18 @@ export const PrivacySettings: React.FC = () => {
   const { getBlockedUsers, getMutedUsers, getRestrictedUsers, deleteAllContent, getSettings, updateSettings } = useSettings();
 
   const [isPrivate, setIsPrivate] = useState(profile?.is_private ?? false);
+  // Same fresh-page-load race as EditProfilePage/AccountSettings: on a
+  // direct navigation to /settings/privacy, profile can still be
+  // loading when this initializer runs, which would show the toggle as
+  // "public" even on an already-private account until the user
+  // happens to interact with it. Runs once, the first time profile
+  // actually has data.
+  const hydratedPrivate = useRef(false);
+  useEffect(() => {
+    if (!profile || hydratedPrivate.current) return;
+    hydratedPrivate.current = true;
+    setIsPrivate(profile.is_private ?? false);
+  }, [profile]);
   const [messagingPrivacy, setMessagingPrivacy] = useState<MessagingPrivacy | null>(null);
   const [allowMessageRequests, setAllowMessageRequests] = useState(true);
   const [showInterestCounts, setShowInterestCounts] = useState(true);

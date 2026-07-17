@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, AtSign, LogOut } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
@@ -30,6 +30,20 @@ export const AccountSettings: React.FC = () => {
   const [usernameStatus, setUsernameStatus] = useState<string | null>(null);
   const [usernameError, setUsernameError] = useState<string | null>(null);
   const cooldownDays = getUsernameCooldownDaysRemaining(profile?.username_changed_at ?? null);
+
+  // On a fresh page load straight to /settings/account, useAuth's
+  // profile fetch is still async when this component first mounts —
+  // the useState initializer above runs before it resolves and never
+  // re-syncs once it arrives, so the username field would silently
+  // stay blank (and "Update username" would reject it as required)
+  // even though the account clearly has one. Runs once, the first time
+  // profile actually has data.
+  const hydratedUsername = useRef(false);
+  useEffect(() => {
+    if (!profile || hydratedUsername.current) return;
+    hydratedUsername.current = true;
+    setNewUsername(profile.username ?? '');
+  }, [profile]);
 
   const handleChangeEmail = async () => {
     setEmailError(null);

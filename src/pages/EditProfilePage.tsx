@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AtSign, User, Check, X, Loader2, ArrowLeft, MapPin, Link2, Calendar, Smile, Lock } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
@@ -47,6 +47,31 @@ export const EditProfilePage: React.FC = () => {
   const [website, setWebsite] = useState(profile?.website ?? '');
   const [dateOfBirth, setDateOfBirth] = useState(profile?.date_of_birth ?? '');
   const [isPrivate, setIsPrivate] = useState(profile?.is_private ?? false);
+
+  // On a fresh page load straight to /profile/edit (not navigated to
+  // from within the app), useAuth's profile fetch is still async when
+  // this component first mounts — the useState initializers above run
+  // before it resolves and capture an empty profile, then never
+  // re-sync once it arrives, since a hook's initial value only runs
+  // once. Left unfixed, every field here silently stays blank even
+  // though the page clearly shows your real name/username elsewhere,
+  // and hitting Save would wipe them. Runs exactly once, the first time
+  // `profile` actually has data — not on every profile change, so it
+  // doesn't clobber an in-progress edit if the profile object updates
+  // for an unrelated reason later.
+  const hydrated = useRef(false);
+  useEffect(() => {
+    if (!profile || hydrated.current) return;
+    hydrated.current = true;
+    setDisplayName(profile.display_name ?? '');
+    setUsername(profile.username ?? '');
+    setPronouns(profile.pronouns ?? '');
+    setBio(profile.bio ?? '');
+    setLocation(profile.location ?? '');
+    setWebsite(profile.website ?? '');
+    setDateOfBirth(profile.date_of_birth ?? '');
+    setIsPrivate(profile.is_private ?? false);
+  }, [profile]);
 
   const usernameStatus = useUsernameAvailability(username, profile?.username);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
