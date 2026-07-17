@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Edit3, Bookmark, Sparkles, Settings, LogOut, Compass, Users, X } from 'lucide-react';
+import { Edit3, Bookmark, PackageOpen, Settings, LogOut, Compass, Users, X } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useSocial } from '../../hooks/useSocial';
 import { Avatar } from '../ui/Avatar';
@@ -8,7 +8,7 @@ import { Avatar } from '../ui/Avatar';
 const ACCOUNT_LINKS = [
   { to: '/profile/edit', label: 'Edit profile', icon: Edit3 },
   { to: '/saved', label: 'Saved memories', icon: Bookmark },
-  { to: '/moments', label: 'Your moments', icon: Sparkles },
+  { to: '/moments', label: 'Your moments', icon: PackageOpen },
   { to: '/settings', label: 'Settings', icon: Settings },
 ];
 

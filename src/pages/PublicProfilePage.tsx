@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   UserX, Clock, Globe2, Users, UserPlus, Pin, Send, Activity as ActivityIcon,
-  Lock, Unlock, Archive, Bookmark, Eye, KeyRound, MessageCircle, Share2, Sparkles, Star, Zap, Wand2,
+  Lock, Unlock, Archive, Bookmark, Eye, KeyRound, MessageCircle, Share2, PackageOpen, Star, Zap, Wand2,
 } from 'lucide-react';
 import { PROFILE_STAT_META, type ProfileStatKey } from '../types/settings';
 import { supabase } from '../lib/supabase';
@@ -64,7 +64,7 @@ const EXTRA_STAT_ICONS: Record<ProfileStatKey, IconComponent> = {
   total_unlocks: KeyRound,
   total_reactions: SparkleDrop,
   total_comments: MessageCircle,
-  total_moments: Sparkles,
+  total_moments: PackageOpen,
   interested_received: Star,
   cant_wait_received: Zap,
   good_vibes_received: Wand2,

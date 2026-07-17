@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { X, Plus, Sparkles } from 'lucide-react';
+import { X, Plus, Sparkles, PackageOpen } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { useMoments } from '../../hooks/useMoments';
 import { Avatar } from '../ui/Avatar';
@@ -75,7 +75,7 @@ export const MomentPileGround: React.FC<MomentPileGroundProps> = ({ onClose, onC
     >
       <div className="flex items-center justify-between px-5 pt-[calc(env(safe-area-inset-top)+1rem)] pb-2">
         <h1 className="text-white font-semibold flex items-center gap-1.5">
-          <Sparkles size={16} className="text-purple-300" aria-hidden="true" /> Moments
+          <PackageOpen size={16} className="text-purple-300" aria-hidden="true" /> Moments
         </h1>
         <button
           type="button"
