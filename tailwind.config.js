@@ -30,6 +30,9 @@ export default {
           [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950].map(shade => [shade, `rgb(var(--color-blue-${shade}) / <alpha-value>)`])
         ),
       },
+      backgroundImage: {
+        'gradient-brand': 'linear-gradient(135deg, rgb(var(--color-purple-600)) 0%, rgb(var(--color-blue-500)) 100%)',
+      },
       // 'spring' approximates iOS's default UISpring curve (overshoot then
       // settle) — the shared timing function behind every "tactile" press/
       // reveal interaction introduced for the Feed redesign, so motion
@@ -46,8 +49,12 @@ export default {
         'page-enter': 'pageEnter 0.22s ease-out',
         'unlock-reveal': 'unlockReveal 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
         'slide-in-left': 'slideInLeft 0.2s ease-out',
+        'aurora-shift': 'auroraShift 14s ease-in-out infinite',
+        'shimmer-sweep': 'shimmerSweep 3.2s ease-in-out infinite',
         'capsule-crack': 'capsuleCrack 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
         'pill-pulse': 'pillPulse 1.6s ease-in-out infinite',
+        'capsule-float': 'capsuleFloat 3.4s ease-in-out infinite',
+        'sparkle-twinkle': 'sparkleTwinkle 2.2s ease-in-out infinite',
       },
       keyframes: {
         fadeIn: { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
@@ -68,6 +75,21 @@ export default {
           '0%': { transform: 'translateY(0) scale(1)', opacity: '1' },
           '100%': { transform: 'translateY(-22px) scale(1.3)', opacity: '0' },
         },
+        // Slow drift of a large background-gradient behind a locked drop's
+        // sealed-capsule teaser — never resolves into a real image (there
+        // is none to show, the server withholds locked content entirely),
+        // just an ambient living color that invites curiosity.
+        auroraShift: {
+          '0%, 100%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
+        },
+        // A diagonal light streak sweeping across the frosted glass pane,
+        // like a reflection catching the light — reinforces "sealed under
+        // glass" without needing any real content underneath.
+        shimmerSweep: {
+          '0%': { transform: 'translateX(-150%) rotate(8deg)' },
+          '55%, 100%': { transform: 'translateX(150%) rotate(8deg)' },
+        },
         // The unlock moment: a quick anticipatory compress, then an
         // overshoot burst outward as the capsule "cracks open," settling
         // back to rest — a tactile, physical alternative to a plain fade.
@@ -80,6 +102,16 @@ export default {
         pillPulse: {
           '0%, 100%': { boxShadow: '0 0 0 0 rgba(147,51,234,0.35)' },
           '50%': { boxShadow: '0 0 0 6px rgba(147,51,234,0)' },
+        },
+        // A gentle, continuous bob — the "cozy, alive" idle motion behind
+        // the floating moments capsule and the piled-up capsules at rest.
+        capsuleFloat: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-6px)' },
+        },
+        sparkleTwinkle: {
+          '0%, 100%': { opacity: '0.25', transform: 'scale(0.7)' },
+          '50%': { opacity: '1', transform: 'scale(1.1)' },
         },
       },
     },

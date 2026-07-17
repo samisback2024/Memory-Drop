@@ -49,7 +49,7 @@ export const CountdownPill: React.FC<CountdownPillProps> = ({ unlockDate, onUnlo
   return (
     <span
       className={[
-        'inline-flex items-center gap-1.5 rounded-full bg-purple-600 text-white font-medium tactile',
+        'inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-purple-600 to-blue-500 text-white font-medium tactile',
         size === 'sm' ? 'px-2.5 py-1 text-xs' : 'px-3.5 py-1.5 text-sm',
         almostThere || remaining <= 0 ? 'animate-pill-pulse' : '',
       ].join(' ')}

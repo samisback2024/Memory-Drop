@@ -29,18 +29,18 @@ const ringClasses = {
   '2xl': 'ring-4',
 };
 
-const FALLBACK_COLORS = [
-  'bg-purple-400',
-  'bg-blue-400',
-  'bg-teal-400',
-  'bg-orange-500',
-  'bg-red-400',
-  'bg-indigo-400',
+const GRADIENT_COLORS = [
+  'from-purple-400 to-pink-400',
+  'from-blue-400 to-cyan-400',
+  'from-green-400 to-teal-400',
+  'from-orange-400 to-yellow-400',
+  'from-red-400 to-pink-400',
+  'from-indigo-400 to-purple-400',
 ];
 
-const getFallbackColor = (name: string): string => {
-  const code = name.charCodeAt(0) % FALLBACK_COLORS.length;
-  return FALLBACK_COLORS[code];
+const getGradient = (name: string): string => {
+  const code = name.charCodeAt(0) % GRADIENT_COLORS.length;
+  return GRADIENT_COLORS[code];
 };
 
 const getInitials = (name: string): string => {
@@ -71,7 +71,7 @@ export const Avatar: React.FC<AvatarProps> = ({
         sizeClasses[size],
         ring ? `${ringClasses[size]} ring-offset-1 ${ringColor}` : '',
         onClick ? 'cursor-pointer' : '',
-        showFallback ? getFallbackColor(name) : 'bg-gray-200 dark:bg-gray-700',
+        showFallback ? `bg-gradient-to-br ${getGradient(name)}` : 'bg-gray-200 dark:bg-gray-700',
         className,
       ].join(' ')}
     >

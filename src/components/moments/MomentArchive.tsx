@@ -60,7 +60,7 @@ export const MomentArchive: React.FC<MomentArchiveProps> = ({ onOpenMoment, refr
                 <img src={m.media_url} alt="" className="w-full h-full object-cover" />
               )
             ) : (
-              <div className="w-full h-full flex items-center justify-center bg-purple-50 dark:bg-purple-950/30 p-2">
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-100 to-blue-100 p-2">
                 <p className="text-[10px] text-gray-600 text-center line-clamp-4">{m.text_content}</p>
               </div>
             )}

@@ -256,7 +256,7 @@ export const DropComposer: React.FC<DropComposerProps> = ({ isOpen, onClose, onD
         )}
 
         <div className="flex gap-3">
-          <Button variant="accent" fullWidth loading={dropping} onClick={handleSubmit}>
+          <Button variant="gradient" fullWidth loading={dropping} onClick={handleSubmit}>
             {visibility === 'private' ? <Lock size={15} aria-hidden="true" /> : visibility === 'followers' ? <Users size={15} aria-hidden="true" /> : <Globe2 size={15} aria-hidden="true" />}
             Drop Memory
           </Button>

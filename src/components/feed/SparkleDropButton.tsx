@@ -55,7 +55,7 @@ export const SparkleDropButton: React.FC<SparkleDropButtonProps> = ({ dropId, is
       className={[
         'relative inline-flex items-center gap-1.5 rounded-full pl-2.5 pr-3 py-1.5 text-xs font-semibold transition-all',
         sparkled
-          ? 'bg-purple-600 text-white shadow-sm shadow-purple-500/25'
+          ? 'bg-gradient-to-r from-fuchsia-500 to-purple-600 text-white shadow-sm shadow-purple-500/25'
           : 'bg-gray-50 dark:bg-gray-800/70 text-gray-500 dark:text-gray-400',
       ].join(' ')}
     >

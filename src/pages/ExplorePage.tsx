@@ -12,14 +12,6 @@ import { EXPLORE_TABS, PERSON_TABS, type ExploreTab, type Memory } from '../type
 
 const PAGE_SIZE = 21;
 
-const EMPTY_COPY: Partial<Record<ExploreTab, { title: string; description: string }>> = {
-  unlocking_soon: { title: 'Nothing unlocking soon', description: "No public memories are about to unlock — check back later." },
-  todays_unlocks: { title: "Nothing unlocked today", description: 'No public memories have unlocked yet today.' },
-  recently_unlocked: { title: 'Nothing recently unlocked', description: 'Recently unlocked public memories will show up here.' },
-  popular_public_drops: { title: 'No popular drops yet', description: 'Public Drops getting attention from the community will show up here.' },
-  public_capsules: { title: 'No public capsules yet', description: 'Public Time Capsules will show up here once someone seals one.' },
-};
-
 // Discovery — revised Phase 10 spec's exact section list. Every memory
 // tab is a thin parameterization of get_explore_feed(), built on
 // search_memories(): the same can_view_drop/can_view_capsule visibility
@@ -91,7 +83,7 @@ export const ExplorePage: React.FC = () => {
             onClick={() => setTab(id)}
             className={[
               'px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0',
-              tab === id ? 'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300' : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800',
+              tab === id ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800',
             ].join(' ')}
           >
             {label}
@@ -114,11 +106,7 @@ export const ExplorePage: React.FC = () => {
           {!isOnline ? (
             <ErrorState title="You're offline" description="Reconnect and try again." onRetry={() => load(tab)} />
           ) : (
-            <EmptyState
-              icon={Compass}
-              title={EMPTY_COPY[tab]?.title ?? 'Nothing here yet'}
-              description={EMPTY_COPY[tab]?.description ?? 'Nothing public matches this category right now — check back later.'}
-            />
+            <EmptyState icon={Compass} title="Nothing here yet" description="Nothing public matches this category right now — check back later." />
           )}
         </div>
       ) : (

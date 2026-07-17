@@ -26,7 +26,7 @@ export const NotFoundPage: React.FC = () => {
       </div>
       <Link
         to={homeHref}
-        className="mt-1 px-4 py-2 rounded-xl text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 transition-colors"
+        className="mt-1 px-4 py-2 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-blue-500 hover:opacity-90 transition-opacity"
       >
         {homeLabel}
       </Link>

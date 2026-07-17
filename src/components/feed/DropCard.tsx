@@ -107,11 +107,11 @@ const DropCardImpl: React.FC<DropCardProps> = ({ drop, onDeleted, onHidden, onUn
   return (
     <div className="flex gap-3 cv-auto">
       <div className="flex flex-col items-center w-5 flex-shrink-0 pt-6" aria-hidden="true">
-        <div className="w-2.5 h-2.5 rounded-full bg-purple-500 ring-4 ring-gray-50 dark:ring-gray-900 shadow-sm flex-shrink-0" />
+        <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 ring-4 ring-gray-50 shadow-sm flex-shrink-0" />
         <div className="w-px flex-1 bg-gradient-to-b from-purple-200 to-transparent mt-1" />
       </div>
 
-      <article className="flex-1 min-w-0 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-sm rounded-[28px] overflow-hidden transition-transform duration-300 ease-spring sm:hover:-translate-y-0.5">
+      <article className="flex-1 min-w-0 glass-panel rounded-[28px] overflow-hidden transition-transform duration-300 ease-spring sm:hover:-translate-y-0.5">
         <div className="flex items-center gap-3 p-4">
           <Link to={`/u/${content.username}`} className="flex-shrink-0">
             <Avatar src={content.profile_photo_url} name={displayName} size="md" />
@@ -148,7 +148,7 @@ const DropCardImpl: React.FC<DropCardProps> = ({ drop, onDeleted, onHidden, onUn
               <MoreHorizontal size={16} aria-hidden="true" />
             </button>
             {menuOpen && (
-              <div role="menu" className="absolute right-0 top-11 w-48 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl z-20 overflow-hidden py-1 animate-fade-in">
+              <div role="menu" className="absolute right-0 top-11 w-48 glass-panel rounded-2xl shadow-xl z-20 overflow-hidden py-1 animate-fade-in">
                 <Link
                   to={`/u/${content.username}`}
                   role="menuitem"

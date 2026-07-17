@@ -42,7 +42,7 @@ export const CapsuleFilters: React.FC<CapsuleFiltersProps> = ({ filters, onChang
             onClick={() => onChange({ ...filters, lockStatus: opt.value })}
             className={[
               'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
-              filters.lockStatus === opt.value ? 'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300' : 'text-gray-500 hover:text-gray-800',
+              filters.lockStatus === opt.value ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'text-gray-500 hover:text-gray-800',
             ].join(' ')}
           >
             {opt.label}

@@ -29,11 +29,13 @@ export const CapsuleLockedCard: React.FC<CapsuleLockedCardProps> = ({ capsule, o
   const isDue = new Date(capsule.unlock_date).getTime() <= Date.now();
 
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-purple-900 px-6 py-10 flex flex-col items-center text-center gap-5">
+    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-800 via-fuchsia-800 to-blue-800 px-6 py-10 flex flex-col items-center text-center gap-5">
       <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/5" aria-hidden="true" />
 
       <div className="relative w-24 h-24 flex items-center justify-center" aria-hidden="true">
-        <span className="relative w-16 h-16 rounded-full bg-white/15 shadow-lg flex items-center justify-center">
+        <span className="absolute inset-0 rounded-full bg-white/10 animate-ping" style={{ animationDuration: '3s' }} />
+        <span className="absolute inset-2 rounded-full bg-white/10 animate-ping" style={{ animationDuration: '3s', animationDelay: '1s' }} />
+        <span className="relative w-16 h-16 rounded-full bg-white/15 backdrop-blur-sm shadow-lg flex items-center justify-center">
           <Lock size={26} className="text-white" aria-hidden="true" />
         </span>
       </div>

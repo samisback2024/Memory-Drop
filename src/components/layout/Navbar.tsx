@@ -56,7 +56,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenMenu }) => {
           </button>
           <NavLink to="/feed" className="flex items-center gap-2">
             <img src="/icon-192.png" alt="Memory Drop" className="w-8 h-8 rounded-xl flex-shrink-0" />
-            <span className="hidden sm:inline text-lg font-bold text-purple-600 dark:text-purple-400">
+            <span className="hidden sm:inline text-lg font-bold bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">
               Memory Drop
             </span>
           </NavLink>

@@ -73,7 +73,7 @@ export const OnboardingPage: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-purple-600">
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-purple-600 via-purple-500 to-blue-500">
       <OnboardingArt kind={slide.art} className="absolute inset-0 w-full h-full" />
       <div className="absolute inset-x-0 bottom-0 h-[60%] bg-gradient-to-t from-purple-950/80 via-purple-900/40 to-transparent" />
 

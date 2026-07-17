@@ -55,7 +55,7 @@ const MessageBubbleImpl: React.FC<MessageBubbleProps> = ({
 
   const bubbleAlign = isMine ? 'items-end self-end' : 'items-start self-start';
   const bubbleColor = isMine
-    ? 'bg-purple-600 text-white'
+    ? 'bg-gradient-to-br from-purple-600 to-blue-500 text-white'
     : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100';
 
   const mediaItems: MediaViewerItem[] = m.attachments

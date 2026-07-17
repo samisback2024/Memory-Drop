@@ -17,7 +17,7 @@ export const ProfileCompletionBar: React.FC<ProfileCompletionBarProps> = ({ comp
       </div>
       <div className="h-2 rounded-full bg-gray-100 dark:bg-gray-800 overflow-hidden">
         <div
-          className="h-full rounded-full bg-purple-600 transition-all duration-300"
+          className="h-full rounded-full bg-gradient-to-r from-purple-600 to-blue-500 transition-all duration-300"
           style={{ width: `${completion.percentage}%` }}
         />
       </div>

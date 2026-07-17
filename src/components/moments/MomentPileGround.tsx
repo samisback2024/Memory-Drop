@@ -70,7 +70,8 @@ export const MomentPileGround: React.FC<MomentPileGroundProps> = ({ onClose, onC
       // Below Modal's z-50 (CreateMomentModal, opened from the Add
       // capsule, needs to sit on top of the ground, not under it) and
       // MomentViewer's z-70, but above the base app chrome (z-40).
-      className="fixed inset-0 z-[45] flex flex-col animate-fade-in bg-purple-950"
+      className="fixed inset-0 z-[45] flex flex-col animate-fade-in"
+      style={{ background: 'radial-gradient(circle at 50% 25%, rgba(107,33,168,0.55), rgba(10,7,20,0.96) 65%)' }}
     >
       <div className="flex items-center justify-between px-5 pt-[calc(env(safe-area-inset-top)+1rem)] pb-2">
         <h1 className="text-white font-semibold flex items-center gap-1.5">
@@ -111,7 +112,7 @@ export const MomentPileGround: React.FC<MomentPileGroundProps> = ({ onClose, onC
                   aria-label="Add a moment"
                   className="flex flex-col items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:outline-none rounded-full"
                 >
-                  <span className="relative w-14 h-24 rounded-full border-2 border-dashed border-purple-300/70 bg-white/5 flex items-center justify-center tactile">
+                  <span className="relative w-14 h-24 rounded-full border-2 border-dashed border-purple-300/70 bg-white/5 backdrop-blur-sm flex items-center justify-center animate-capsule-float tactile">
                     <Plus size={20} className="text-purple-200" aria-hidden="true" />
                   </span>
                   <span className="text-[11px] text-white/70">Add</span>
@@ -122,6 +123,7 @@ export const MomentPileGround: React.FC<MomentPileGroundProps> = ({ onClose, onC
                   const isLeaving = leavingUserId === group.userId;
                   const tilt = (seededFraction(group.userId) - 0.5) * 22;
                   const lift = seededFraction(group.userId + 'y') * 14;
+                  const delay = seededFraction(group.userId + 'd') * 3;
                   const label = isSelf ? 'You' : group.name.split(' ')[0];
 
                   return (
@@ -132,16 +134,20 @@ export const MomentPileGround: React.FC<MomentPileGroundProps> = ({ onClose, onC
                       aria-label={`View ${label}'s moments`}
                       className={[
                         'flex flex-col items-center gap-1.5 focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:outline-none rounded-full',
-                        isLeaving ? 'animate-capsule-crack pointer-events-none' : '',
+                        isLeaving ? 'animate-capsule-crack pointer-events-none' : 'animate-capsule-float',
                       ].join(' ')}
-                      style={{ transform: `rotate(${tilt}deg) translateY(-${lift}px)` }}
+                      style={{ transform: `rotate(${tilt}deg) translateY(-${lift}px)`, animationDelay: `${delay}s` }}
                     >
                       <span
                         className={[
                           'relative w-14 h-24 rounded-full flex items-end justify-center pb-2 overflow-hidden tactile shadow-[0_14px_28px_-10px_rgba(124,58,237,0.6)]',
-                          isSelf ? 'bg-blue-500' : 'bg-purple-500',
+                          isSelf
+                            ? 'bg-gradient-to-b from-blue-300 via-blue-500 to-purple-600'
+                            : 'bg-gradient-to-b from-purple-300 via-fuchsia-500 to-blue-600',
                         ].join(' ')}
                       >
+                        <span className="absolute -top-1 left-2 w-7 h-9 rounded-full bg-white/40 blur-[3px] rotate-[-18deg]" aria-hidden="true" />
+                        <Sparkles size={9} className="absolute top-2 right-1.5 text-white/80 animate-sparkle-twinkle" style={{ animationDelay: `${delay}s` }} aria-hidden="true" />
                         <Avatar src={group.photoUrl} name={group.name} size="sm" className="border-2 border-white/80 relative" />
                       </span>
                       <span className="text-[11px] text-white/80 truncate max-w-[4rem]">{label}</span>

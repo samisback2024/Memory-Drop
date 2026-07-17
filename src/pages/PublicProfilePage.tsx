@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  Clock, Globe2, Users, UserPlus, Pin, Send, Activity as ActivityIcon,
+  UserX, Clock, Globe2, Users, UserPlus, Pin, Send, Activity as ActivityIcon,
   Lock, Unlock, Archive, Bookmark, Eye, KeyRound, MessageCircle, Share2, Sparkles, Star, Zap, Wand2,
 } from 'lucide-react';
 import { PROFILE_STAT_META, type ProfileStatKey } from '../types/settings';
@@ -23,7 +23,7 @@ import { OrbitButton } from '../components/social/OrbitButton';
 import { RelationshipMenu } from '../components/social/RelationshipMenu';
 import { MutualFriends } from '../components/social/MutualFriends';
 import { ShareProfileModal } from '../components/social/ShareProfileModal';
-import { UserNotFoundState } from '../components/shared/UserNotFoundState';
+import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { EMPTY_MEMORY_FILTERS, type Memory, type PinnedMemory, type PublicStats } from '../types/memory';
 import type { Relationship } from '../types/social';
@@ -154,13 +154,13 @@ export const PublicProfilePage: React.FC = () => {
 
         {state === 'not_found' && (
           <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
-            <UserNotFoundState username={username} />
+            <EmptyState icon={UserX} title="User not found" description={`No account with the username @${username}.`} />
           </div>
         )}
 
         {state === 'error' && (
           <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
-            <ErrorState title="Couldn't load this profile" onRetry={load} />
+            <ErrorState title="Couldn't load this profile" description="Check your connection and try again." onRetry={load} />
           </div>
         )}
 

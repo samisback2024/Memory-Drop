@@ -45,7 +45,7 @@ export const DropPage: React.FC = () => {
         )}
         {state === 'error' && (
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
-            <ErrorState title="Couldn't load this drop" onRetry={load} />
+            <ErrorState title="Couldn't load this drop" description="Check your connection and try again." onRetry={load} />
           </div>
         )}
         {state === 'ready' && drop && (

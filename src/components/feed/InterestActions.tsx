@@ -56,7 +56,7 @@ export const InterestActions: React.FC<InterestActionsProps> = ({ dropId, counts
               'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors',
               'focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none',
               isActive
-                ? 'bg-purple-600 border-transparent text-white shadow-sm'
+                ? 'bg-gradient-to-r from-purple-500 to-blue-500 border-transparent text-white shadow-sm'
                 : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-purple-200 dark:hover:border-purple-800 hover:text-purple-600 dark:hover:text-purple-400',
             ].join(' ')}
           >

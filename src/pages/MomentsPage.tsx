@@ -22,7 +22,7 @@ export const MomentsPage: React.FC = () => {
           <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">Your Moments</h1>
           <p className="text-sm text-gray-500 mt-0.5">Active and expired — this view is only ever yours.</p>
         </div>
-        <Button variant="accent" size="sm" onClick={() => navigate('/moments/create')}>
+        <Button variant="gradient" size="sm" onClick={() => navigate('/moments/create')}>
           <Plus size={15} aria-hidden="true" />
           Add Moment
         </Button>

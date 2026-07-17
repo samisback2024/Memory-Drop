@@ -16,7 +16,7 @@ export const LocationCard: React.FC<LocationCardProps> = ({ location }) => (
     rel="noopener noreferrer"
     className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:border-purple-300 dark:hover:border-purple-700 transition-colors max-w-[240px]"
   >
-    <div className="w-10 h-10 rounded-xl bg-purple-500 flex items-center justify-center flex-shrink-0">
+    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center flex-shrink-0">
       <MapPin size={18} className="text-white" aria-hidden="true" />
     </div>
     <div className="flex-1 min-w-0">

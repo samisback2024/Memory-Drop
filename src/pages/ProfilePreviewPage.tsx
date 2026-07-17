@@ -46,7 +46,7 @@ export const ProfilePreviewPage: React.FC = () => {
           type="button"
           onClick={() => setPreviewAs('public')}
           className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${
-            previewAs === 'public' ? 'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+            previewAs === 'public' ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
           }`}
         >
           <Globe2 size={14} aria-hidden="true" /> As Public
@@ -55,7 +55,7 @@ export const ProfilePreviewPage: React.FC = () => {
           type="button"
           onClick={() => setPreviewAs('private')}
           className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium transition-colors ${
-            previewAs === 'private' ? 'bg-purple-50 dark:bg-purple-950/30 text-purple-700 dark:text-purple-300 shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
+            previewAs === 'private' ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white shadow-sm' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200'
           }`}
         >
           <Lock size={14} aria-hidden="true" /> As Private
@@ -68,7 +68,7 @@ export const ProfilePreviewPage: React.FC = () => {
         <p className="text-xs text-gray-500 dark:text-gray-400">What the relationship button says to a stranger:</p>
         <span
           className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium ${
-            previewAs === 'private' ? 'bg-black text-white dark:bg-white dark:text-gray-900' : 'bg-purple-600 text-white'
+            previewAs === 'private' ? 'bg-black text-white dark:bg-white dark:text-gray-900' : 'bg-gradient-to-r from-purple-600 to-blue-500 text-white'
           }`}
         >
           {previewAs === 'private' && <Lock size={12} aria-hidden="true" />}
