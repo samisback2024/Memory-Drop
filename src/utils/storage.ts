@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { logger } from '../lib/logger';
 
 export const uploadFile = async (
   bucket: string,
@@ -10,7 +11,7 @@ export const uploadFile = async (
     upsert: false,
   });
   if (error) {
-    console.error('Upload error:', error);
+    logger.error('Upload error', { error: error.message, bucket });
     return null;
   }
   const { data } = supabase.storage.from(bucket).getPublicUrl(path);
@@ -26,11 +27,14 @@ export const getPublicUrl = (bucket: string, path: string): string => {
   return data.publicUrl;
 };
 
+// Every bucket is public-read, gated only by path unguessability (see
+// KNOWN_LIMITATIONS) — crypto.randomUUID() gives each file a 122-bit random
+// component, vs. Math.random()'s ~31 bits, which was brute-forceable and,
+// worse, not actually random enough to rely on for anything that looks like
+// privacy (DM attachments in particular).
 export const generateStoragePath = (userId: string, filename: string): string => {
   const ext = filename.split('.').pop() ?? 'bin';
-  const timestamp = Date.now();
-  const random = Math.random().toString(36).slice(2, 8);
-  return `${userId}/${timestamp}-${random}.${ext}`;
+  return `${userId}/${crypto.randomUUID()}.${ext}`;
 };
 
 // Public Supabase Storage URLs look like
