@@ -39,7 +39,7 @@ Ordered, human-operator action items to actually take Memory Drop from "code is 
 
 ## 6. App store submission (when ready to leave beta/web-only)
 
-- [ ] Decide on a packaging approach for iOS/Android (this is a web app today — needs a wrapper like Capacitor/Bubblewrap, or a decision to stay web-only for launch).
+- [ ] See `APP_STORE_SUBMISSION_PLAN.md` for the full, phased plan — packaging decision (Capacitor, over Bubblewrap/React Native), the Capacitor integration steps, and everything specific to each store's submission process, costs, and timeline.
 - [ ] Fill in the privacy-labels questionnaire (Apple App Store) using the checklist in `APP_STORE_ASSETS.md` as the source of truth for what data is actually collected.
 - [ ] Replace the "Coming to the App Store" / "Coming to Google Play" placeholder buttons on `/support` with real store links once listings exist.
 

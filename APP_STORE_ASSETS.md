@@ -23,9 +23,9 @@ Real, ready-to-use drafted copy and exact specs for whoever prepares Memory Drop
 >
 > **Build a real archive.** Every Drop, Capsule, and Moment you create becomes part of your personal Memories library — searchable, organized into collections, with real Flashbacks and Highlights, not an algorithm deciding what you get to look back on.
 >
-> **Message the people who matter.** Real-time messaging with read receipts, typing indicators, and the same privacy-first design as everything else in the app — message requests keep your inbox to people you actually know unless you choose otherwise.
+> **Message the people who matter.** Real-time messaging with read receipts, typing indicators, and the same privacy-first design as everything else in the app — messaging only unlocks once you and someone else are mutually in each other's Orbit, so your inbox is never open to strangers.
 >
-> **Private by default, yours by design.** Private accounts, granular Followers/Only-Me visibility on every memory, full block/mute/restrict controls, and a real, working dark mode. No ads. No algorithm deciding what you see. No premium tier gating basic features — Memory Drop is free.
+> **Private by default, yours by design.** Private accounts, granular Orbit/Only-Me visibility on every memory, full block/mute/restrict controls, and a real, working dark mode. No ads. No algorithm deciding what you see. No premium tier gating basic features — Memory Drop is free.
 >
 > Memory Drop is currently in beta. We'd love your feedback — reach us anytime at support@memorydrop.app.
 

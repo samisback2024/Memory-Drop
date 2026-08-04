@@ -33,7 +33,7 @@ A curated list of what a beta user, reviewer, or new contributor is most likely 
 ## Website / App Store
 
 - **There's no separate marketing landing page.** `/` is this app's own login/redirect entry point. A real pre-signup marketing homepage (hero copy, feature highlights, social proof) is a genuinely separate, feature-sized piece of scope that wasn't built here — the new `/support` page and the existing Terms/Privacy pages are the only fully public-and-unauthenticated surfaces today.
-- **No app store presence yet.** This is a web app; shipping to the Apple App Store / Google Play needs a packaging decision (Capacitor, Bubblewrap, or similar) that hasn't been made. `APP_STORE_ASSETS.md` has real drafted listing copy ready for whenever that happens; the "Coming soon" buttons on `/support` are honest placeholders, not a claim of an imminent launch date.
+- **No app store presence yet.** This is a web app; the packaging decision is made (Capacitor, for both iOS and Android — see `APP_STORE_SUBMISSION_PLAN.md`) but not yet executed. `APP_STORE_ASSETS.md` has real drafted listing copy ready for whenever that happens; the "Coming soon" buttons on `/support` are honest placeholders, not a claim of an imminent launch date.
 - **Adaptive Android icon, splash screen image, and real screenshots don't exist yet** — all three need actual image-generation/design tooling this environment doesn't have access to. Exact specs are documented in `APP_STORE_ASSETS.md` for whoever picks this up.
 
 ## Messaging (Phase 12, hardened this phase)
