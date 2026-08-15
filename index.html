@@ -8,9 +8,22 @@
     <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#9333ea" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <!-- black-translucent draws the page content up through/behind the
+         status bar (the standard native-app look — Instagram/Twitter/etc
+         all do this) instead of iOS reserving an opaque white strip above
+         the page. This is also what makes env(safe-area-inset-top) start
+         resolving to a real value instead of 0 — every place that now
+         pads for it (Navbar, MomentViewer, MediaViewer, MomentPileGround)
+         only matters because of this line. -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Memory Drop" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <!-- viewport-fit=cover lets the page draw edge-to-edge on notch/Dynamic-
+         Island/home-indicator devices instead of Safari/Chrome letterboxing
+         behind a safe strip — required for env(safe-area-inset-*) to
+         resolve to anything other than 0 everywhere this app already uses
+         it (MobileNav, MomentPileGround) or is about to. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="description" content="Capture today. Unlock tomorrow. Memory Drop is a time-capsule social app." />
     <title>Memory Drop</title>
 

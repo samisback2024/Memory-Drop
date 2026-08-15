@@ -72,6 +72,7 @@ export const MomentPileGround: React.FC<MomentPileGroundProps> = ({ onClose, onC
       // MomentViewer's z-70, but above the base app chrome (z-40).
       className="fixed inset-0 z-[45] flex flex-col animate-fade-in"
       style={{ background: 'radial-gradient(circle at 50% 25%, rgba(107,33,168,0.55), rgba(10,7,20,0.96) 65%)' }}
+      data-no-swipe-back
     >
       <div className="flex items-center justify-between px-5 pt-[calc(env(safe-area-inset-top)+1rem)] pb-2">
         <h1 className="text-white font-semibold flex items-center gap-1.5">

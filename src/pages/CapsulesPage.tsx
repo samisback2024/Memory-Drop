@@ -8,6 +8,8 @@ import { CapsuleArchive } from '../components/capsules/CapsuleArchive';
 import { CapsuleTimeline } from '../components/capsules/CapsuleTimeline';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
+import { PullToRefreshIndicator } from '../components/ui/PullToRefreshIndicator';
+import { usePullToRefresh } from '../hooks/usePullToRefresh';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { EMPTY_CAPSULE_FILTERS, type Capsule } from '../types/capsule';
 
@@ -149,10 +151,13 @@ export const CapsulesPage: React.FC = () => {
 
   const removeFrom = (setter: React.Dispatch<React.SetStateAction<Capsule[]>>) => (id: string) => setter(prev => prev.filter(c => c.id !== id));
 
+  const { pulling, distance, refreshing } = usePullToRefresh(loadOverview, mode === 'overview');
+
   if (!user) return null;
 
   return (
     <div className="flex flex-col gap-4 -mx-4 px-4 -mt-6 pt-6 pb-6 bg-gradient-to-b from-purple-50/60 via-transparent to-transparent min-h-[calc(100vh-4rem)]">
+      <PullToRefreshIndicator pulling={pulling} distance={distance} refreshing={refreshing} />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">

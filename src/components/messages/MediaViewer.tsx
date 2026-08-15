@@ -86,8 +86,8 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({ items, startIndex, onC
   if (!current) return null;
 
   return (
-    <div className="fixed inset-0 z-[70] bg-black flex flex-col" role="dialog" aria-modal="true" aria-label="Media viewer">
-      <div className="flex items-center justify-between p-3 flex-shrink-0">
+    <div className="fixed inset-0 z-[70] bg-black flex flex-col" role="dialog" aria-modal="true" aria-label="Media viewer" data-no-swipe-back>
+      <div className="flex items-center justify-between p-3 pt-[calc(0.75rem+env(safe-area-inset-top))] flex-shrink-0">
         <button type="button" onClick={onClose} aria-label="Close" className="p-2 rounded-full text-white hover:bg-white/10 transition-colors">
           <X size={22} aria-hidden="true" />
         </button>
@@ -129,7 +129,7 @@ export const MediaViewer: React.FC<MediaViewerProps> = ({ items, startIndex, onC
       </div>
 
       {items.length > 1 && (
-        <div className="flex justify-center gap-1.5 py-3 flex-shrink-0">
+        <div className="flex justify-center gap-1.5 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] flex-shrink-0">
           {items.map((_, i) => (
             <span key={i} className={`w-1.5 h-1.5 rounded-full transition-colors ${i === index ? 'bg-white' : 'bg-white/30'}`} />
           ))}

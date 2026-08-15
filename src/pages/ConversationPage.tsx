@@ -255,7 +255,7 @@ export const ConversationPage: React.FC = () => {
 
   return (
     <div className="fixed inset-0 z-40 bg-white dark:bg-gray-950 flex flex-col">
-      <header className="flex items-center gap-2 px-3 py-2.5 border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
+      <header className="flex items-center gap-2 px-3 py-2.5 pt-[calc(0.625rem+env(safe-area-inset-top))] border-b border-gray-100 dark:border-gray-800 flex-shrink-0">
         <button type="button" onClick={() => navigate('/messages')} aria-label="Back" className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
           <ChevronLeft size={20} aria-hidden="true" />
         </button>

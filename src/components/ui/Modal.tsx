@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 
 interface ModalProps {
@@ -20,6 +20,12 @@ const sizeClasses = {
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
+// How far down the handle needs to be dragged before letting go actually
+// dismisses the sheet, vs. snapping back to rest — matches the ballpark
+// most native bottom sheets use (a fraction of the handle's own touch
+// target, not the full sheet height).
+const DISMISS_DRAG_PX = 90;
+
 export const Modal: React.FC<ModalProps> = ({
   isOpen,
   onClose,
@@ -30,6 +36,31 @@ export const Modal: React.FC<ModalProps> = ({
 }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   const titleId = useRef(`modal-title-${Math.random().toString(36).slice(2, 8)}`);
+
+  // Drag-to-dismiss for the mobile bottom-sheet layout — deliberately
+  // only listens on the handle strip itself (not the whole dialog), so
+  // dragging inside scrollable modal content never gets mistaken for a
+  // dismiss gesture. Desktop's centered dialog ignores this entirely
+  // (the handle is hidden there via `sm:hidden`).
+  const [dragY, setDragY] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const dragStartY = useRef<number | null>(null);
+
+  const handleDragStart = (e: React.TouchEvent) => {
+    dragStartY.current = e.touches[0].clientY;
+    setDragging(true);
+  };
+  const handleDragMove = (e: React.TouchEvent) => {
+    if (dragStartY.current === null) return;
+    const delta = e.touches[0].clientY - dragStartY.current;
+    if (delta > 0) setDragY(delta);
+  };
+  const handleDragEnd = () => {
+    dragStartY.current = null;
+    setDragging(false);
+    if (dragY > DISMISS_DRAG_PX) onClose();
+    setDragY(0);
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -77,7 +108,7 @@ export const Modal: React.FC<ModalProps> = ({
     // full-screen viewer; at the old z-50 its buttons were rendered
     // under the viewer's invisible prev/next tap targets and couldn't
     // actually be clicked.
-    <div className="fixed inset-0 z-[75] flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div className="fixed inset-0 z-[75] flex items-end sm:items-center justify-center p-0 sm:p-4" data-no-swipe-back>
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in"
         onClick={onClose}
@@ -89,12 +120,30 @@ export const Modal: React.FC<ModalProps> = ({
         aria-labelledby={title ? titleId.current : undefined}
         tabIndex={-1}
         className={[
-          'relative bg-white dark:bg-gray-900 w-full sm:rounded-2xl shadow-2xl animate-slide-up',
-          'rounded-t-2xl max-h-[90vh] overflow-y-auto',
+          'relative bg-white dark:bg-gray-900 w-full sm:rounded-2xl shadow-2xl',
+          dragging ? '' : 'animate-slide-up',
+          'rounded-t-2xl max-h-[90vh] overflow-y-auto overscroll-y-contain',
           'focus:outline-none',
           sizeClasses[size],
         ].join(' ')}
+        style={{
+          transform: dragY ? `translateY(${dragY}px)` : undefined,
+          transition: dragging ? 'none' : 'transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
+        }}
       >
+        {/* Drag handle — mobile-only, matches the native bottom-sheet
+            affordance. Deliberately the only touch-responsive strip of
+            the dialog, so it never fights scrolling inside the modal's
+            own content. */}
+        <div
+          className="sm:hidden flex justify-center pt-2.5 pb-1 touch-none"
+          onTouchStart={handleDragStart}
+          onTouchMove={handleDragMove}
+          onTouchEnd={handleDragEnd}
+        >
+          <div className="w-9 h-1.5 rounded-full bg-gray-200 dark:bg-gray-700" aria-hidden="true" />
+        </div>
+
         {(title || !hideClose) && (
           <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-800">
             {title && <h2 id={titleId.current} className="text-lg font-semibold text-gray-900 dark:text-gray-100">{title}</h2>}

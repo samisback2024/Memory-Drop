@@ -39,8 +39,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenMenu }) => {
   const displayName = profile?.display_name || profile?.username || 'You';
 
   return (
-    <header className="sticky top-0 z-40 h-16 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 shadow-sm transition-colors">
-      <div className="flex items-center justify-between h-full max-w-5xl mx-auto px-4">
+    <header className="sticky top-0 z-40 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-800 shadow-sm transition-colors pt-[env(safe-area-inset-top)]">
+      <div className="flex items-center justify-between h-16 max-w-5xl mx-auto px-4">
         <div className="flex items-center gap-2">
           {/* Opens the AccountSidebar drawer below lg: — that width no
               longer has the persistent sidebar AppShell renders beside

@@ -15,6 +15,12 @@ body {
   font-family: 'Inter', system-ui, sans-serif;
   background-color: #F9FAFB;
   color: #111827;
+  /* Suppresses Safari/Chrome's native rubber-band bounce at the top/
+     bottom of the page. usePullToRefresh.ts already builds its own pull
+     indicator from raw touch deltas — without this, the native bounce
+     plays underneath it at the same time, so pulling down shows two
+     competing effects instead of one coherent one. */
+  overscroll-behavior-y: contain;
 }
 
 #root {

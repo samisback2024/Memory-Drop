@@ -164,7 +164,7 @@ export const MomentViewer: React.FC<MomentViewerProps> = ({ authorUserId, includ
   const moodMeta = current.mood ? MOOD_META[current.mood] : null;
 
   return (
-    <div className="fixed inset-0 z-[70] bg-black flex flex-col select-none">
+    <div className="fixed inset-0 z-[70] bg-black flex flex-col select-none pt-[env(safe-area-inset-top)]" data-no-swipe-back>
       <MomentProgressBar count={moments.length} activeIndex={index} progress={progress} />
 
       <div className="flex items-center gap-2.5 px-4 pt-3 pb-2">
@@ -238,7 +238,7 @@ export const MomentViewer: React.FC<MomentViewerProps> = ({ authorUserId, includ
         )}
       </div>
 
-      <div className="p-4 flex flex-col gap-3">
+      <div className="p-4 pb-[calc(1rem+env(safe-area-inset-bottom))] flex flex-col gap-3">
         {current.is_owner ? (
           <button
             type="button"

@@ -7,6 +7,8 @@ import { NewCreators } from '../components/social/NewCreators';
 import { EmptyState } from '../components/ui/EmptyState';
 import { ErrorState } from '../components/ui/ErrorState';
 import { Button } from '../components/ui/Button';
+import { PullToRefreshIndicator } from '../components/ui/PullToRefreshIndicator';
+import { usePullToRefresh } from '../hooks/usePullToRefresh';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
 import { EXPLORE_TABS, PERSON_TABS, type ExploreTab, type Memory } from '../types/memory';
 
@@ -63,8 +65,11 @@ export const ExplorePage: React.FC = () => {
     });
   };
 
+  const { pulling, distance, refreshing } = usePullToRefresh(() => load(tab), !isPersonTab);
+
   return (
     <div className="flex flex-col gap-4">
+      <PullToRefreshIndicator pulling={pulling} distance={distance} refreshing={refreshing} />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">

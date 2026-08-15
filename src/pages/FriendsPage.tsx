@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useSocial } from '../hooks/useSocial';
 import { UserList } from '../components/social/UserList';
 import { SuggestedFriends } from '../components/social/SuggestedFriends';
+import { PullToRefreshIndicator } from '../components/ui/PullToRefreshIndicator';
+import { usePullToRefresh } from '../hooks/usePullToRefresh';
 import type { SocialUserWithRelationship } from '../types/social';
 
 // "Friends" = people you orbit who orbit you back — computed client-side
@@ -15,19 +17,30 @@ export const FriendsPage: React.FC = () => {
   const [friends, setFriends] = useState<SocialUserWithRelationship[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (!profile) return;
-    let cancelled = false;
-    getOrbiting(profile.id).then(data => {
-      if (cancelled) return;
+  // Ref-based cancel guard (not a local closure flag) so the same
+  // function can be called both from the mount effect below and from
+  // pull-to-refresh without two separate copies of this fetch existing.
+  const cancelledRef = React.useRef(false);
+  const loadFriends = useCallback(() => {
+    if (!profile) return Promise.resolve();
+    cancelledRef.current = false;
+    return getOrbiting(profile.id).then(data => {
+      if (cancelledRef.current) return;
       setFriends(data.filter(u => u.is_orbiting_you));
       setLoading(false);
     });
-    return () => { cancelled = true; };
   }, [profile, getOrbiting]);
+
+  useEffect(() => {
+    loadFriends();
+    return () => { cancelledRef.current = true; };
+  }, [loadFriends]);
+
+  const { pulling, distance, refreshing } = usePullToRefresh(loadFriends, true);
 
   return (
     <div className="flex flex-col gap-4">
+      <PullToRefreshIndicator pulling={pulling} distance={distance} refreshing={refreshing} />
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">Friends</h1>
         <nav className="flex items-center gap-2 text-sm">

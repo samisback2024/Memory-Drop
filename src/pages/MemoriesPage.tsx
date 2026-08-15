@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { GitCommitVertical, CalendarDays, CalendarRange, Unlock, Lock } from 'lucide-react';
 import { useMemories } from '../hooks/useMemories';
 import { MemoryTimeline } from '../components/memories/MemoryTimeline';
 import { MemoryCalendar } from '../components/memories/MemoryCalendar';
 import { YearView } from '../components/memories/YearView';
 import { ListView } from '../components/memories/ListView';
+import { PullToRefreshIndicator } from '../components/ui/PullToRefreshIndicator';
+import { usePullToRefresh } from '../hooks/usePullToRefresh';
 import { EMPTY_MEMORY_FILTERS, type Memory } from '../types/memory';
 
 type MemoriesTab = 'timeline' | 'calendar' | 'years';
@@ -27,10 +29,9 @@ export const MemoriesPage: React.FC = () => {
   const [lockedUntilLater, setLockedUntilLater] = useState<Memory[]>([]);
   const [overviewLoading, setOverviewLoading] = useState(true);
 
-  useEffect(() => {
-    if (tab !== 'timeline') return;
+  const loadOverview = useCallback(() => {
     setOverviewLoading(true);
-    Promise.all([
+    return Promise.all([
       getMemories({ ...EMPTY_MEMORY_FILTERS, lockStatus: 'unlocked' }, 'newest', 5, 0),
       // Fetched wider than needed and re-sorted client-side by matured_at
       // (soonest unlock first) — get_memories only sorts by created_at,
@@ -41,10 +42,18 @@ export const MemoriesPage: React.FC = () => {
       setLockedUntilLater([...locked].sort((a, b) => new Date(a.matured_at).getTime() - new Date(b.matured_at).getTime()).slice(0, 5));
       setOverviewLoading(false);
     });
-  }, [tab, getMemories]);
+  }, [getMemories]);
+
+  useEffect(() => {
+    if (tab === 'timeline') loadOverview();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tab]);
+
+  const { pulling, distance, refreshing } = usePullToRefresh(loadOverview, tab === 'timeline');
 
   return (
     <div className="flex flex-col gap-4 -mx-4 px-4 -mt-6 pt-6 pb-6 bg-gradient-to-b from-purple-50/60 via-transparent to-transparent min-h-[calc(100vh-4rem)]">
+      <PullToRefreshIndicator pulling={pulling} distance={distance} refreshing={refreshing} />
       <div>
         <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">Memories</h1>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Every memory you've ever unlocked, in one place, forever.</p>

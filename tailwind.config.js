@@ -5,6 +5,17 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  // Without this, every `hover:` class also matches a touchscreen tap —
+  // Safari/Chrome on iOS/Android fire :hover on tap and don't clear it
+  // until the next tap lands elsewhere, so a button visibly "sticks"
+  // highlighted after you've already tapped it. Wrapping every `hover:`
+  // utility in `@media (hover: hover)` (stable since Tailwind 3.4) fixes
+  // this app-wide with no per-component changes — desktop mice/trackpads
+  // are unaffected, they still report `hover: hover` and get real hover
+  // states exactly as before.
+  future: {
+    hoverOnlyWhenSupported: true,
+  },
   theme: {
     extend: {
       fontFamily: {
@@ -47,6 +58,8 @@ export default {
         'reaction-pop': 'reactionPop 0.35s ease-out',
         'reaction-float': 'reactionFloat 0.6s ease-out forwards',
         'page-enter': 'pageEnter 0.22s ease-out',
+        'page-enter-forward': 'pageEnterForward 0.24s cubic-bezier(0.32, 0.72, 0, 1)',
+        'page-enter-back': 'pageEnterBack 0.24s cubic-bezier(0.32, 0.72, 0, 1)',
         'unlock-reveal': 'unlockReveal 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)',
         'slide-in-left': 'slideInLeft 0.2s ease-out',
         'aurora-shift': 'auroraShift 14s ease-in-out infinite',
@@ -61,6 +74,11 @@ export default {
         slideUp: { '0%': { transform: 'translateY(10px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
         slideInLeft: { '0%': { transform: 'translateX(-100%)' }, '100%': { transform: 'translateX(0)' } },
         pageEnter: { '0%': { opacity: '0', transform: 'translateY(6px)' }, '100%': { opacity: '1', transform: 'translateY(0)' } },
+        // Approximates iOS/Android's forward (push) and back (pop) stack-
+        // navigation transitions — new screens arrive from the direction
+        // they conceptually "came from" instead of just fading in place.
+        pageEnterForward: { '0%': { opacity: '0', transform: 'translateX(28px)' }, '100%': { opacity: '1', transform: 'translateX(0)' } },
+        pageEnterBack: { '0%': { opacity: '0', transform: 'translateX(-28px)' }, '100%': { opacity: '1', transform: 'translateX(0)' } },
         unlockReveal: {
           '0%': { opacity: '0', transform: 'scale(0.96)' },
           '60%': { opacity: '1', transform: 'scale(1.015)' },
