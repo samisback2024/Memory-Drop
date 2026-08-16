@@ -14,7 +14,7 @@ Related docs, so this one doesn't repeat them: `LAUNCH_CHECKLIST.md` (web-launch
 - **Store-readiness gaps that exist regardless of packaging approach**, carried over from `LAUNCH_CHECKLIST.md`/`KNOWN_LIMITATIONS.md` (don't re-solve these here, just tracking that they block submission either way):
   - `TermsPage.tsx`/`PrivacyPage.tsx` are explicitly placeholder copy — both stores' reviewers check that these links are live and real, not just present.
   - No adaptive Android icon (needs separate foreground/background layers), no splash screen art, no real device screenshots — specs already drafted in `APP_STORE_ASSETS.md`, execution needs a designer or design tool.
-  - `APP_STORE_ASSETS.md`'s long description and Part 2 of `README2.md` both still describe the old "message requests from strangers" messaging model — messaging now strictly requires mutual Orbit (see `supabase/phase28_mutual_orbit_messaging.sql`); both need a copy pass before submission (tracked below).
+  - ~~`APP_STORE_ASSETS.md`'s long description and `README.md` both still describe the old "message requests from strangers" messaging model~~ **Resolved** — both now describe the mutual-Orbit-only model (see `supabase/phase28_mutual_orbit_messaging.sql`).
   - No real production domain configured yet in Vercel (also blocks the Google OAuth branding fix from the last round of work — same underlying prerequisite).
   - `moderate_content()`/`get_content_reports()` (Phase 10f) have no admin UI — this stops being a "nice to have later" once you're a UGC app under App Store/Play review (see Phase 2/3 below, this becomes a real submission requirement, not a backlog item).
 
@@ -36,7 +36,7 @@ Three real options existed; here's why one wins clearly for this specific app:
 
 ## Phase 0 — Finish the web-launch prerequisites first
 
-`README2.md`'s existing recommendation still holds and this plan doesn't second-guess it: **launch web-first / PWA-installable before wrapping for the stores.** Reasoning, concretely:
+`README.md`'s existing recommendation still holds and this plan doesn't second-guess it: **launch web-first / PWA-installable before wrapping for the stores.** Reasoning, concretely:
 - App store review cycles (Phase 2/3 below) add real friction to iteration speed. It's cheaper to find and fix bugs against real users on the web first.
 - A native wrapper is easiest to build correctly once the underlying web app is stable, not while it's still actively changing day to day.
 - Nothing about wrapping later is harder than wrapping now — Capacitor works the same regardless of how many users you already have.
@@ -48,7 +48,7 @@ Concrete blockers to clear first (full detail in `LAUNCH_CHECKLIST.md`, summariz
 - [ ] Google OAuth production credentials + consent screen branding (App name = "Memory Drop", logo, privacy/terms links) — same prerequisite as the OAuth branding work already scoped.
 - [ ] Legal review pass on Terms/Privacy — real copy, not the placeholder text currently in `TermsPage.tsx`/`PrivacyPage.tsx`.
 - [ ] `pg_cron` enabled for `generate_unlock_reminders()`/`generate_weekly_recap()` — not a hard submission blocker, but genuinely improves what reviewers and early users experience.
-- [ ] Refresh `APP_STORE_ASSETS.md`'s long description and `README2.md` Part 2's messaging description — both still describe the pre-Phase-28 "message requests from strangers" model; messaging is now mutual-Orbit-only.
+- [x] Refresh `APP_STORE_ASSETS.md`'s long description and `README.md`'s messaging description — both now describe the mutual-Orbit-only model.
 
 ---
 
@@ -65,7 +65,7 @@ Concrete blockers to clear first (full detail in `LAUNCH_CHECKLIST.md`, summariz
 9. **Local testing**:
    - Android: `npx cap run android` — needs Android Studio installed, works on Windows/Mac/Linux.
    - iOS: `npx cap run ios` — **needs Xcode, which is Mac-only.** If there's no Mac available, this is a real blocker, not a preference — options are buying/borrowing a Mac, or a cloud Mac CI service (MacStadium, Codemagic, GitHub Actions' macOS runners) to build and sign without owning one. Flagging this now since it's the single most common surprise blocker for teams doing this for the first time.
-10. **(Later, optional, not required for initial submission)** Push notifications for unlock reminders — `README2.md`'s growth playbook already identifies unlock reminders as a real retention lever currently only reachable via in-app `pg_cron` + the Activity Center. Wiring real OS push would need `@capacitor/push-notifications` + Apple Push Notification service / Firebase Cloud Messaging setup — a separate, later scope, don't block initial store submission on it.
+10. **(Later, optional, not required for initial submission)** Push notifications for unlock reminders — `README.md`'s growth playbook already identifies unlock reminders as a real retention lever currently only reachable via in-app `pg_cron` + the Activity Center. Wiring real OS push would need `@capacitor/push-notifications` + Apple Push Notification service / Firebase Cloud Messaging setup — a separate, later scope, don't block initial store submission on it.
 
 ---
 
@@ -128,7 +128,7 @@ Concrete blockers to clear first (full detail in `LAUNCH_CHECKLIST.md`, summariz
 - [ ] Real production domain live
 - [ ] Google OAuth branding fixed (consent screen shows "Memory Drop", not the raw Supabase URL)
 - [ ] Terms/Privacy have real, lawyer-reviewed copy, live at real URLs
-- [ ] `APP_STORE_ASSETS.md` and `README2.md`'s messaging description updated to match Phase 28's mutual-Orbit-only model
+- [x] `APP_STORE_ASSETS.md` and `README.md`'s messaging description updated to match Phase 28's mutual-Orbit-only model
 
 **Capacitor setup (Phase 1):**
 - [ ] App ID decided and locked in

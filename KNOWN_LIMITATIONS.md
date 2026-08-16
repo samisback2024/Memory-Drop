@@ -1,6 +1,6 @@
 # Known Limitations
 
-A curated list of what a beta user, reviewer, or new contributor is most likely to actually hit. Every phase's README section (`README.md`, search for "## Known limitations") has the exhaustive, phase-by-phase record — this file surfaces the ones that matter most at launch, in one place.
+A curated list of what a beta user, reviewer, or new contributor is most likely to actually hit. `git log` and each migration file's own header comment under `supabase/` have the exhaustive, phase-by-phase record — this file surfaces the ones that matter most at launch, in one place.
 
 ## Testing
 
