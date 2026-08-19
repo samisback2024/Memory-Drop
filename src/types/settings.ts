@@ -34,11 +34,11 @@ export const COLOR_HUE_META: Record<ColorHue, { label: string; swatch: string }>
 // option. "Memory Gold" and "Sage & Plum" are new, built specifically
 // to feel like this product rather than a generic palette.
 export const SIGNATURE_PAIRS: { label: string; description: string; primary: ColorHue; secondary: ColorHue }[] = [
-  { label: 'Classic', description: "The original Memory Drop purple-to-blue.", primary: 'classic_purple', secondary: 'classic_blue' },
+  { label: 'Memory Gold', description: 'Amber unlock-gold on graphite — this app\'s own signature, and the default.', primary: 'graphite', secondary: 'amber' },
   { label: 'Ink & Claret', description: 'Quiet navy with a claret accent.', primary: 'navy', secondary: 'claret' },
   { label: 'Riviera', description: 'Warm cornflower and terracotta.', primary: 'cornflower', secondary: 'terracotta' },
   { label: 'Grand Prix', description: 'Bold royal blue and true red.', primary: 'royal_blue', secondary: 'scarlet' },
-  { label: 'Memory Gold', description: 'Amber unlock-gold on graphite — this app\'s own signature.', primary: 'graphite', secondary: 'amber' },
+  { label: 'Classic', description: "The original Memory Drop purple-to-blue.", primary: 'classic_purple', secondary: 'classic_blue' },
   { label: 'Sage & Plum', description: 'Calm forest green with a plum accent.', primary: 'forest', secondary: 'plum' },
 ];
 

@@ -23,8 +23,11 @@ interface ThemeContextType extends AppearanceState {
 }
 
 const STORAGE_KEY = 'memorydrop_appearance';
+// "Memory Gold" (graphite/amber) is the out-of-the-box pair — see the
+// comment on index.css's :root block for why. Classic purple/blue is
+// still one tap away in Settings → Appearance for anyone who prefers it.
 const DEFAULT_STATE: AppearanceState = {
-  theme: 'system', colorPrimary: 'classic_purple', colorSecondary: 'classic_blue',
+  theme: 'system', colorPrimary: 'graphite', colorSecondary: 'amber',
   fontSize: 'medium', reducedMotion: false, highContrast: false, largerTouchTargets: false,
 };
 
