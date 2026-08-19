@@ -23,7 +23,7 @@ export const MoodPicker: React.FC<MoodPickerProps> = ({ value, onChange }) => (
           className={[
             'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors',
             'focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none',
-            selected ? 'bg-purple-600 border-purple-600 text-white' : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300',
+            selected ? 'bg-purple-600 border-purple-600 text-white' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600',
           ].join(' ')}
         >
           <span aria-hidden="true">{meta.emoji}</span>

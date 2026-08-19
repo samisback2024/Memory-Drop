@@ -16,7 +16,7 @@ const VARIANTS: Record<EmptyDropVariant, { icon: typeof Sparkles; title: string;
 export const EmptyDropState: React.FC<{ variant: EmptyDropVariant }> = ({ variant }) => {
   const { icon, title, description } = VARIANTS[variant];
   return (
-    <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm">
+    <div className="bg-white/80 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm">
       <EmptyState icon={icon} title={title} description={description} />
     </div>
   );

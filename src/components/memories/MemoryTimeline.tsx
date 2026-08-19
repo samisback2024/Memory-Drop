@@ -53,7 +53,7 @@ export const MemoryTimeline: React.FC = () => {
       <MemoryFilters filters={filters} onChange={setFilters} years={years} />
 
       <div className="flex items-center justify-between">
-        <div className="flex bg-white/70 backdrop-blur-xl rounded-xl p-1 gap-1 border border-white/60 shadow-sm">
+        <div className="flex bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-xl p-1 gap-1 border border-white/60 dark:border-gray-800/60 shadow-sm">
           {LAYOUTS.map(({ id, icon: Icon, label }) => (
             <button
               key={id}
@@ -63,7 +63,7 @@ export const MemoryTimeline: React.FC = () => {
               aria-pressed={layout === id}
               className={[
                 'p-2 rounded-lg transition-colors',
-                layout === id ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'text-gray-500 hover:text-gray-800',
+                layout === id ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200',
               ].join(' ')}
             >
               <Icon size={15} aria-hidden="true" />
@@ -73,7 +73,7 @@ export const MemoryTimeline: React.FC = () => {
         <button
           type="button"
           onClick={() => setSort(s => (s === 'newest' ? 'oldest' : 'newest'))}
-          className="flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-800 px-2"
+          className="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 px-2"
         >
           <ArrowDownUp size={13} aria-hidden="true" /> {sort === 'newest' ? 'Newest first' : 'Oldest first'}
         </button>
@@ -81,10 +81,10 @@ export const MemoryTimeline: React.FC = () => {
 
       {loading ? (
         <div className="flex flex-col gap-4">
-          {[0, 1, 2].map(i => <div key={i} className="h-32 rounded-2xl bg-white/60 animate-pulse" />)}
+          {[0, 1, 2].map(i => <div key={i} className="h-32 rounded-2xl bg-white/60 dark:bg-gray-800/60 animate-pulse" />)}
         </div>
       ) : memories.length === 0 ? (
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm">
+        <div className="bg-white/80 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm">
           <EmptyState icon={Archive} title="No memories here yet" description="Once a capsule unlocks or a moment expires, it'll live here forever." />
         </div>
       ) : (
@@ -99,7 +99,7 @@ export const MemoryTimeline: React.FC = () => {
               type="button"
               onClick={() => load(false, memories.length)}
               disabled={loadingMore}
-              className="self-center flex items-center gap-2 text-sm font-medium text-purple-600 hover:text-purple-700 disabled:opacity-50 py-2"
+              className="self-center flex items-center gap-2 text-sm font-medium text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 disabled:opacity-50 py-2"
             >
               {loadingMore && <Loader2 size={14} className="animate-spin" aria-hidden="true" />}
               Load more

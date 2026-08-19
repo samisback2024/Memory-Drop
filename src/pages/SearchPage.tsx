@@ -154,7 +154,7 @@ export const SearchPage: React.FC = () => {
         )}
 
         {showSuggestions && suggestions.length > 0 && (
-          <div role="listbox" className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-100 rounded-xl shadow-lg z-30 overflow-hidden">
+          <div role="listbox" className="absolute left-0 right-0 top-full mt-1 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl shadow-lg z-30 overflow-hidden">
             {suggestions.map((s, i) => (
               <button
                 key={`${s.suggestion_type}-${s.suggestion}-${i}`}
@@ -162,9 +162,9 @@ export const SearchPage: React.FC = () => {
                 role="option"
                 aria-selected={false}
                 onMouseDown={() => submitQuery(s.suggestion)}
-                className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-left text-gray-700 hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
               >
-                {s.suggestion_type === 'user' ? <Search size={13} className="text-gray-400" aria-hidden="true" /> : <TrendingUp size={13} className="text-gray-400" aria-hidden="true" />}
+                {s.suggestion_type === 'user' ? <Search size={13} className="text-gray-400 dark:text-gray-500" aria-hidden="true" /> : <TrendingUp size={13} className="text-gray-400 dark:text-gray-500" aria-hidden="true" />}
                 {s.suggestion_type === 'user' ? `@${s.suggestion}` : s.suggestion}
               </button>
             ))}
@@ -182,7 +182,7 @@ export const SearchPage: React.FC = () => {
               onClick={() => setActiveType(id)}
               className={[
                 'px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0',
-                activeType === id ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50',
+                activeType === id ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700',
               ].join(' ')}
             >
               {label}
@@ -203,7 +203,7 @@ export const SearchPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => clearSearchHistory().then(refreshRecent)}
-                  className="text-xs font-medium text-gray-400 hover:text-gray-600"
+                  className="text-xs font-medium text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                 >
                   Clear
                 </button>
@@ -214,7 +214,7 @@ export const SearchPage: React.FC = () => {
                     key={r.query}
                     type="button"
                     onClick={() => submitQuery(r.query)}
-                    className="px-3 py-1.5 rounded-full text-xs font-medium bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors"
+                    className="px-3 py-1.5 rounded-full text-xs font-medium bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                   >
                     {r.query}
                   </button>
@@ -235,7 +235,7 @@ export const SearchPage: React.FC = () => {
                     key={t.query}
                     type="button"
                     onClick={() => submitQuery(t.query)}
-                    className="px-3 py-1.5 rounded-full text-xs font-medium bg-gray-50 text-gray-600 hover:bg-gray-100 transition-colors"
+                    className="px-3 py-1.5 rounded-full text-xs font-medium bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                   >
                     {t.query}
                   </button>
@@ -245,14 +245,14 @@ export const SearchPage: React.FC = () => {
           )}
 
           <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4">
-            <h2 className="text-sm font-semibold text-gray-900 mb-1">Suggested for you</h2>
+            <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">Suggested for you</h2>
             <SuggestedFriends />
           </div>
         </div>
       )}
 
       {showResults && loading && (
-        <div className="grid grid-cols-3 gap-1.5">{[0, 1, 2, 3, 4, 5].map(i => <div key={i} className="aspect-square rounded-xl bg-gray-50 animate-pulse" />)}</div>
+        <div className="grid grid-cols-3 gap-1.5">{[0, 1, 2, 3, 4, 5].map(i => <div key={i} className="aspect-square rounded-xl bg-gray-50 dark:bg-gray-800 animate-pulse" />)}</div>
       )}
 
       {showResults && !loading && nothingFound && (
@@ -269,14 +269,14 @@ export const SearchPage: React.FC = () => {
         <div className="flex flex-col gap-4">
           {showUsers && users.length > 0 && (
             <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4">
-              <h2 className="text-sm font-semibold text-gray-900 mb-2">Users</h2>
+              <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Users</h2>
               <UserSearchResults users={users} loading={false} />
             </div>
           )}
 
           {showMemories && memories.length > 0 && (
             <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4 flex flex-col gap-2">
-              <h2 className="text-sm font-semibold text-gray-900">Memories</h2>
+              <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Memories</h2>
               <GridView memories={memories} />
             </div>
           )}

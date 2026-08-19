@@ -30,7 +30,7 @@ export const SocialStats: React.FC<SocialStatsProps> = ({ profileId, username, r
       </Link>
       <Link to={`/u/${username}/in-orbit`} className="text-center hover:opacity-70 transition-opacity">
         {counts ? <p className="font-bold text-gray-900 dark:text-gray-100">{counts.in_orbit_count}</p> : <Skeleton className="h-4 w-6 mx-auto" />}
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">In Orbit</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Your Orbit</p>
       </Link>
     </>
   );

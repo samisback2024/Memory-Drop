@@ -8,7 +8,7 @@ interface DropTabsProps {
 
 const TABS: Array<{ key: DropTab; label: string }> = [
   { key: 'my_drops', label: 'My Drops' },
-  { key: 'in_orbit', label: 'In Orbit' },
+  { key: 'in_orbit', label: 'Your Orbit' },
   { key: 'public_drops', label: 'Public Drops' },
   { key: 'saved_to_unlock', label: 'Saved to Unlock' },
 ];
@@ -55,7 +55,7 @@ export const DropTabs: React.FC<DropTabsProps> = ({ active, onChange }) => {
           aria-selected={active === tab.key}
           onClick={() => onChange(tab.key)}
           className={[
-            'relative z-10 flex-1 py-2 px-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors duration-200',
+            'relative z-10 flex-1 py-2 px-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all duration-200 ease-spring active:scale-95',
             'focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none',
             active === tab.key ? 'text-white' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200',
           ].join(' ')}

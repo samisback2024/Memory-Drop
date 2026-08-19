@@ -75,7 +75,7 @@ export const Textarea: React.FC<TextareaProps> = ({
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
-        <label htmlFor={textareaId} className="text-sm font-medium text-gray-700">
+        <label htmlFor={textareaId} className="text-sm font-medium text-gray-700 dark:text-gray-300">
           {label}
         </label>
       )}

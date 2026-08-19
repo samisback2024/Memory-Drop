@@ -33,16 +33,16 @@ interface SectionProps {
 }
 
 const CapsuleSection: React.FC<SectionProps> = ({ title, icon: Icon, capsules, loading, emptyLabel, onDeleted }) => (
-  <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm p-4 flex flex-col gap-3">
-    <h2 className="text-sm font-semibold text-gray-900 flex items-center gap-1.5">
+  <div className="bg-white/80 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm p-4 flex flex-col gap-3">
+    <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-1.5">
       <Icon size={15} className="text-purple-500" aria-hidden="true" />
       {title}
-      {!loading && <span className="text-xs font-normal text-gray-400">({capsules.length})</span>}
+      {!loading && <span className="text-xs font-normal text-gray-400 dark:text-gray-500">({capsules.length})</span>}
     </h2>
     {loading ? (
-      <div className="h-24 rounded-xl bg-gray-50 animate-pulse" />
+      <div className="h-24 rounded-xl bg-gray-50 dark:bg-gray-800 animate-pulse" />
     ) : capsules.length === 0 ? (
-      <p className="text-xs text-gray-400">{emptyLabel}</p>
+      <p className="text-xs text-gray-400 dark:text-gray-500">{emptyLabel}</p>
     ) : (
       <CapsuleTimeline capsules={capsules} onDeleted={onDeleted} />
     )}
@@ -164,7 +164,7 @@ export const CapsulesPage: React.FC = () => {
             <Clock size={20} className="text-purple-500" aria-hidden="true" />
             Time Capsules
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">Memories you've sent into the future.</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Memories you've sent into the future.</p>
         </div>
         <Button variant="gradient" size="sm" onClick={() => setWizardOpen(true)}>
           <Plus size={15} aria-hidden="true" />
@@ -172,13 +172,13 @@ export const CapsulesPage: React.FC = () => {
         </Button>
       </div>
 
-      <div role="tablist" aria-label="Capsules views" className="flex bg-white/70 backdrop-blur-xl rounded-xl p-1 gap-1 border border-white/60 shadow-sm overflow-x-auto">
+      <div role="tablist" aria-label="Capsules views" className="flex bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-xl p-1 gap-1 border border-white/60 dark:border-gray-800/60 shadow-sm overflow-x-auto">
         <button
           type="button"
           role="tab"
           aria-selected={mode === 'overview'}
           onClick={() => setMode('overview')}
-          className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0 ${mode === 'overview' ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'text-gray-500'}`}
+          className={`px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-200 ease-spring active:scale-95 flex-shrink-0 ${mode === 'overview' ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'text-gray-500 dark:text-gray-400'}`}
         >
           My Capsules
         </button>
@@ -187,16 +187,16 @@ export const CapsulesPage: React.FC = () => {
           role="tab"
           aria-selected={mode === 'in_orbit'}
           onClick={() => setMode('in_orbit')}
-          className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0 ${mode === 'in_orbit' ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'text-gray-500'}`}
+          className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-200 ease-spring active:scale-95 flex-shrink-0 ${mode === 'in_orbit' ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'text-gray-500 dark:text-gray-400'}`}
         >
-          <Users size={12} aria-hidden="true" /> In Orbit
+          <Users size={12} aria-hidden="true" /> Your Orbit
         </button>
         <button
           type="button"
           role="tab"
           aria-selected={mode === 'public'}
           onClick={() => setMode('public')}
-          className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0 ${mode === 'public' ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'text-gray-500'}`}
+          className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-200 ease-spring active:scale-95 flex-shrink-0 ${mode === 'public' ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'text-gray-500 dark:text-gray-400'}`}
         >
           <Globe2 size={12} aria-hidden="true" /> Public
         </button>
@@ -205,7 +205,7 @@ export const CapsulesPage: React.FC = () => {
           role="tab"
           aria-selected={mode === 'browse'}
           onClick={() => setMode('browse')}
-          className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors flex-shrink-0 ${mode === 'browse' ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'text-gray-500'}`}
+          className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all duration-200 ease-spring active:scale-95 flex-shrink-0 ${mode === 'browse' ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'text-gray-500 dark:text-gray-400'}`}
         >
           <LayoutList size={12} aria-hidden="true" /> Browse & Search
         </button>
@@ -215,9 +215,9 @@ export const CapsulesPage: React.FC = () => {
         <CapsuleArchive key={refreshKey} userId={user.id} isOwnArchive />
       ) : isDiscoveryTab(mode) ? (
         discoveryLoading ? (
-          <div className="flex flex-col gap-3">{[0, 1, 2].map(i => <div key={i} className="h-32 rounded-2xl bg-white/60 animate-pulse" />)}</div>
+          <div className="flex flex-col gap-3">{[0, 1, 2].map(i => <div key={i} className="h-32 rounded-2xl bg-white/60 dark:bg-gray-800/60 animate-pulse" />)}</div>
         ) : discoveryItems.length === 0 ? (
-          <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm">
+          <div className="bg-white/80 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm">
             {!isOnline ? (
               <ErrorState title="You're offline" description="Reconnect and try again." onRetry={() => loadDiscovery(mode)} />
             ) : mode === 'in_orbit' ? (
@@ -234,7 +234,7 @@ export const CapsulesPage: React.FC = () => {
                 {discoveryLoadingMore ? 'Loading...' : 'Load more'}
               </Button>
             ) : (
-              <p className="text-center text-xs text-gray-400 py-2">You've reached the end.</p>
+              <p className="text-center text-xs text-gray-400 dark:text-gray-500 py-2">You've reached the end.</p>
             )}
           </div>
         )
@@ -247,7 +247,7 @@ export const CapsulesPage: React.FC = () => {
             <CapsuleSection title="Archived" icon={ArchiveIcon} capsules={archived} loading={loading} emptyLabel="" onDeleted={removeFrom(setArchived)} />
           )}
           {!loading && locked.length === 0 && unlocked.length === 0 && (
-            <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm">
+            <div className="bg-white/80 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm">
               {!isOnline ? (
                 <ErrorState title="You're offline" description="Reconnect and try again." onRetry={loadOverview} />
               ) : (

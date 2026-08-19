@@ -50,7 +50,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenMenu }) => {
             type="button"
             onClick={onOpenMenu}
             aria-label="Open menu"
-            className="lg:hidden p-2 -ml-2 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100 transition-colors focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none"
+            className="lg:hidden p-2 -ml-2 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100 transition-all duration-150 ease-spring active:scale-90 focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none"
           >
             <Menu size={20} aria-hidden="true" />
           </button>
@@ -75,10 +75,10 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenMenu }) => {
                 to={to}
                 aria-label={label}
                 className={({ isActive }) =>
-                  `flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none ${
+                  `flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-150 ease-spring active:scale-95 focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none ${
                     isActive
-                      ? 'bg-purple-50 text-purple-700'
-                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      ? 'bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100'
                   }`
                 }
               >
@@ -103,7 +103,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenMenu }) => {
             type="button"
             onClick={() => navigate('/search')}
             aria-label="Search"
-            className="sm:hidden p-2 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100 transition-colors focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none"
+            className="sm:hidden p-2 rounded-xl text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-100 transition-all duration-150 ease-spring active:scale-90 focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none"
           >
             <Search size={18} aria-hidden="true" />
           </button>
@@ -118,7 +118,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenMenu }) => {
             type="button"
             onClick={() => navigate('/profile')}
             aria-label="Go to your Profile"
-            className="ml-1 p-1.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none"
+            className="ml-1 p-1.5 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-150 ease-spring active:scale-90 focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none"
           >
             <Avatar src={profile?.profile_photo_url} name={displayName} size="sm" />
           </button>

@@ -19,7 +19,7 @@ const TILES: { key: keyof MemoryStats; label: string; icon: IconComponent }[] = 
   { key: 'saved_to_unlock', label: 'Save to Unlock', icon: Bookmark },
   { key: 'public_drops', label: 'Public drops', icon: Globe2 },
   { key: 'orbiting_count', label: 'Orbiting You', icon: Users },
-  { key: 'in_orbit_count', label: 'In Orbit', icon: UserPlus },
+  { key: 'in_orbit_count', label: 'Your Orbit', icon: UserPlus },
   { key: 'total_views', label: 'Views received', icon: Eye },
   { key: 'total_unlocks', label: 'Unlocks received', icon: KeyRound },
   { key: 'total_reactions', label: 'Reactions received', icon: SparkleDrop },

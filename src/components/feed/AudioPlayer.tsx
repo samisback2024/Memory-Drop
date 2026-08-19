@@ -14,12 +14,12 @@ export const AudioPlayer: React.FC<AudioPlayerProps> = ({ src }) => {
   const { ref, inView } = useInView(OBSERVER_OPTIONS);
 
   return (
-    <div ref={ref} className="mx-4 mb-1 rounded-2xl bg-gradient-to-br from-purple-50 to-blue-50 border border-purple-100/60 p-4 flex items-center gap-3">
-      <div className="w-10 h-10 rounded-full bg-white shadow-sm flex items-center justify-center flex-shrink-0">
+    <div ref={ref} className="mx-4 mb-1 rounded-2xl bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950/30 dark:to-blue-950/30 border border-purple-100/60 dark:border-purple-900/40 p-4 flex items-center gap-3">
+      <div className="w-10 h-10 rounded-full bg-white dark:bg-gray-800 shadow-sm flex items-center justify-center flex-shrink-0">
         <Mic size={16} className="text-purple-500" aria-hidden="true" />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-medium text-gray-500 mb-1">Voice memory</p>
+        <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Voice memory</p>
         {inView ? (
           <audio src={src} controls preload="metadata" className="w-full h-9" />
         ) : (

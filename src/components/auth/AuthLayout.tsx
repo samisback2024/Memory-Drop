@@ -30,12 +30,12 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({ title, subtitle, childre
           {subtitle && <p className="text-purple-200 text-sm mt-1">{subtitle}</p>}
         </div>
 
-        <div className={`bg-white rounded-3xl shadow-2xl p-6 ${stickyAction ? 'max-h-[80vh] flex flex-col' : ''}`}>
+        <div className={`bg-white dark:bg-gray-900 rounded-3xl shadow-2xl p-6 ${stickyAction ? 'max-h-[80vh] flex flex-col' : ''}`}>
           <div className={stickyAction ? 'overflow-y-auto flex-1 -mx-1 px-1' : ''}>
             {children}
           </div>
           {stickyAction && (
-            <div className="sticky bottom-0 -mx-6 -mb-6 px-6 pb-6 pt-4 mt-2 bg-white rounded-b-3xl border-t border-gray-100">
+            <div className="sticky bottom-0 -mx-6 -mb-6 px-6 pb-6 pt-4 mt-2 bg-white dark:bg-gray-900 rounded-b-3xl border-t border-gray-100 dark:border-gray-800">
               {stickyAction}
             </div>
           )}

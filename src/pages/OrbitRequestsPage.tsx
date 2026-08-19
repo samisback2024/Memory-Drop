@@ -28,20 +28,20 @@ export const OrbitRequestsPage: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <Link to="/friends" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 w-fit">
+      <Link to="/friends" className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 w-fit">
         <ArrowLeft size={15} aria-hidden="true" />
         Back to friends
       </Link>
       <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 -mb-1">Orbit requests</h1>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-        <h2 className="text-sm font-semibold text-gray-900 mb-1">Received</h2>
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4">
+        <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">Received</h2>
         {loading ? (
           <UserListSkeleton />
         ) : received.length === 0 ? (
           <EmptySocialState variant="requests" />
         ) : (
-          <div className="flex flex-col divide-y divide-gray-100">
+          <div className="flex flex-col divide-y divide-gray-100 dark:divide-gray-800">
             {received.map(u => (
               <OrbitRequestCard
                 key={u.id}
@@ -63,14 +63,14 @@ export const OrbitRequestsPage: React.FC = () => {
         )}
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-        <h2 className="text-sm font-semibold text-gray-900 mb-1">Sent by you</h2>
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4">
+        <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">Sent by you</h2>
         {loading ? (
           <UserListSkeleton />
         ) : sent.length === 0 ? (
           <EmptySocialState variant="sent-requests" />
         ) : (
-          <div className="flex flex-col divide-y divide-gray-100">
+          <div className="flex flex-col divide-y divide-gray-100 dark:divide-gray-800">
             {sent.map(u => (
               <OrbitRequestCard
                 key={u.id}

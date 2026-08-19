@@ -28,9 +28,9 @@ import {
 const SectionCard: React.FC<{ title: string; description?: string; children: React.ReactNode }> = ({
   title, description, children,
 }) => (
-  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-    <h2 className="text-base font-semibold text-gray-900">{title}</h2>
-    {description && <p className="text-xs text-gray-500 mt-0.5 mb-4">{description}</p>}
+  <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-6">
+    <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">{title}</h2>
+    {description && <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 mb-4">{description}</p>}
     <div className={description ? 'flex flex-col gap-5' : 'flex flex-col gap-5 mt-4'}>{children}</div>
   </div>
 );
@@ -125,7 +125,7 @@ export const EditProfilePage: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <Link to="/profile" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 w-fit">
+      <Link to="/profile" className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 w-fit">
         <ArrowLeft size={15} aria-hidden="true" />
         Back to profile
       </Link>
@@ -212,9 +212,9 @@ export const EditProfilePage: React.FC = () => {
               hint={`${bio.length}/${BIO_MAX}`}
             />
             {bio && (
-              <div className="mt-2 rounded-xl bg-gray-50 border border-gray-100 p-3">
-                <p className="text-[10px] font-medium uppercase tracking-wide text-gray-400 mb-1">Preview</p>
-                <p className="text-sm text-gray-700 whitespace-pre-wrap">{bio}</p>
+              <div className="mt-2 rounded-xl bg-gray-50 dark:bg-gray-800/60 border border-gray-100 dark:border-gray-800 p-3">
+                <p className="text-[10px] font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500 mb-1">Preview</p>
+                <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{bio}</p>
               </div>
             )}
           </div>
@@ -266,8 +266,8 @@ export const EditProfilePage: React.FC = () => {
         </SectionCard>
 
         {error && (
-          <div className="bg-red-50 border border-red-100 rounded-xl p-3">
-            <p className="text-sm text-red-600">{error}</p>
+          <div className="bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-900 rounded-xl p-3">
+            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
           </div>
         )}
         {saved && !error && (

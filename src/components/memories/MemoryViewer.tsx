@@ -34,28 +34,28 @@ const MomentMemoryBody: React.FC<{ memory: Memory }> = ({ memory }) => {
   const media = memory.media[0];
 
   return (
-    <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm overflow-hidden">
+    <div className="bg-white/80 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm overflow-hidden">
       <div className="flex items-center gap-3 p-4">
         <Link to={`/u/${memory.username}`}><Avatar src={memory.profile_photo_url} name={memory.display_name || memory.username} size="md" /></Link>
         <div>
-          <Link to={`/u/${memory.username}`} className="text-sm font-semibold text-gray-900 hover:underline">{memory.display_name || memory.username}</Link>
-          <p className="text-xs text-gray-500">Moment · {formatDate(memory.created_at)}</p>
+          <Link to={`/u/${memory.username}`} className="text-sm font-semibold text-gray-900 dark:text-gray-100 hover:underline">{memory.display_name || memory.username}</Link>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Moment · {formatDate(memory.created_at)}</p>
         </div>
       </div>
       <div className="px-4 pb-4 flex flex-col gap-3">
-        {memory.caption && <p className="text-sm text-gray-800 whitespace-pre-wrap">{memory.caption}</p>}
+        {memory.caption && <p className="text-sm text-gray-800 dark:text-gray-200 whitespace-pre-wrap">{memory.caption}</p>}
         {media?.type === 'photo' && <img src={media.url} alt="" className="w-full rounded-xl object-cover max-h-96" />}
         {media?.type === 'video' && <video src={media.url} controls className="w-full rounded-xl max-h-96 bg-black" />}
         {(media?.type === 'audio' || media?.type === 'voice') && (
-          <div className="flex items-center gap-3 bg-blue-50 border border-blue-100 rounded-2xl p-3">
+          <div className="flex items-center gap-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900 rounded-2xl p-3">
             {media.type === 'voice' ? <Mic size={18} className="text-blue-500 flex-shrink-0" aria-hidden="true" /> : <Music size={18} className="text-blue-500 flex-shrink-0" aria-hidden="true" />}
             <audio src={media.url} controls className="flex-1 h-9" />
           </div>
         )}
         {memory.is_own && reactions.length > 0 && (
-          <div className="flex items-center gap-2 pt-2 border-t border-gray-50">
-            <span className="text-xs text-gray-400">Reactions:</span>
-            {reactions.map(r => <span key={r.emoji} className="text-sm">{r.emoji} <span className="text-xs text-gray-400">{r.reaction_count}</span></span>)}
+          <div className="flex items-center gap-2 pt-2 border-t border-gray-50 dark:border-gray-800">
+            <span className="text-xs text-gray-400 dark:text-gray-500">Reactions:</span>
+            {reactions.map(r => <span key={r.emoji} className="text-sm">{r.emoji} <span className="text-xs text-gray-400 dark:text-gray-500">{r.reaction_count}</span></span>)}
           </div>
         )}
       </div>
@@ -105,14 +105,14 @@ export const MemoryViewer: React.FC<MemoryViewerProps> = ({ memoryType, memoryId
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [memoryType, memoryId]);
 
-  if (memory === undefined) return <div className="h-64 rounded-2xl bg-white/60 animate-pulse" />;
+  if (memory === undefined) return <div className="h-64 rounded-2xl bg-white/60 dark:bg-gray-800/60 animate-pulse" />;
 
   if (!memory) {
     return (
-      <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm">
+      <div className="bg-white/80 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm">
         <div className="flex flex-col items-center gap-3 py-14 text-center">
-          <Lock size={28} className="text-gray-300" aria-hidden="true" />
-          <p className="text-sm text-gray-500">This memory doesn't exist, or isn't visible to you.</p>
+          <Lock size={28} className="text-gray-300 dark:text-gray-600" aria-hidden="true" />
+          <p className="text-sm text-gray-500 dark:text-gray-400">This memory doesn't exist, or isn't visible to you.</p>
         </div>
       </div>
     );
@@ -162,34 +162,34 @@ export const MemoryViewer: React.FC<MemoryViewerProps> = ({ memoryType, memoryId
         <MomentMemoryBody memory={memory} />
       ) : null}
 
-      <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm p-4 flex flex-col gap-4">
+      <div className="bg-white/80 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm p-4 flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-gray-900">Details</h2>
+          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Details</h2>
           <FavoriteButton memoryType={memoryType} memoryId={memoryId} isFavorited={memory.is_favorited} size={17} />
         </div>
 
         <dl className="grid grid-cols-2 gap-3 text-sm">
           <div>
-            <dt className="text-xs text-gray-400">Visibility</dt>
-            <dd className="text-gray-800">{CAPSULE_VISIBILITY_META[memory.visibility].label}</dd>
+            <dt className="text-xs text-gray-400 dark:text-gray-500">Visibility</dt>
+            <dd className="text-gray-800 dark:text-gray-300">{CAPSULE_VISIBILITY_META[memory.visibility].label}</dd>
           </div>
           <div>
-            <dt className="text-xs text-gray-400">Mood</dt>
-            <dd className="text-gray-800">{moodMeta ? `${moodMeta.emoji} ${moodMeta.label}` : '—'}</dd>
+            <dt className="text-xs text-gray-400 dark:text-gray-500">Mood</dt>
+            <dd className="text-gray-800 dark:text-gray-300">{moodMeta ? `${moodMeta.emoji} ${moodMeta.label}` : '—'}</dd>
           </div>
           <div>
-            <dt className="text-xs text-gray-400">Created</dt>
-            <dd className="text-gray-800">{formatDate(memory.created_at)}</dd>
+            <dt className="text-xs text-gray-400 dark:text-gray-500">Created</dt>
+            <dd className="text-gray-800 dark:text-gray-300">{formatDate(memory.created_at)}</dd>
           </div>
           <div>
-            <dt className="text-xs text-gray-400">{memory.memory_type === 'capsule' ? 'Unlocked' : 'Expired'}</dt>
-            <dd className="text-gray-800">{formatDate(memory.matured_at)}</dd>
+            <dt className="text-xs text-gray-400 dark:text-gray-500">{memory.memory_type === 'capsule' ? 'Unlocked' : 'Expired'}</dt>
+            <dd className="text-gray-800 dark:text-gray-300">{formatDate(memory.matured_at)}</dd>
           </div>
         </dl>
 
         {isOwn && supportsTagsAndLocation && (
           <div className="flex flex-col gap-1.5">
-            <p className="text-xs text-gray-400 flex items-center gap-1"><MapPin size={12} aria-hidden="true" /> Location</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1"><MapPin size={12} aria-hidden="true" /> Location</p>
             {editingLocation ? (
               <div className="flex gap-2">
                 <input
@@ -198,13 +198,13 @@ export const MemoryViewer: React.FC<MemoryViewerProps> = ({ memoryType, memoryId
                   onChange={e => setLocationDraft(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter') saveLocation(); }}
                   placeholder="Where was this?"
-                  className="flex-1 text-sm border border-gray-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="flex-1 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-purple-500"
                 />
-                <button type="button" onClick={saveLocation} className="text-xs font-medium text-purple-600">Save</button>
+                <button type="button" onClick={saveLocation} className="text-xs font-medium text-purple-600 dark:text-purple-400">Save</button>
               </div>
             ) : (
-              <button type="button" onClick={() => setEditingLocation(true)} className="text-sm text-gray-700 text-left hover:text-purple-600">
-                {memory.location_text || <span className="text-gray-400">Add a location…</span>}
+              <button type="button" onClick={() => setEditingLocation(true)} className="text-sm text-gray-700 dark:text-gray-300 text-left hover:text-purple-600 dark:hover:text-purple-400">
+                {memory.location_text || <span className="text-gray-400 dark:text-gray-500">Add a location…</span>}
               </button>
             )}
           </div>
@@ -212,10 +212,10 @@ export const MemoryViewer: React.FC<MemoryViewerProps> = ({ memoryType, memoryId
 
         {isOwn && supportsTagsAndLocation && (
           <div className="flex flex-col gap-1.5">
-            <p className="text-xs text-gray-400 flex items-center gap-1"><Tag size={12} aria-hidden="true" /> Tags</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1"><Tag size={12} aria-hidden="true" /> Tags</p>
             <div className="flex flex-wrap gap-1.5">
               {memory.tags.map(tag => (
-                <span key={tag} className="flex items-center gap-1 text-xs bg-purple-50 text-purple-700 rounded-full px-2.5 py-1">
+                <span key={tag} className="flex items-center gap-1 text-xs bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 rounded-full px-2.5 py-1">
                   {tag}
                   <button type="button" onClick={() => removeTag(tag)} aria-label={`Remove tag ${tag}`}><X size={10} aria-hidden="true" /></button>
                 </span>
@@ -226,7 +226,7 @@ export const MemoryViewer: React.FC<MemoryViewerProps> = ({ memoryType, memoryId
                 onChange={e => setTagDraft(e.target.value)}
                 onKeyDown={e => { if (e.key === 'Enter') addTag(); }}
                 placeholder="Add a tag…"
-                className="text-xs border border-gray-200 rounded-full px-2.5 py-1 w-24 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="text-xs border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-full px-2.5 py-1 w-24 focus:outline-none focus:ring-2 focus:ring-purple-500"
               />
             </div>
           </div>
@@ -237,13 +237,13 @@ export const MemoryViewer: React.FC<MemoryViewerProps> = ({ memoryType, memoryId
         )}
 
         {isOwn && (
-          <div className="flex items-center gap-4 pt-2 border-t border-gray-50">
+          <div className="flex items-center gap-4 pt-2 border-t border-gray-50 dark:border-gray-800">
             {!supportsArchive ? null : memory.is_hidden ? (
-              <button type="button" onClick={handleRestore} className="flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-purple-600">
+              <button type="button" onClick={handleRestore} className="flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400">
                 <ArchiveRestore size={13} aria-hidden="true" /> Restore
               </button>
             ) : (
-              <button type="button" onClick={handleHide} className="flex items-center gap-1.5 text-xs font-medium text-gray-600 hover:text-purple-600">
+              <button type="button" onClick={handleHide} className="flex items-center gap-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400">
                 <EyeOff size={13} aria-hidden="true" /> Hide
               </button>
             )}

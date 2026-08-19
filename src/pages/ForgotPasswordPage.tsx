@@ -38,11 +38,11 @@ export const ForgotPasswordPage: React.FC = () => {
     return (
       <AuthLayout title="Check your email">
         <div className="flex flex-col items-center text-center gap-3 py-2">
-          <div className="w-14 h-14 rounded-2xl bg-purple-50 flex items-center justify-center">
-            <MailCheck size={26} className="text-purple-600" />
+          <div className="w-14 h-14 rounded-2xl bg-purple-50 dark:bg-purple-950/40 flex items-center justify-center">
+            <MailCheck size={26} className="text-purple-600 dark:text-purple-400" />
           </div>
-          <p className="text-sm text-gray-600">
-            If an account exists for <span className="font-medium text-gray-900">{email}</span>, we&apos;ve sent a
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            If an account exists for <span className="font-medium text-gray-900 dark:text-gray-100">{email}</span>, we&apos;ve sent a
             link to reset your password.
           </p>
           <Link to="/login" className="mt-2">
@@ -71,8 +71,8 @@ export const ForgotPasswordPage: React.FC = () => {
         />
 
         {error && (
-          <div className="bg-red-50 border border-red-100 rounded-xl p-3">
-            <p className="text-sm text-red-600">{error}</p>
+          <div className="bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-900 rounded-xl p-3">
+            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
           </div>
         )}
 
@@ -81,7 +81,7 @@ export const ForgotPasswordPage: React.FC = () => {
         </Button>
       </form>
 
-      <p className="text-center text-sm text-gray-500 mt-5">
+      <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-5">
         <Link to="/login" className="font-medium text-purple-600 hover:text-purple-700 inline-flex items-center gap-1">
           <ArrowLeft size={14} />
           Back to sign in

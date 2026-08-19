@@ -63,17 +63,17 @@ export const VerifyEmailPage: React.FC = () => {
   return (
     <AuthLayout title="Verify your email">
       <div className="flex flex-col items-center text-center gap-3 py-2">
-        <div className="w-14 h-14 rounded-2xl bg-purple-50 flex items-center justify-center">
-          <MailCheck size={26} className="text-purple-600" />
+        <div className="w-14 h-14 rounded-2xl bg-purple-50 dark:bg-purple-950/40 flex items-center justify-center">
+          <MailCheck size={26} className="text-purple-600 dark:text-purple-400" />
         </div>
 
         {email ? (
-          <p className="text-sm text-gray-600">
-            We sent a verification link to <span className="font-medium text-gray-900">{email}</span>. Click it,
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            We sent a verification link to <span className="font-medium text-gray-900 dark:text-gray-100">{email}</span>. Click it,
             then come back here.
           </p>
         ) : (
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             We sent you a verification link. Click it to activate your account, then sign in.
           </p>
         )}

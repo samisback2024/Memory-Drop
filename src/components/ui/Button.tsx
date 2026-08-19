@@ -42,8 +42,9 @@ export const Button: React.FC<ButtonProps> = ({
       disabled={disabled || loading}
       className={[
         'inline-flex items-center justify-center gap-2 font-medium rounded-xl',
-        'transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500',
-        'disabled:opacity-50 disabled:cursor-not-allowed',
+        'transition-all duration-150 ease-spring focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500',
+        'hover:scale-[1.015] active:scale-[0.96] active:duration-75',
+        'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:active:scale-100',
         variantClasses[variant],
         sizeClasses[size],
         fullWidth ? 'w-full' : '',

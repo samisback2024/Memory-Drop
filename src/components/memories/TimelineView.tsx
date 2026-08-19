@@ -22,13 +22,13 @@ export const TimelineView: React.FC<{ memories: Memory[] }> = ({ memories }) => 
         <React.Fragment key={`${memory.memory_type}-${memory.id}`}>
           {showYear && (
             <div className="flex items-center gap-3 px-1">
-              <span className="text-xs font-semibold text-gray-400 tracking-wide">{year}</span>
-              <div className="flex-1 h-px bg-gray-100" />
+              <span className="text-xs font-semibold text-gray-400 dark:text-gray-500 tracking-wide">{year}</span>
+              <div className="flex-1 h-px bg-gray-100 dark:bg-gray-800" />
             </div>
           )}
           <div className="flex gap-3">
             <div className="flex flex-col items-center w-5 flex-shrink-0 pt-6" aria-hidden="true">
-              <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 ring-4 ring-gray-50 shadow-sm flex-shrink-0" />
+              <div className="w-2.5 h-2.5 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 ring-4 ring-gray-50 dark:ring-gray-950 shadow-sm flex-shrink-0" />
               <div className="w-px flex-1 bg-gradient-to-b from-purple-200 to-transparent mt-1" />
             </div>
             <div className="flex-1 min-w-0">

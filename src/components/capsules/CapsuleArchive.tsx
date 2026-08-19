@@ -62,10 +62,10 @@ export const CapsuleArchive: React.FC<CapsuleArchiveProps> = ({ userId, isOwnArc
 
       {loading ? (
         <div className="flex flex-col gap-4">
-          {[0, 1, 2].map(i => <div key={i} className="h-40 rounded-2xl bg-white/60 animate-pulse" />)}
+          {[0, 1, 2].map(i => <div key={i} className="h-40 rounded-2xl bg-white/60 dark:bg-gray-800/60 animate-pulse" />)}
         </div>
       ) : capsules.length === 0 ? (
-        <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm">
+        <div className="bg-white/80 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm">
           <EmptyState
             icon={Archive}
             title={isOwnArchive ? 'No capsules yet' : 'No capsules to show'}
@@ -80,7 +80,7 @@ export const CapsuleArchive: React.FC<CapsuleArchiveProps> = ({ userId, isOwnArc
               type="button"
               onClick={() => load(false)}
               disabled={loadingMore}
-              className="self-center flex items-center gap-2 text-sm font-medium text-purple-600 hover:text-purple-700 disabled:opacity-50 py-2"
+              className="self-center flex items-center gap-2 text-sm font-medium text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 disabled:opacity-50 py-2"
             >
               {loadingMore && <Loader2 size={14} className="animate-spin" aria-hidden="true" />}
               Load more

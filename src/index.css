@@ -8,6 +8,25 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   box-sizing: border-box;
+  /* Kills the gray/blue flash WebViews paint on tap before any :active
+     class applies — every button's own press feedback (tactile scale,
+     color darkening) is the only thing that should show, not this. */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Removes the ~300ms tap-delay browsers reserve to detect double-tap-to-
+   zoom, so every button/link/control responds the instant a finger lifts
+   instead of a beat later — the single biggest lever for taps feeling
+   "smooth" on a touch device. */
+button, a, [role="button"], input, select, textarea, summary {
+  touch-action: manipulation;
+}
+
+/* Fallback momentum scrolling for older WKWebViews (native since iOS 13
+   for the page itself, but nested `overflow-auto` panes — tab strips,
+   modals, horizontal scrollers — didn't reliably inherit it without this). */
+.overflow-x-auto, .overflow-y-auto, .overflow-auto, .overflow-scroll {
+  -webkit-overflow-scrolling: touch;
 }
 
 body {

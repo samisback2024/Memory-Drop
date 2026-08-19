@@ -30,12 +30,12 @@ export const YearView: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="flex flex-col gap-3">{[0, 1, 2].map(i => <div key={i} className="h-16 rounded-2xl bg-white/60 animate-pulse" />)}</div>;
+    return <div className="flex flex-col gap-3">{[0, 1, 2].map(i => <div key={i} className="h-16 rounded-2xl bg-white/60 dark:bg-gray-800/60 animate-pulse" />)}</div>;
   }
 
   if (years.length === 0) {
     return (
-      <div className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm">
+      <div className="bg-white/80 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm">
         <EmptyState icon={CalendarRange} title="No years yet" description="Your memories will group themselves here as they arrive." />
       </div>
     );
@@ -44,7 +44,7 @@ export const YearView: React.FC = () => {
   return (
     <div className="flex flex-col gap-3">
       {years.map(({ year, memory_count }) => (
-        <div key={year} className="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm overflow-hidden">
+        <div key={year} className="bg-white/80 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm overflow-hidden">
           <button
             type="button"
             onClick={() => toggleYear(year)}
@@ -52,13 +52,13 @@ export const YearView: React.FC = () => {
           >
             <div className="flex items-baseline gap-2">
               <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-500 bg-clip-text text-transparent">{year}</span>
-              <span className="text-xs text-gray-400">{memory_count} {memory_count === 1 ? 'memory' : 'memories'}</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500">{memory_count} {memory_count === 1 ? 'memory' : 'memories'}</span>
             </div>
-            <ChevronDown size={16} className={`text-gray-400 transition-transform ${openYear === year ? 'rotate-180' : ''}`} aria-hidden="true" />
+            <ChevronDown size={16} className={`text-gray-400 dark:text-gray-500 transition-transform ${openYear === year ? 'rotate-180' : ''}`} aria-hidden="true" />
           </button>
           {openYear === year && (
             <div className="px-4 pb-4">
-              {yearMemories[year] ? <TimelineView memories={yearMemories[year]} /> : <div className="h-20 rounded-xl bg-gray-50 animate-pulse" />}
+              {yearMemories[year] ? <TimelineView memories={yearMemories[year]} /> : <div className="h-20 rounded-xl bg-gray-50 dark:bg-gray-800 animate-pulse" />}
             </div>
           )}
         </div>

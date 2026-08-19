@@ -84,7 +84,7 @@ export const CompleteProfilePage: React.FC = () => {
         </Button>
       }
     >
-      <p className="text-sm text-gray-600 mb-4">
+      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
         Pick a username and confirm your details to finish setting up your account.
       </p>
 
@@ -157,15 +157,15 @@ export const CompleteProfilePage: React.FC = () => {
         />
 
         {error && (
-          <div className="bg-red-50 border border-red-100 rounded-xl p-3">
-            <p className="text-sm text-red-600">{error}</p>
+          <div className="bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-900 rounded-xl p-3">
+            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
           </div>
         )}
       </form>
 
       <button
         onClick={() => signOut().then(() => navigate('/login'))}
-        className="w-full text-center text-xs text-gray-400 hover:text-gray-600 mt-4"
+        className="w-full text-center text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 mt-4"
       >
         Sign out and use a different account
       </button>

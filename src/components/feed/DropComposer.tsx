@@ -174,14 +174,14 @@ export const DropComposer: React.FC<DropComposerProps> = ({ isOpen, onClose, onD
             maxLength={CAPTION_MAX}
             rows={4}
             aria-label="What do you want to remember?"
-            className="flex-1 resize-none border-0 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-0 pt-1.5"
+            className="flex-1 resize-none border-0 bg-transparent text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-0 pt-1.5"
           />
         </div>
 
         {images.length > 0 && (
           <div className="grid grid-cols-3 gap-2">
             {images.map((img, i) => (
-              <div key={img.previewUrl} className="relative aspect-square rounded-xl overflow-hidden bg-gray-100">
+              <div key={img.previewUrl} className="relative aspect-square rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800">
                 <img src={img.previewUrl} alt="" className="w-full h-full object-cover" />
                 <button type="button" onClick={() => removeImage(i)} aria-label="Remove image" className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 text-white flex items-center justify-center hover:bg-black/80 transition-colors">
                   <X size={13} aria-hidden="true" />
@@ -202,29 +202,29 @@ export const DropComposer: React.FC<DropComposerProps> = ({ isOpen, onClose, onD
 
         <div className="flex flex-col gap-1 border-t border-gray-100 pt-3">
           <div className="flex items-center gap-1">
-            <button type="button" onClick={() => imageInputRef.current?.click()} disabled={Boolean(video) || images.length >= MAX_POST_IMAGES} aria-label="Add photos" className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+            <button type="button" onClick={() => imageInputRef.current?.click()} disabled={Boolean(video) || images.length >= MAX_POST_IMAGES} aria-label="Add photos" className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
               <ImageIcon size={19} aria-hidden="true" />
               <span className="text-xs font-medium">Photo</span>
             </button>
-            <button type="button" onClick={() => videoInputRef.current?.click()} disabled={images.length > 0} aria-label="Add video" className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-gray-500 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
+            <button type="button" onClick={() => videoInputRef.current?.click()} disabled={images.length > 0} aria-label="Add video" className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">
               <Video size={19} aria-hidden="true" />
               <span className="text-xs font-medium">Video</span>
             </button>
             <EmojiPicker onSelect={emoji => setCaption(c => c + emoji)} />
-            <span className="ml-auto text-xs text-gray-400">{caption.length}/{CAPTION_MAX}</span>
+            <span className="ml-auto text-xs text-gray-400 dark:text-gray-500">{caption.length}/{CAPTION_MAX}</span>
             <input ref={imageInputRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple className="hidden" onChange={e => { handleImageSelect(e.target.files); e.target.value = ''; }} />
             <input ref={videoInputRef} type="file" accept="video/mp4,video/webm,video/quicktime" className="hidden" onChange={e => { handleVideoSelect(e.target.files); e.target.value = ''; }} />
           </div>
           {images.length === 0 && !video && (
-            <p className="text-[11px] text-gray-400 px-2.5">
+            <p className="text-[11px] text-gray-400 dark:text-gray-500 px-2.5">
               Up to {MAX_POST_IMAGES} photos (JPG, PNG, WebP, GIF · {MAX_POST_IMAGE_BYTES / (1024 * 1024)}MB each) or 1 video (MP4, WebM, MOV · {MAX_POST_VIDEO_BYTES / (1024 * 1024)}MB)
             </p>
           )}
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="unlock-date" className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
-            <CalendarClock size={15} className="text-gray-400" aria-hidden="true" />
+          <label htmlFor="unlock-date" className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+            <CalendarClock size={15} className="text-gray-400 dark:text-gray-500" aria-hidden="true" />
             When should this unlock?
           </label>
           <input
@@ -232,26 +232,26 @@ export const DropComposer: React.FC<DropComposerProps> = ({ isOpen, onClose, onD
             type="datetime-local"
             value={unlockDate}
             onChange={e => setUnlockDate(e.target.value)}
-            className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-xl px-4 py-2.5 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           />
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-gray-400 dark:text-gray-500">
             {isFutureUnlock ? "Sealed until then — nobody, not even you, can see it early." : 'Leave as-is to share right away.'}
           </p>
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <p className="text-sm font-medium text-gray-700">Mood</p>
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Mood</p>
           <MoodPicker value={mood} onChange={setMood} />
         </div>
 
         <div className="flex flex-col gap-1.5">
-          <p className="text-sm font-medium text-gray-700">Who can see this?</p>
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Who can see this?</p>
           <VisibilityPicker value={visibility} onChange={setVisibility} />
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-100 rounded-xl p-3">
-            <p className="text-sm text-red-600">{error}</p>
+          <div className="bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-900 rounded-xl p-3">
+            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
           </div>
         )}
 

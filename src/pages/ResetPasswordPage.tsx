@@ -59,7 +59,7 @@ export const ResetPasswordPage: React.FC = () => {
     return (
       <AuthLayout title="Link expired">
         <div className="text-center py-2">
-          <p className="text-sm text-gray-600 mb-4">
+          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
             This password reset link is invalid or has expired. Request a new one to continue.
           </p>
           <Link to="/forgot-password">
@@ -86,7 +86,7 @@ export const ResetPasswordPage: React.FC = () => {
             <button
               type="button"
               onClick={() => setShowPassword(p => !p)}
-              className="text-gray-400 hover:text-gray-600 p-0.5"
+              className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 p-0.5"
               aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
               {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -105,8 +105,8 @@ export const ResetPasswordPage: React.FC = () => {
         />
 
         {error && (
-          <div className="bg-red-50 border border-red-100 rounded-xl p-3">
-            <p className="text-sm text-red-600">{error}</p>
+          <div className="bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-900 rounded-xl p-3">
+            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
           </div>
         )}
 

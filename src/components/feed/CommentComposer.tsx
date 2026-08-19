@@ -75,19 +75,19 @@ export const CommentComposer: React.FC<CommentComposerProps> = ({ avatarUrl, ava
           maxLength={1000}
           autoFocus={autoFocus}
           aria-label={placeholder}
-          className="flex-1 text-sm border border-gray-200 rounded-full px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          className="flex-1 text-sm border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 rounded-full px-3.5 py-2 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
         />
-        <button type="submit" disabled={!text.trim() || posting} className="text-sm font-semibold text-purple-600 disabled:text-gray-300 transition-colors flex-shrink-0">
+        <button type="submit" disabled={!text.trim() || posting} className="text-sm font-semibold text-purple-600 dark:text-purple-400 disabled:text-gray-300 dark:disabled:text-gray-600 transition-colors flex-shrink-0">
           Post
         </button>
         {onCancel && (
-          <button type="button" onClick={onCancel} className="text-xs text-gray-400 hover:text-gray-600 flex-shrink-0">
+          <button type="button" onClick={onCancel} className="text-xs text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 flex-shrink-0">
             Cancel
           </button>
         )}
       </form>
       {suggestions.length > 0 && (
-        <div role="listbox" className="absolute left-8 right-0 top-full mt-1 bg-white border border-gray-100 rounded-xl shadow-lg z-30 overflow-hidden">
+        <div role="listbox" className="absolute left-8 right-0 top-full mt-1 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl shadow-lg z-30 overflow-hidden">
           {suggestions.map(s => (
             <button
               key={s.id}
@@ -95,11 +95,11 @@ export const CommentComposer: React.FC<CommentComposerProps> = ({ avatarUrl, ava
               role="option"
               aria-selected={false}
               onMouseDown={() => pickSuggestion(s.username)}
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-gray-700 hover:bg-gray-50 transition-colors"
+              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-left text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
             >
               <Avatar src={s.profile_photo_url} name={s.display_name || s.username} size="xs" />
               <span className="font-medium">@{s.username}</span>
-              {s.display_name && <span className="text-xs text-gray-400">{s.display_name}</span>}
+              {s.display_name && <span className="text-xs text-gray-400 dark:text-gray-500">{s.display_name}</span>}
             </button>
           ))}
         </div>

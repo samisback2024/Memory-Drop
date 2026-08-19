@@ -203,7 +203,7 @@ export const CapsuleWizard: React.FC<CapsuleWizardProps> = ({ isOpen, onClose, o
         {step < 9 && (
           <div className="flex gap-1" aria-label={`Step ${step} of 8`}>
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className={`h-1 flex-1 rounded-full ${i < step ? 'bg-purple-500' : 'bg-gray-100'}`} />
+              <div key={i} className={`h-1 flex-1 rounded-full ${i < step ? 'bg-purple-500' : 'bg-gray-100 dark:bg-gray-800'}`} />
             ))}
           </div>
         )}
@@ -221,7 +221,7 @@ export const CapsuleWizard: React.FC<CapsuleWizardProps> = ({ isOpen, onClose, o
                   aria-pressed={selected}
                   className={[
                     'flex flex-col items-center gap-1.5 py-4 rounded-xl border text-xs font-medium transition-colors',
-                    selected ? 'bg-purple-50 border-purple-300 text-purple-700' : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300',
+                    selected ? 'bg-purple-50 dark:bg-purple-950/40 border-purple-300 dark:border-purple-800 text-purple-700 dark:text-purple-300' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600',
                   ].join(' ')}
                 >
                   <Icon size={20} aria-hidden="true" />
@@ -241,9 +241,9 @@ export const CapsuleWizard: React.FC<CapsuleWizardProps> = ({ isOpen, onClose, o
               maxLength={CAPSULE_TITLE_MAX}
               placeholder="Give this memory a name…"
               autoFocus
-              className="border border-gray-200 rounded-xl px-4 py-3 text-base text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-xl px-4 py-3 text-base text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
-            <p className="text-xs text-gray-400 text-right">{title.length}/{CAPSULE_TITLE_MAX}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 text-right">{title.length}/{CAPSULE_TITLE_MAX}</p>
           </div>
         )}
 
@@ -258,11 +258,11 @@ export const CapsuleWizard: React.FC<CapsuleWizardProps> = ({ isOpen, onClose, o
                 autoFocus
                 placeholder="What do you want your future self (or someone else) to know?"
                 maxLength={CAPSULE_MEMORY_TEXT_MAX}
-                className="w-full resize-none border-0 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-0"
+                className="w-full resize-none border-0 bg-transparent text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-0"
               />
               <div className="flex items-center justify-end gap-1">
                 <EmojiPicker onSelect={emoji => setMemoryText(t => t + emoji)} />
-                <span className="text-xs text-gray-400">{memoryText.length}/{CAPSULE_MEMORY_TEXT_MAX}</span>
+                <span className="text-xs text-gray-400 dark:text-gray-500">{memoryText.length}/{CAPSULE_MEMORY_TEXT_MAX}</span>
               </div>
             </div>
           </div>
@@ -271,20 +271,20 @@ export const CapsuleWizard: React.FC<CapsuleWizardProps> = ({ isOpen, onClose, o
         {step === 4 && (
           <div className="flex flex-col gap-4">
             {nonTextTypes.length === 0 && (
-              <p className="text-sm text-gray-400 text-center py-6">Text only — nothing to attach. Move on to the next step whenever you're ready.</p>
+              <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-6">Text only — nothing to attach. Move on to the next step whenever you're ready.</p>
             )}
 
             {nonTextTypes.includes('photo') && (
               <div className="flex flex-col gap-2">
-                <p className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
-                  <ImageIcon size={15} className="text-gray-400" aria-hidden="true" /> Photos
-                  <span className="text-xs font-normal text-gray-400">{mediaCount('photo')}/{CAPSULE_MAX_PHOTOS} · JPG, PNG, WebP, GIF · {MAX_POST_IMAGE_BYTES / (1024 * 1024)}MB each</span>
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                  <ImageIcon size={15} className="text-gray-400 dark:text-gray-500" aria-hidden="true" /> Photos
+                  <span className="text-xs font-normal text-gray-400 dark:text-gray-500">{mediaCount('photo')}/{CAPSULE_MAX_PHOTOS} · JPG, PNG, WebP, GIF · {MAX_POST_IMAGE_BYTES / (1024 * 1024)}MB each</span>
                 </p>
                 <div className="grid grid-cols-4 gap-2">
                   {media.filter(m => m.type === 'photo').map((m) => {
                     const index = media.indexOf(m);
                     return (
-                      <div key={m.previewUrl} className="relative aspect-square rounded-xl overflow-hidden bg-gray-100">
+                      <div key={m.previewUrl} className="relative aspect-square rounded-xl overflow-hidden bg-gray-100 dark:bg-gray-800">
                         <img src={m.previewUrl} alt="" className="w-full h-full object-cover" />
                         <button type="button" onClick={() => removeMedia(index)} aria-label="Remove photo" className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center">
                           <X size={11} aria-hidden="true" />
@@ -293,7 +293,7 @@ export const CapsuleWizard: React.FC<CapsuleWizardProps> = ({ isOpen, onClose, o
                     );
                   })}
                   {mediaCount('photo') < CAPSULE_MAX_PHOTOS && (
-                    <button type="button" onClick={() => photoInputRef.current?.click()} className="aspect-square rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center text-gray-400 hover:border-purple-300 hover:text-purple-500 transition-colors">
+                    <button type="button" onClick={() => photoInputRef.current?.click()} className="aspect-square rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 flex items-center justify-center text-gray-400 dark:text-gray-500 hover:border-purple-300 dark:hover:border-purple-700 hover:text-purple-500 dark:hover:text-purple-400 transition-colors">
                       <ImageIcon size={18} aria-hidden="true" />
                     </button>
                   )}
@@ -304,9 +304,9 @@ export const CapsuleWizard: React.FC<CapsuleWizardProps> = ({ isOpen, onClose, o
 
             {nonTextTypes.includes('video') && (
               <div className="flex flex-col gap-2">
-                <p className="text-sm font-medium text-gray-700 flex items-center gap-1.5">
-                  <Video size={15} className="text-gray-400" aria-hidden="true" /> Videos
-                  <span className="text-xs font-normal text-gray-400">{mediaCount('video')}/{CAPSULE_MAX_VIDEOS} · MP4, WebM, MOV · {MAX_POST_VIDEO_BYTES / (1024 * 1024)}MB each</span>
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                  <Video size={15} className="text-gray-400 dark:text-gray-500" aria-hidden="true" /> Videos
+                  <span className="text-xs font-normal text-gray-400 dark:text-gray-500">{mediaCount('video')}/{CAPSULE_MAX_VIDEOS} · MP4, WebM, MOV · {MAX_POST_VIDEO_BYTES / (1024 * 1024)}MB each</span>
                 </p>
                 {media.filter(m => m.type === 'video').map(m => {
                   const index = media.indexOf(m);
@@ -320,7 +320,7 @@ export const CapsuleWizard: React.FC<CapsuleWizardProps> = ({ isOpen, onClose, o
                   );
                 })}
                 {mediaCount('video') < CAPSULE_MAX_VIDEOS && (
-                  <button type="button" onClick={() => videoInputRef.current?.click()} className="py-3 rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center gap-1.5 text-gray-400 hover:border-purple-300 hover:text-purple-500 transition-colors text-sm">
+                  <button type="button" onClick={() => videoInputRef.current?.click()} className="py-3 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700 flex items-center justify-center gap-1.5 text-gray-400 dark:text-gray-500 hover:border-purple-300 dark:hover:border-purple-700 hover:text-purple-500 dark:hover:text-purple-400 transition-colors text-sm">
                     <Video size={16} aria-hidden="true" /> Add a video
                   </button>
                 )}
@@ -333,7 +333,7 @@ export const CapsuleWizard: React.FC<CapsuleWizardProps> = ({ isOpen, onClose, o
         {step === 5 && (
           <div className="flex flex-col gap-2">
             <MoodPicker value={mood} onChange={setMood} />
-            <p className="text-xs text-gray-400">Optional — how this memory feels right now.</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500">Optional — how this memory feels right now.</p>
           </div>
         )}
 
@@ -350,15 +350,15 @@ export const CapsuleWizard: React.FC<CapsuleWizardProps> = ({ isOpen, onClose, o
                   onClick={() => setVisibility(option)}
                   className={[
                     'flex items-start gap-3 px-3.5 py-2.5 rounded-xl border text-left transition-colors',
-                    selected ? 'bg-purple-50 border-purple-300' : 'bg-white border-gray-200 hover:border-gray-300',
+                    selected ? 'bg-purple-50 dark:bg-purple-950/40 border-purple-300 dark:border-purple-800' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600',
                   ].join(' ')}
                 >
-                  <span className={['w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5', selected ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-500'].join(' ')}>
+                  <span className={['w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5', selected ? 'bg-purple-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'].join(' ')}>
                     <Icon size={15} aria-hidden="true" />
                   </span>
                   <span className="flex-1 min-w-0">
-                    <span className={`block text-sm font-medium ${selected ? 'text-purple-900' : 'text-gray-900'}`}>{meta.label}</span>
-                    <span className="block text-xs text-gray-500 mt-0.5">{meta.description}</span>
+                    <span className={`block text-sm font-medium ${selected ? 'text-purple-900 dark:text-purple-300' : 'text-gray-900 dark:text-gray-100'}`}>{meta.label}</span>
+                    <span className="block text-xs text-gray-500 dark:text-gray-400 mt-0.5">{meta.description}</span>
                   </span>
                 </button>
               );
@@ -376,7 +376,7 @@ export const CapsuleWizard: React.FC<CapsuleWizardProps> = ({ isOpen, onClose, o
                   onClick={() => pickPreset(p.id)}
                   className={[
                     'py-2.5 rounded-xl text-sm font-medium border transition-colors',
-                    preset === p.id ? 'bg-gradient-to-r from-purple-600 to-blue-500 border-transparent text-white shadow-sm' : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300',
+                    preset === p.id ? 'bg-gradient-to-r from-purple-600 to-blue-500 border-transparent text-white shadow-sm' : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600',
                   ].join(' ')}
                 >
                   {p.label}
@@ -390,8 +390,8 @@ export const CapsuleWizard: React.FC<CapsuleWizardProps> = ({ isOpen, onClose, o
               <input type="datetime-local" value={customDateTime} onChange={e => applyCustomDateTime(e.target.value)} className="border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent" />
             )}
             {unlockDate && (
-              <p className="text-sm text-gray-500 flex items-center gap-1.5">
-                <CalendarClock size={14} className="text-gray-400" aria-hidden="true" />
+              <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1.5">
+                <CalendarClock size={14} className="text-gray-400 dark:text-gray-500" aria-hidden="true" />
                 Unlocks {formatDate(unlockDate.toISOString())}
               </p>
             )}
@@ -400,23 +400,23 @@ export const CapsuleWizard: React.FC<CapsuleWizardProps> = ({ isOpen, onClose, o
 
         {step === 8 && (
           <div className="flex flex-col gap-4">
-            <div className="rounded-2xl bg-gradient-to-br from-purple-50 to-blue-50 p-4 flex flex-col gap-2">
+            <div className="rounded-2xl bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950/30 dark:to-blue-950/30 p-4 flex flex-col gap-2">
               <div className="flex items-center gap-1.5 flex-wrap">
                 {memoryTypes.map(type => {
                   const Icon = MEMORY_TYPE_ICONS[type];
-                  return <span key={type} className="w-6 h-6 rounded-full bg-white flex items-center justify-center"><Icon size={12} className="text-purple-500" aria-hidden="true" /></span>;
+                  return <span key={type} className="w-6 h-6 rounded-full bg-white dark:bg-gray-800 flex items-center justify-center"><Icon size={12} className="text-purple-500" aria-hidden="true" /></span>;
                 })}
                 {mood && <span className="text-sm" aria-label={MOOD_META[mood].label}>{MOOD_META[mood].emoji}</span>}
               </div>
-              {title && <p className="text-sm font-semibold text-gray-900">{title}</p>}
-              {memoryText && <p className="text-sm text-gray-700 whitespace-pre-wrap line-clamp-4">{memoryText}</p>}
-              {media.length > 0 && <p className="text-xs text-gray-500">{media.length} attachment{media.length !== 1 ? 's' : ''}</p>}
-              <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
+              {title && <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{title}</p>}
+              {memoryText && <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-wrap line-clamp-4">{memoryText}</p>}
+              {media.length > 0 && <p className="text-xs text-gray-500 dark:text-gray-400">{media.length} attachment{media.length !== 1 ? 's' : ''}</p>}
+              <div className="flex items-center gap-3 text-xs text-gray-500 dark:text-gray-400 mt-1">
                 <span>{CAPSULE_VISIBILITY_META[visibility].label}</span>
                 {unlockDate && <span>Unlocks {formatDate(unlockDate.toISOString())}</span>}
               </div>
             </div>
-            <p className="text-xs text-gray-400 text-center">Once sealed, nobody — not even you — can see this again until it unlocks.</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 text-center">Once sealed, nobody — not even you — can see this again until it unlocks.</p>
           </div>
         )}
 
@@ -426,19 +426,19 @@ export const CapsuleWizard: React.FC<CapsuleWizardProps> = ({ isOpen, onClose, o
               <Lock size={24} className="text-white" aria-hidden="true" />
             </div>
             <div>
-              <p className="text-lg font-bold text-gray-900">Memory Locked</p>
-              <p className="text-sm text-gray-500 mt-1">Unlocks on {formatDate(createdCapsule.unlock_date)}</p>
+              <p className="text-lg font-bold text-gray-900 dark:text-gray-100">Memory Locked</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Unlocks on {formatDate(createdCapsule.unlock_date)}</p>
             </div>
             <div className="w-full rounded-2xl bg-gradient-to-br from-purple-800 via-fuchsia-800 to-blue-800 p-4">
               <CapsuleCountdown unlockDate={createdCapsule.unlock_date} size="lg" />
             </div>
-            <p className="text-sm text-gray-400 italic">You just sent a memory into the future.</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500 italic">You just sent a memory into the future.</p>
           </div>
         )}
 
         {error && (
-          <div className="bg-red-50 border border-red-100 rounded-xl p-3">
-            <p className="text-sm text-red-600">{error}</p>
+          <div className="bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-900 rounded-xl p-3">
+            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
           </div>
         )}
 

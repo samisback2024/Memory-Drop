@@ -22,13 +22,13 @@ export const Checkbox: React.FC<CheckboxProps> = ({ checked, onChange, label, er
           className={[
             'mt-0.5 w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 transition-colors',
             'focus-visible:ring-2 focus-visible:ring-purple-500 focus-visible:outline-none',
-            checked ? 'bg-black border-black' : 'bg-white border-gray-300 hover:border-gray-400',
+            checked ? 'bg-black border-black dark:bg-white dark:border-white' : 'bg-white border-gray-300 hover:border-gray-400 dark:bg-gray-800 dark:border-gray-600 dark:hover:border-gray-500',
             error ? 'border-red-400' : '',
           ].join(' ')}
         >
-          {checked && <Check size={13} className="text-white" strokeWidth={3} />}
+          {checked && <Check size={13} className="text-white dark:text-gray-900" strokeWidth={3} />}
         </button>
-        <span className="text-sm text-gray-600 leading-snug">{label}</span>
+        <span className="text-sm text-gray-600 dark:text-gray-400 leading-snug">{label}</span>
       </label>
       {error && <p className="text-sm text-red-500 pl-7">{error}</p>}
     </div>

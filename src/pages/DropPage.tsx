@@ -34,17 +34,17 @@ export const DropPage: React.FC = () => {
   useEffect(() => { load(); }, [load]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-purple-50/60 via-gray-50 to-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-purple-50/60 via-gray-50 to-gray-50 dark:from-purple-950/20 dark:via-gray-950 dark:to-gray-950 transition-colors">
       <PublicPageHeader title="Memory Drop" />
       <main className="max-w-2xl mx-auto px-4 py-6">
         {state === 'loading' && <FeedSkeleton count={1} />}
         {state === 'not_found' && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
             <EmptyState icon={FileX} title="Drop not found" description="This memory may have been deleted, or you don't have permission to view it." />
           </div>
         )}
         {state === 'error' && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
             <ErrorState title="Couldn't load this drop" description="Check your connection and try again." onRetry={load} />
           </div>
         )}

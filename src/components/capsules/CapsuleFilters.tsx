@@ -23,26 +23,26 @@ export const CapsuleFilters: React.FC<CapsuleFiltersProps> = ({ filters, onChang
     <div className="flex flex-col gap-3">
       {showSearch && (
         <div className="relative">
-          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden="true" />
+          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" aria-hidden="true" />
           <input
             type="text"
             value={filters.search}
             onChange={e => onChange({ ...filters, search: e.target.value })}
             placeholder="Search your archive…"
-            className="w-full border border-gray-200 rounded-xl pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            className="w-full border border-gray-200 dark:border-gray-700 rounded-xl pl-9 pr-4 py-2.5 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           />
         </div>
       )}
 
-      <div className="flex bg-white/70 backdrop-blur-xl rounded-xl p-1 gap-1 border border-white/60 shadow-sm w-fit">
+      <div className="flex bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl rounded-xl p-1 gap-1 border border-white/60 dark:border-gray-800/60 shadow-sm w-fit">
         {LOCK_STATUS_OPTIONS.map(opt => (
           <button
             key={opt.label}
             type="button"
             onClick={() => onChange({ ...filters, lockStatus: opt.value })}
             className={[
-              'px-3 py-1.5 rounded-lg text-xs font-medium transition-colors',
-              filters.lockStatus === opt.value ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'text-gray-500 hover:text-gray-800',
+              'px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 ease-spring active:scale-95',
+              filters.lockStatus === opt.value ? 'bg-gradient-to-r from-purple-600 to-blue-500 text-white' : 'text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200',
             ].join(' ')}
           >
             {opt.label}
@@ -54,7 +54,7 @@ export const CapsuleFilters: React.FC<CapsuleFiltersProps> = ({ filters, onChang
         <select
           value={filters.year ?? ''}
           onChange={e => onChange({ ...filters, year: e.target.value ? Number(e.target.value) : null })}
-          className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 text-gray-600 bg-white flex-shrink-0"
+          className="text-xs border border-gray-200 dark:border-gray-700 rounded-lg px-2.5 py-1.5 text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 flex-shrink-0"
         >
           <option value="">Any year</option>
           {years.map(y => <option key={y} value={y}>{y}</option>)}
@@ -63,7 +63,7 @@ export const CapsuleFilters: React.FC<CapsuleFiltersProps> = ({ filters, onChang
         <select
           value={filters.mood ?? ''}
           onChange={e => onChange({ ...filters, mood: (e.target.value || null) as Mood | null })}
-          className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 text-gray-600 bg-white flex-shrink-0"
+          className="text-xs border border-gray-200 dark:border-gray-700 rounded-lg px-2.5 py-1.5 text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 flex-shrink-0"
         >
           <option value="">Any mood</option>
           {(Object.keys(MOOD_META) as Mood[]).map(m => <option key={m} value={m}>{MOOD_META[m].emoji} {MOOD_META[m].label}</option>)}
@@ -72,7 +72,7 @@ export const CapsuleFilters: React.FC<CapsuleFiltersProps> = ({ filters, onChang
         <select
           value={filters.mediaType ?? ''}
           onChange={e => onChange({ ...filters, mediaType: (e.target.value || null) as CapsuleArchiveFilters['mediaType'] })}
-          className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 text-gray-600 bg-white flex-shrink-0"
+          className="text-xs border border-gray-200 dark:border-gray-700 rounded-lg px-2.5 py-1.5 text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 flex-shrink-0"
         >
           <option value="">Any type</option>
           {MEMORY_TYPE_OPTIONS.map(o => <option key={o.type} value={o.type}>{o.label}</option>)}
@@ -81,7 +81,7 @@ export const CapsuleFilters: React.FC<CapsuleFiltersProps> = ({ filters, onChang
         <select
           value={filters.visibility ?? ''}
           onChange={e => onChange({ ...filters, visibility: (e.target.value || null) as CapsuleArchiveFilters['visibility'] })}
-          className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 text-gray-600 bg-white flex-shrink-0"
+          className="text-xs border border-gray-200 dark:border-gray-700 rounded-lg px-2.5 py-1.5 text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 flex-shrink-0"
         >
           <option value="">Any visibility</option>
           {(Object.keys(CAPSULE_VISIBILITY_META) as (keyof typeof CAPSULE_VISIBILITY_META)[]).map(v => (
@@ -93,7 +93,7 @@ export const CapsuleFilters: React.FC<CapsuleFiltersProps> = ({ filters, onChang
           <button
             type="button"
             onClick={() => onChange({ search: '', lockStatus: null, year: null, mood: null, mediaType: null, visibility: null })}
-            className="flex items-center gap-1 text-xs text-purple-600 hover:text-purple-700 flex-shrink-0 px-1"
+            className="flex items-center gap-1 text-xs text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 flex-shrink-0 px-1"
           >
             <X size={12} aria-hidden="true" /> Clear
           </button>

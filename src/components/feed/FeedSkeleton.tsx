@@ -5,9 +5,9 @@ const DropCardSkeleton: React.FC = () => (
   <div className="flex gap-3">
     <div className="flex flex-col items-center w-5 flex-shrink-0 pt-6">
       <Skeleton className="w-2.5 h-2.5" rounded="full" />
-      <div className="w-px flex-1 bg-gray-100 mt-1" />
+      <div className="w-px flex-1 bg-gray-100 dark:bg-gray-800 mt-1" />
     </div>
-    <div className="flex-1 bg-white/80 backdrop-blur-xl rounded-2xl border border-white/60 shadow-sm overflow-hidden">
+    <div className="flex-1 bg-white/80 dark:bg-gray-900/70 backdrop-blur-xl rounded-2xl border border-white/60 dark:border-gray-800/60 shadow-sm overflow-hidden">
       <div className="flex items-center gap-3 p-4">
         <Skeleton className="w-10 h-10" rounded="full" />
         <div className="flex flex-col gap-1.5">

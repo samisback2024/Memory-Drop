@@ -45,7 +45,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose, dropI
   if (submitted) {
     return (
       <Modal isOpen={isOpen} onClose={handleClose} title="Thanks for letting us know" size="sm">
-        <p className="text-sm text-gray-600">
+        <p className="text-sm text-gray-600 dark:text-gray-400">
           We've received your report and will review this drop.
         </p>
         <Button variant="primary" fullWidth size="md" onClick={handleClose} className="mt-4">
@@ -68,7 +68,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose, dropI
               onClick={() => setReason(r)}
               className={[
                 'w-full text-left px-4 py-2.5 rounded-xl text-sm font-medium transition-colors border',
-                reason === r ? 'border-purple-500 bg-purple-50 text-purple-700' : 'border-gray-100 text-gray-700 hover:bg-gray-50',
+                reason === r ? 'border-purple-500 bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300' : 'border-gray-100 dark:border-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800',
               ].join(' ')}
             >
               {REPORT_REASON_LABELS[r]}
@@ -88,8 +88,8 @@ export const ReportModal: React.FC<ReportModalProps> = ({ isOpen, onClose, dropI
         )}
 
         {error && (
-          <div className="bg-red-50 border border-red-100 rounded-xl p-3">
-            <p className="text-sm text-red-600">{error}</p>
+          <div className="bg-red-50 dark:bg-red-950/30 border border-red-100 dark:border-red-900 rounded-xl p-3">
+            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
           </div>
         )}
 

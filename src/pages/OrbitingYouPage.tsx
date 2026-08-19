@@ -55,26 +55,26 @@ export const OrbitingYouPage: React.FC = () => {
   const title = target ? `${target.display_name || target.username}'s Orbit` : 'Orbiting You';
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 transition-colors">
       <PublicPageHeader title={state === 'ready' ? title : undefined} />
       <main className="max-w-2xl mx-auto px-4 py-6">
         {state === 'loading' && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4">
             <UserListSkeleton />
           </div>
         )}
         {state === 'not_found' && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
             <EmptyState icon={UserX} title="User not found" description={`No account with the username @${username}.`} />
           </div>
         )}
         {state === 'error' && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm">
             <ErrorState title="Couldn't load Orbit" description="Check your connection and try again." onRetry={load} />
           </div>
         )}
         {state === 'ready' && target && (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4">
             <OrbitingYouList profileId={target.id} isOwnProfile={target.is_own_profile} canView={canView} />
           </div>
         )}

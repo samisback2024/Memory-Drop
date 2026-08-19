@@ -43,14 +43,14 @@ export const CapsuleUnlockedCard: React.FC<CapsuleUnlockedCardProps> = ({ capsul
       ))}
 
       {audioClips.map(a => (
-        <div key={a.url} className="flex items-center gap-3 bg-purple-50 border border-purple-100 rounded-2xl p-3">
+        <div key={a.url} className="flex items-center gap-3 bg-purple-50 dark:bg-purple-950/30 border border-purple-100 dark:border-purple-900 rounded-2xl p-3">
           <Music size={18} className="text-purple-500 flex-shrink-0" aria-hidden="true" />
           <audio src={a.url} controls className="flex-1 h-9" />
         </div>
       ))}
 
       {voiceClips.map(v => (
-        <div key={v.url} className="flex items-center gap-3 bg-blue-50 border border-blue-100 rounded-2xl p-3">
+        <div key={v.url} className="flex items-center gap-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900 rounded-2xl p-3">
           <Mic size={18} className="text-blue-500 flex-shrink-0" aria-hidden="true" />
           <audio src={v.url} controls className="flex-1 h-9" />
         </div>

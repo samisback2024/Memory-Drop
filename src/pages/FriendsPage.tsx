@@ -46,18 +46,18 @@ export const FriendsPage: React.FC = () => {
         <nav className="flex items-center gap-2 text-sm">
           <Link to="/orbiting-you" className="text-purple-600 hover:text-purple-700 font-medium">Orbiting You</Link>
           <span className="text-gray-300">·</span>
-          <Link to="/in-orbit" className="text-purple-600 hover:text-purple-700 font-medium">In Orbit</Link>
+          <Link to="/in-orbit" className="text-purple-600 hover:text-purple-700 font-medium">Your Orbit</Link>
           <span className="text-gray-300">·</span>
           <Link to="/friends/orbit-requests" className="text-purple-600 hover:text-purple-700 font-medium">Orbit requests</Link>
         </nav>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4">
         <UserList users={friends} loading={loading} emptyVariant="followers" />
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
-        <h2 className="text-sm font-semibold text-gray-900 mb-1">Suggested for you</h2>
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm p-4">
+        <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1">Suggested for you</h2>
         <SuggestedFriends />
       </div>
     </div>

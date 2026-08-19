@@ -41,9 +41,9 @@ export const PinButton: React.FC<PinButtonProps> = ({ memoryType, memoryId, isPi
         onClick={toggle}
         disabled={busy}
         aria-pressed={pinned}
-        className={`flex items-center gap-1.5 text-xs font-medium disabled:opacity-50 ${pinned ? 'text-purple-600' : 'text-gray-600 hover:text-purple-600'}`}
+        className={`flex items-center gap-1.5 text-xs font-medium disabled:opacity-50 ${pinned ? 'text-purple-600 dark:text-purple-400' : 'text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400'}`}
       >
-        <Pin size={13} className={pinned ? 'fill-purple-600' : ''} aria-hidden="true" />
+        <Pin size={13} className={pinned ? 'fill-purple-600 dark:fill-purple-400' : ''} aria-hidden="true" />
         {pinned ? 'Pinned to profile' : 'Pin to profile'}
       </button>
       {error && <p className="text-[11px] text-red-500">{error}</p>}

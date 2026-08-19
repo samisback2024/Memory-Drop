@@ -247,7 +247,7 @@ export const PublicProfilePage: React.FC = () => {
                   <div className="flex flex-col items-center gap-1 rounded-xl bg-gray-50 dark:bg-gray-800 py-3 px-1 text-center">
                     <UserPlus size={14} className="text-purple-500" aria-hidden="true" />
                     <span className="text-base font-bold text-gray-900 dark:text-gray-100">{publicStats.in_orbit_count}</span>
-                    <span className="text-[10px] text-gray-400 dark:text-gray-500 leading-tight">In Orbit</span>
+                    <span className="text-[10px] text-gray-400 dark:text-gray-500 leading-tight">Your Orbit</span>
                   </div>
                   {(Object.keys(PROFILE_STAT_META) as ProfileStatKey[])
                     .filter(key => publicStats[key] !== null)
